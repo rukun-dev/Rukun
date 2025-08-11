@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,681 +7,480 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ========================
-// RT ORGANIZATION SETUP
-// ========================
-
-model RtProfile {
-  id        String @id @default(cuid())
-  rt_number String // Nomor RT (contoh: "001")
-  rw_number String // Nomor RW dimana RT ini berada (contoh: "005")
-
-  // Location
-  village     String // Kelurahan
-  district    String // Kecamatan
-  city        String // Kota/Kabupaten
-  province    String // Provinsi
-  postal_code String? // Kode pos
-  address     String  @db.Text // Alamat lengkap RT
-
-  // Contact
-  phone String? @db.VarChar(20)
-  email String? @db.VarChar(255)
-
-  // Leadership
-  ketua_name      String  @db.VarChar(100)
-  sekretaris_name String? @db.VarChar(100)
-  bendahara_name  String? @db.VarChar(100)
-
-  // Setup
-  is_setup_completed Boolean   @default(false)
-  setup_completed_at DateTime?
-
-  // Branding
-  logo_url    String? @db.VarChar(500)
-  description String? @db.Text
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  // Relations
-  settings RtSettings?
-
-  @@index([rt_number, rw_number])
-  @@map("rt_profile")
-}
-
-model RtSettings {
-  id            String @id @default(cuid())
-  rt_profile_id String @unique
-
-  // Email settings
-  smtp_host       String? @db.VarChar(255)
-  smtp_port       Int?
-  smtp_username   String? @db.VarChar(255)
-  smtp_password   String? @db.VarChar(255)
-  smtp_encryption String? @db.VarChar(10) // tls, ssl, none
-  from_email      String? @db.VarChar(255)
-  from_name       String? @db.VarChar(100)
-
-  // Notification settings
-  enable_email_notifications Boolean @default(true)
-
-  // Payment settings
-  qris_static_code String? @db.Text
-  bank_name        String? @db.VarChar(100)
-  bank_account     String? @db.VarChar(50)
-  account_holder   String? @db.VarChar(100)
-
-  // Document settings
-  document_header String? @db.Text
-  document_footer String? @db.Text
-  letter_head     String? @db.Text
-
-  // System settings
-  timezone    String @default("Asia/Jakarta") @db.VarChar(50)
-  date_format String @default("DD/MM/YYYY") @db.VarChar(20)
-  currency    String @default("IDR") @db.VarChar(10)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  rt_profile RtProfile @relation(fields: [rt_profile_id], references: [id], onDelete: Cascade)
-
-  @@map("rt_settings")
-}
-
-// ========================
-// USER MANAGEMENT
-// ========================
-
+// User Management & Authentication
 model User {
-  id String @id @default(cuid())
-
-  username      String     @unique @db.VarChar(50)
-  email         String     @unique @db.VarChar(255)
-  password_hash String     @db.VarChar(255)
-  full_name     String     @db.VarChar(100)
-  role          UserRole
-  status        UserStatus @default(ACTIVE)
-
-  // Security
-  last_login_at         DateTime?
-  failed_login_attempts Int       @default(0)
-  locked_until          DateTime?
-
-  // Profile
-  phone      String? @db.VarChar(20)
-  avatar_url String? @db.VarChar(500)
-
-  // Notification preferences
-  email_notifications Boolean @default(true)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String
+  phone       String?
+  avatar      String?
+  isActive    Boolean  @default(true)
+  role        Role     @default(WARGA)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
   // Relations
-  created_warga           Warga[]                 @relation("CreatedBy")
-  updated_warga           Warga[]                 @relation("UpdatedBy")
-  created_transactions    Transaction[]           @relation("CreatedBy")
-  created_announcements   Announcement[]          @relation("CreatedBy")
-  created_documents       Document[]              @relation("CreatedBy")
-  approved_documents      Document[]              @relation("ApprovedBy")
-  created_iuran           Iuran[]                 @relation("CreatedBy")
-  verified_payments       Payment[]               @relation("VerifiedBy")
-  activity_logs           ActivityLog[]
-  announcement_recipients AnnouncementRecipient[]
-  warga_account           Warga?
-
-  @@index([email])
-  @@index([username])
-  @@index([role])
-  @@index([status])
+  profile     UserProfile?
+  sessions    Session[]
+  activityLogs ActivityLog[]
+  createdWargas Warga[] @relation("CreatedBy")
+  families    Family[]
+  documents   Document[]
+  transactions Transaction[]
+  payments    Payment[]
+  announcements Announcement[]
+  emailCampaigns EmailCampaign[]
+  
   @@map("users")
 }
 
-// ========================
-// WARGA MANAGEMENT
-// ========================
-
-model Warga {
-  id String @id @default(cuid())
-
-  // Personal Info
-  nik            String    @unique @db.VarChar(16)
-  full_name      String    @db.VarChar(100)
-  gender         Gender
-  birth_place    String?   @db.VarChar(100)
-  birth_date     DateTime? @db.Date
-  religion       String?   @db.VarChar(50)
-  education      String?   @db.VarChar(50)
-  occupation     String?   @db.VarChar(100)
-  marital_status String?   @db.VarChar(20)
-
-  // Address Info (dalam RT yang sama)
-  address      String  @db.Text
-  house_number String? @db.VarChar(10)
-
-  // Contact Info
-  phone String? @db.VarChar(20)
-  email String? @db.VarChar(255)
-
-  // Family Info
-  family_id        String?
-  relation_to_head FamilyRelation?
-
-  // Status
-  status WargaStatus @default(ACTIVE)
-
-  // Documents
-  ktp_url   String? @db.VarChar(500)
-  kk_url    String? @db.VarChar(500)
-  photo_url String? @db.VarChar(500)
-
-  // User account (jika warga punya akses login)
-  user_id String? @unique
-
-  // Notification preferences
-  email_notifications   Boolean @default(true)
-  receive_announcements Boolean @default(true)
-
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  created_by_id String
-  updated_by_id String?
-
-  // Relations
-  created_by              User                    @relation("CreatedBy", fields: [created_by_id], references: [id])
-  updated_by              User?                   @relation("UpdatedBy", fields: [updated_by_id], references: [id])
-  family                  Family?                 @relation(fields: [family_id], references: [id])
-  user_account            User?                   @relation(fields: [user_id], references: [id])
-  document_requests       Document[]
-  payments                Payment[]
-  announcement_recipients AnnouncementRecipient[]
-
-  @@index([nik])
-  @@index([full_name])
-  @@index([status])
-  @@index([family_id])
-  @@index([email])
-  @@fulltext([full_name], map: "warga_fulltext_name_idx")
-  @@map("warga")
+model UserProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  nik         String?  @unique
+  birthDate   DateTime?
+  birthPlace  String?
+  address     String?
+  job         String?
+  education   String?
+  maritalStatus String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_profiles")
 }
 
-model Family {
-  id String @id @default(cuid())
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
 
-  family_card_number String  @unique @db.VarChar(20)
-  head_name          String  @db.VarChar(100)
-  address            String  @db.Text
-  house_number       String? @db.VarChar(10)
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String
+  description String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("activity_logs")
+}
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+// RT Settings
+model RtProfile {
+  id          String   @id @default(cuid())
+  rtNumber    String   @unique
+  rwNumber    String
+  kelurahan   String
+  kecamatan   String
+  kabupaten   String
+  provinsi    String
+  postalCode  String?
+  description String?
+  logo        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("rt_profiles")
+}
 
+model RtSettings {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("rt_settings")
+}
+
+// Warga (Citizens) Management
+model Warga {
+  id            String    @id @default(cuid())
+  nik           String    @unique
+  noKk          String    // Nomor Kartu Keluarga
+  name          String
+  email         String?   @unique
+  phone         String?
+  birthDate     DateTime?
+  birthPlace    String?
+  gender        Gender
+  maritalStatus MaritalStatus @default(SINGLE)
+  job           String?
+  education     String?
+  religion      String?
+  address       String
+  rtNumber      String
+  rwNumber      String
+  kelurahan     String
+  kecamatan     String
+  kabupaten     String
+  provinsi      String
+  postalCode    String?
+  fatherName    String?
+  motherName    String?
+  isActive      Boolean   @default(true)
+  createdById   String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
   // Relations
-  members Warga[]
+  createdBy     User      @relation("CreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  familyMembers FamilyMember[]
+  documents     Document[]
+  transactions  Transaction[]
+  payments      Payment[]
+  
+  @@map("wargas")
+}
 
-  @@index([family_card_number])
-  @@index([head_name])
+// Family Management
+model Family {
+  id          String   @id @default(cuid())
+  noKk        String   @unique
+  name        String
+  headName    String
+  address     String
+  rtNumber    String
+  rwNumber    String
+  kelurahan   String
+  kecamatan   String
+  kabupaten   String
+  provinsi    String
+  postalCode  String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  members     FamilyMember[]
+  
   @@map("families")
 }
 
-// ========================
-// FINANCIAL MANAGEMENT
-// ========================
-
-model TransactionCategory {
-  id          String          @id @default(cuid())
-  name        String          @unique @db.VarChar(100)
-  type        TransactionType
-  description String?         @db.Text
-  color       String?         @db.VarChar(7) // Hex color untuk UI
-  is_active   Boolean         @default(true)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  // Relations
-  transactions Transaction[]
-  budgets      Budget[]
-
-  @@index([type])
-  @@index([is_active])
-  @@map("transaction_categories")
+model FamilyMember {
+  id            String         @id @default(cuid())
+  familyId      String
+  wargaId       String
+  relationship  FamilyRelation @default(MEMBER)
+  isHeadFamily  Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  
+  family        Family         @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  warga         Warga          @relation(fields: [wargaId], references: [id], onDelete: Cascade)
+  
+  @@unique([familyId, wargaId])
+  @@map("family_members")
 }
 
+// Document Management
+model Document {
+  id          String         @id @default(cuid())
+  title       String
+  type        DocumentType
+  content     String?
+  filePath    String?
+  fileSize    Int?
+  mimeType    String?
+  status      DocumentStatus @default(DRAFT)
+  requesterId String?
+  approverId  String?
+  wargaId     String?
+  templateId  String?
+  number      String?        @unique
+  isArchived  Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  requester   User?          @relation(fields: [requesterId], references: [id], onDelete: SetNull)
+  warga       Warga?         @relation(fields: [wargaId], references: [id], onDelete: SetNull)
+  template    DocumentTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  workflow    DocumentWorkflow[]
+  
+  @@map("documents")
+}
+
+model DocumentTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  type        DocumentType
+  content     String
+  variables   String?  // JSON format
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  documents   Document[]
+  
+  @@map("document_templates")
+}
+
+model DocumentWorkflow {
+  id          String   @id @default(cuid())
+  documentId  String
+  step        Int
+  status      WorkflowStatus
+  approver    String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  @@map("document_workflows")
+}
+
+// Financial Management
 model Transaction {
-  id String @id @default(cuid())
-
-  type             TransactionType
-  category_id      String
-  description      String          @db.Text
-  amount           Decimal         @db.Decimal(15, 2)
-  transaction_date DateTime        @db.Date
-
-  // Receipt
-  receipt_url    String? @db.VarChar(500)
-  receipt_number String? @db.VarChar(50)
-
-  // Meta
-  notes String? @db.Text
-  tags  Json?
-
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  created_by_id String
-
-  // Relations
-  category   TransactionCategory @relation(fields: [category_id], references: [id])
-  created_by User                @relation("CreatedBy", fields: [created_by_id], references: [id])
-
-  @@index([type])
-  @@index([category_id])
-  @@index([transaction_date])
-  @@index([created_by_id])
+  id          String          @id @default(cuid())
+  type        TransactionType
+  category    String
+  amount      Decimal         @db.Decimal(15, 2)
+  description String
+  date        DateTime
+  wargaId     String?
+  createdById String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  warga       Warga?          @relation(fields: [wargaId], references: [id], onDelete: SetNull)
+  createdBy   User            @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  budgetItems BudgetItem[]
+  
   @@map("transactions")
 }
 
 model Budget {
-  id String @id @default(cuid())
-
-  name         String   @db.VarChar(100)
-  category_id  String
-  amount       Decimal  @db.Decimal(15, 2)
-  period_start DateTime @db.Date
-  period_end   DateTime @db.Date
-
-  description String? @db.Text
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  // Relations
-  category TransactionCategory @relation(fields: [category_id], references: [id])
-
-  @@index([category_id])
-  @@index([period_start, period_end])
+  id          String   @id @default(cuid())
+  year        Int
+  name        String
+  totalAmount Decimal  @db.Decimal(15, 2)
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  items       BudgetItem[]
+  
+  @@unique([year, name])
   @@map("budgets")
 }
 
-model Iuran {
-  id String @id @default(cuid())
-
-  title       String  @db.VarChar(200) // "Iuran Bulanan Januari 2025"
-  description String? @db.Text
-  category    String  @db.VarChar(50) // "BULANAN", "KEBERSIHAN", "KEAMANAN", "SOSIAL", etc
-  amount      Decimal @db.Decimal(15, 2)
-
-  // Schedule
-  due_date DateTime @db.Date
-  late_fee Decimal? @db.Decimal(15, 2)
-
-  status IuranStatus @default(ACTIVE)
-
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  created_by_id String
-
-  // Relations
-  created_by User      @relation("CreatedBy", fields: [created_by_id], references: [id])
-  payments   Payment[]
-
-  @@index([status])
-  @@index([due_date])
-  @@index([category])
-  @@index([created_by_id])
-  @@map("iuran")
+model BudgetItem {
+  id            String      @id @default(cuid())
+  budgetId      String
+  transactionId String?
+  category      String
+  plannedAmount Decimal     @db.Decimal(15, 2)
+  actualAmount  Decimal?    @db.Decimal(15, 2)
+  description   String?
+  
+  budget        Budget      @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  
+  @@map("budget_items")
 }
 
 model Payment {
-  id       String @id @default(cuid())
-  iuran_id String
-  warga_id String
-
-  amount         Decimal       @db.Decimal(15, 2)
-  payment_method PaymentMethod
-  payment_date   DateTime?     @db.Date
-
-  // Payment proof
-  proof_url   String? @db.VarChar(500)
-  proof_notes String? @db.Text
-
-  // Verification
-  status             PaymentStatus @default(PENDING)
-  verified_at        DateTime?
-  verified_by_id     String?
-  verification_notes String?       @db.Text
-
-  // Cash payment
-  cash_received_by String? @db.VarChar(100) // Nama bendahara yang terima
-  cash_receipt_url String? @db.VarChar(500)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  // Relations
-  iuran       Iuran @relation(fields: [iuran_id], references: [id], onDelete: Cascade)
-  warga       Warga @relation(fields: [warga_id], references: [id], onDelete: Cascade)
-  verified_by User? @relation("VerifiedBy", fields: [verified_by_id], references: [id])
-
-  @@unique([iuran_id, warga_id])
-  @@index([status])
-  @@index([payment_method])
-  @@index([payment_date])
-  @@index([verified_by_id])
+  id            String        @id @default(cuid())
+  type          PaymentType
+  amount        Decimal       @db.Decimal(15, 2)
+  description   String
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        PaymentStatus @default(PENDING)
+  wargaId       String
+  createdById   String
+  proofPath     String?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  warga         Warga         @relation(fields: [wargaId], references: [id], onDelete: Restrict)
+  createdBy     User          @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  
   @@map("payments")
 }
 
-// ========================
-// COMMUNICATION
-// ========================
-
-model AnnouncementTemplate {
-  id           String  @id @default(cuid())
-  name         String  @unique @db.VarChar(100)
-  subject      String  @db.VarChar(200)
-  content      String  @db.Text
-  content_html String? @db.LongText
-  category     String? @db.VarChar(50)
-
-  is_active Boolean @default(true)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@index([is_active])
-  @@index([category])
-  @@map("announcement_templates")
-}
-
+// Announcement & Communication
 model Announcement {
-  id String @id @default(cuid())
-
-  title        String  @db.VarChar(200)
-  content      String  @db.Text
-  content_html String? @db.LongText
-
-  // Targeting
-  target_type AnnouncementTargetType
-
-  // Role-based Targeting
-  target_roles Json? // [ADMIN, STAFF] atau [] untuk semua
-
-  // Individual Targeting
-  target_user_ids  Json? // [user_id1, user_id2] untuk specific users
-  target_warga_ids Json? // [warga_id1, warga_id2] untuk specific warga
-
-  // Hybrid Targeting
-  include_admins Boolean @default(false)
-  include_staff  Boolean @default(false)
-  include_warga  Boolean @default(false)
-
-  // Attachments
-  attachments Json? // [{"name": "file.pdf", "url": "...", "size": 1024}]
-
-  // Scheduling
-  scheduled_at DateTime?
-  sent_at      DateTime?
-
-  status AnnouncementStatus @default(DRAFT)
-
-  // Analytics
-  total_recipients Int @default(0)
-  total_sent       Int @default(0)
-  total_delivered  Int @default(0)
-  total_bounced    Int @default(0)
-  total_opened     Int @default(0)
-
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  created_by_id String
-
-  // Relations
-  created_by User                    @relation("CreatedBy", fields: [created_by_id], references: [id])
-  recipients AnnouncementRecipient[]
-  email_logs EmailLog[]
-
-  @@index([status])
-  @@index([target_type])
-  @@index([scheduled_at])
-  @@index([sent_at])
-  @@index([created_by_id])
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  type        AnnouncementType @default(INFO)
+  priority    Priority @default(NORMAL)
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+  expiresAt   DateTime?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  recipients  AnnouncementRecipient[]
+  
   @@map("announcements")
 }
 
 model AnnouncementRecipient {
-  id              String @id @default(cuid())
-  announcement_id String
-
-  // Recipient bisa user atau warga
-  user_id  String?
-  warga_id String?
-
-  // Contact info
-  email String @db.VarChar(255)
-  name  String @db.VarChar(100)
-
-  // Status tracking per recipient
-  status       RecipientStatus @default(PENDING)
-  sent_at      DateTime?
-  delivered_at DateTime?
-  opened_at    DateTime?
-  bounced_at   DateTime?
-
-  created_at DateTime @default(now())
-
-  // Relations
-  announcement Announcement @relation(fields: [announcement_id], references: [id], onDelete: Cascade)
-  user         User?        @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  warga        Warga?       @relation(fields: [warga_id], references: [id], onDelete: Cascade)
-  email_logs   EmailLog[]
-
-  @@unique([announcement_id, user_id])
-  @@unique([announcement_id, warga_id])
-  @@index([status])
-  @@index([email])
+  id             String       @id @default(cuid())
+  announcementId String
+  recipientType  RecipientType
+  recipientId    String?
+  isRead         Boolean      @default(false)
+  readAt         DateTime?
+  
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  
   @@map("announcement_recipients")
 }
 
-model EmailLog {
-  id              String  @id @default(cuid())
-  announcement_id String?
-  recipient_id    String?
-
-  recipient_email String  @db.VarChar(255)
-  recipient_name  String? @db.VarChar(100)
-  subject         String  @db.VarChar(200)
-
-  status       EmailStatus
-  sent_at      DateTime?
-  delivered_at DateTime?
-  opened_at    DateTime?
-  bounced_at   DateTime?
-
-  error_message String? @db.Text
-
-  created_at DateTime @default(now())
-
-  // Relations
-  announcement Announcement?          @relation(fields: [announcement_id], references: [id], onDelete: Cascade)
-  recipient    AnnouncementRecipient? @relation(fields: [recipient_id], references: [id], onDelete: Cascade)
-
-  @@index([status])
-  @@index([recipient_email])
-  @@index([sent_at])
-  @@map("email_logs")
+// Email Management
+model EmailCampaign {
+  id          String   @id @default(cuid())
+  name        String
+  subject     String
+  content     String
+  templateId  String?
+  status      CampaignStatus @default(DRAFT)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  template    EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  emails      Email[]
+  
+  @@map("email_campaigns")
 }
 
-// ========================
-// DOCUMENT MANAGEMENT
-// ========================
-
-model DocumentTemplate {
-  id      String       @id @default(cuid())
-  name    String       @unique @db.VarChar(100)
-  type    DocumentType
-  content String       @db.LongText // HTML template content
-
-  // Variables yang bisa digunakan di template
-  variables Json // {"warga_name": "string", "purpose": "string", etc}
-
-  is_active Boolean @default(true)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@index([type])
-  @@index([is_active])
-  @@map("document_templates")
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  subject     String
+  content     String
+  variables   String?  // JSON format
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  campaigns   EmailCampaign[]
+  emails      Email[]
+  
+  @@map("email_templates")
 }
 
-model Document {
-  id       String @id @default(cuid())
-  warga_id String
-
-  type    DocumentType
-  purpose String       @db.Text // Keperluan surat
-
-  // Request info
-  request_date    DateTime @default(now()) @db.Date
-  supporting_docs Json? // [{"name": "ktp.jpg", "url": "...", "type": "KTP"}]
-
-  // Processing
-  status         DocumentStatus @default(PENDING)
-  processed_at   DateTime?
-  approved_by_id String?
-  approval_notes String?        @db.Text
-
-  // Generated document
-  document_number String? @db.VarChar(50)
-  generated_url   String? @db.VarChar(500)
-  template_used   String? @db.VarChar(100)
-
-  // Digital signature
-  signature_data String?   @db.Text // Base64 signature
-  signed_by      String?   @db.VarChar(100)
-  signed_at      DateTime?
-
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  created_by_id String
-
-  // Relations
-  warga       Warga @relation(fields: [warga_id], references: [id], onDelete: Cascade)
-  created_by  User  @relation("CreatedBy", fields: [created_by_id], references: [id])
-  approved_by User? @relation("ApprovedBy", fields: [approved_by_id], references: [id])
-
-  @@index([type])
-  @@index([status])
-  @@index([warga_id])
-  @@index([request_date])
-  @@index([document_number])
-  @@map("documents")
-}
-
-model DocumentCounter {
-  id      String       @id @default(cuid())
-  type    DocumentType
-  year    Int
-  month   Int
-  counter Int          @default(0)
-
-  @@unique([type, year, month])
-  @@index([type])
-  @@index([year, month])
-  @@map("document_counters")
-}
-
-// ========================
-// SYSTEM UTILITIES
-// ========================
-
-model ActivityLog {
-  id      String  @id @default(cuid())
-  user_id String?
-
-  action      String  @db.VarChar(100) // "CREATE_WARGA", "UPDATE_TRANSACTION", etc
-  entity_type String  @db.VarChar(50) // "WARGA", "TRANSACTION", etc
-  entity_id   String? @db.VarChar(50)
-
-  old_values Json?
-  new_values Json?
-
-  ip_address String? @db.VarChar(45) // IPv6 support
-  user_agent String? @db.Text
-
-  created_at DateTime @default(now())
-
-  // Relations
-  user User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
-
-  @@index([action])
-  @@index([entity_type])
-  @@index([entity_id])
-  @@index([user_id])
-  @@index([created_at])
-  @@map("activity_logs")
-}
-
-model SystemSetting {
+model Email {
   id          String      @id @default(cuid())
-  key         String      @unique @db.VarChar(100)
-  value       String      @db.Text
-  description String?     @db.Text
-  type        SettingType @default(STRING)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@index([key])
-  @@map("system_settings")
+  campaignId  String?
+  templateId  String?
+  to          String
+  subject     String
+  content     String
+  status      EmailStatus @default(QUEUED)
+  sentAt      DateTime?
+  openedAt    DateTime?
+  clickedAt   DateTime?
+  bouncedAt   DateTime?
+  errorMessage String?
+  createdAt   DateTime    @default(now())
+  
+  campaign    EmailCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  template    EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  
+  @@map("emails")
 }
 
+// File Management
 model FileUpload {
-  id String @id @default(cuid())
-
-  original_name String @db.VarChar(255)
-  filename      String @db.VarChar(255)
-  mime_type     String @db.VarChar(100)
-  size          Int
-  path          String @db.VarChar(500)
-  url           String @db.VarChar(500)
-
-  // Meta
-  uploaded_by_id String? @db.VarChar(50)
-  entity_type    String? @db.VarChar(50) // "WARGA", "DOCUMENT", "ANNOUNCEMENT", etc
-  entity_id      String? @db.VarChar(50)
-
-  created_at DateTime @default(now())
-
-  @@index([entity_type, entity_id])
-  @@index([uploaded_by_id])
-  @@index([created_at])
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String
+  path        String
+  size        Int
+  mimeType    String
+  uploadedBy  String
+  createdAt   DateTime @default(now())
+  
   @@map("file_uploads")
 }
 
-// ========================
-// ENUMS
-// ========================
-
-enum UserRole {
-  KETUA_RT // Ketua RT (Super Admin)
-  SEKRETARIS // Sekretaris RT
-  BENDAHARA // Bendahara RT
-  STAFF // Staff RT
-  WARGA // Warga biasa
+// System Settings & Utilities
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  type        SettingType @default(STRING)
+  description String?
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("system_settings")
 }
 
-enum UserStatus {
-  ACTIVE
-  INACTIVE
-  SUSPENDED
+model Backup {
+  id          String   @id @default(cuid())
+  filename    String
+  path        String
+  size        Int
+  type        BackupType
+  status      BackupStatus @default(IN_PROGRESS)
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+  
+  @@map("backups")
+}
+
+model ScheduledJob {
+  id          String    @id @default(cuid())
+  name        String
+  type        JobType
+  schedule    String    // cron format
+  lastRun     DateTime?
+  nextRun     DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("scheduled_jobs")
+}
+
+// Enums
+enum Role {
+  SUPER_ADMIN
+  KETUA_RT
+  SEKRETARIS
+  BENDAHARA
+  STAFF
+  WARGA
 }
 
 enum Gender {
   MALE
   FEMALE
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
 }
 
 enum FamilyRelation {
@@ -693,14 +489,34 @@ enum FamilyRelation {
   CHILD
   PARENT
   SIBLING
+  MEMBER
+}
+
+enum DocumentType {
+  SURAT_PENGANTAR
+  SURAT_KETERANGAN
+  SURAT_DOMISILI
+  SURAT_TIDAK_MAMPU
+  SURAT_KELAHIRAN
+  SURAT_KEMATIAN
+  SURAT_PINDAH
   OTHER
 }
 
-enum WargaStatus {
-  ACTIVE
-  MOVED
-  DECEASED
-  INACTIVE
+enum DocumentStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum WorkflowStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SKIPPED
 }
 
 enum TransactionType {
@@ -708,79 +524,55 @@ enum TransactionType {
   EXPENSE
 }
 
-enum IuranStatus {
-  ACTIVE
-  INACTIVE
-  COMPLETED
-}
-
-enum PaymentMethod {
-  QRIS
-  BANK_TRANSFER
-  CASH
+enum PaymentType {
+  IURAN_BULANAN
+  IURAN_KEBERSIHAN
+  SUMBANGAN
+  DENDA
+  OTHER
 }
 
 enum PaymentStatus {
   PENDING
-  APPROVED
-  REJECTED
-  EXPIRED
+  PAID
+  OVERDUE
+  CANCELLED
 }
 
-enum AnnouncementTargetType {
-  ALL // Semua user + warga dalam RT
-  ALL_USERS // Semua pengurus RT
-  ALL_WARGA // Semua warga RT yang punya email
-  SPECIFIC_ROLE // Berdasarkan role user (ketua/sekretaris/bendahara)
-  SPECIFIC_USERS // User tertentu (pilih manual)
-  SPECIFIC_WARGA // Warga tertentu (pilih manual)
-  HYBRID // Kombinasi berbagai targeting
+enum AnnouncementType {
+  INFO
+  WARNING
+  URGENT
+  EVENT
 }
 
-enum RecipientStatus {
-  PENDING
-  SENT
-  DELIVERED
-  OPENED
-  BOUNCED
-  FAILED
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }
 
-enum AnnouncementStatus {
+enum RecipientType {
+  ALL
+  ROLE
+  SPECIFIC
+}
+
+enum CampaignStatus {
   DRAFT
   SCHEDULED
+  SENDING
   SENT
   CANCELLED
 }
 
 enum EmailStatus {
-  PENDING
+  QUEUED
+  SENDING
   SENT
-  DELIVERED
-  OPENED
-  BOUNCED
   FAILED
-}
-
-enum DocumentType {
-  DOMICILE // Surat Keterangan Domisili
-  POVERTY // Surat Keterangan Tidak Mampu
-  LOST_ID // Surat Pengantar KTP Hilang
-  BUSINESS // Surat Keterangan Usaha
-  GOOD_CONDUCT // Surat Keterangan Kelakuan Baik
-  INHERITANCE // Surat Keterangan Waris
-  BIRTH // Surat Keterangan Kelahiran
-  DEATH // Surat Keterangan Kematian
-  OTHER // Surat Lainnya
-}
-
-enum DocumentStatus {
-  PENDING
-  REVIEWED
-  APPROVED
-  REJECTED
-  GENERATED
-  COMPLETED
+  BOUNCED
 }
 
 enum SettingType {
@@ -788,4 +580,23 @@ enum SettingType {
   NUMBER
   BOOLEAN
   JSON
+}
+
+enum BackupType {
+  FULL
+  PARTIAL
+  AUTOMATED
+}
+
+enum BackupStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum JobType {
+  EMAIL_REMINDER
+  BACKUP
+  CLEANUP
+  REPORT_GENERATION
 }

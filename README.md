@@ -1,242 +1,445 @@
-# **📋 RUKUN - Task Distribution (RT/RW Management System)**
-*Schema DB sudah final, fokus development sesuai schema*
+# RT Management System
 
-## **🌐 SYSTEM ARCHITECTURE OVERVIEW**
+A comprehensive digital management system for Indonesian RT (Rukun Tetangga) communities, built with modern web technologies to streamline administrative tasks, citizen data management, financial tracking, and community communication.
 
-### **Platform Structure:**
-1. **RUKUN Web App** - RT/RW Management System
-2. **Setup Wizard** - First-time RT profile configuration
-3. **Admin Panel** - System administration
-4. **User Portal** - Interface untuk warga
+## 🚀 Features
+
+### 👥 User & Citizen Management
+- **Multi-role Authentication**: Super Admin, Ketua RT, Sekretaris, Bendahara, Staff, and Warga
+- **Comprehensive Citizen Database**: Complete warga (citizen) profiles with NIK, family relationships, and personal details
+- **Family Management**: Kartu Keluarga (KK) integration with family member relationships
+- **Profile Management**: Detailed user profiles with Cloudinary avatar integration
+
+### 📋 Document Management
+- **Digital Document Processing**: Automated generation of RT documents (Surat Pengantar, Surat Keterangan, etc.)
+- **Document Templates**: Customizable templates with variable support
+- **Approval Workflow**: Multi-step document approval process
+- **Document Archiving**: Organized document storage and retrieval
+
+### 💰 Financial Management
+- **Transaction Tracking**: Income and expense management with proof attachments
+- **Budget Planning**: Annual budget creation and monitoring
+- **Payment System**: Monthly fees, cleaning fees, donations, and penalty tracking
+- **Financial Reporting**: Comprehensive financial analytics and reports
+
+### 📢 Communication & Announcements
+- **Digital Announcements**: Priority-based community announcements
+- **Email Campaigns**: Bulk email communication with templates
+- **Targeted Messaging**: Role-based and specific recipient targeting
+- **Read Status Tracking**: Monitor announcement engagement
+
+### 🗃️ File Management
+- **Cloudinary Integration**: Secure cloud storage for documents, images, and files
+- **Multi-format Support**: Images, documents, videos with automatic optimization
+- **Organized Storage**: Folder-based organization with tagging system
+
+### 🛠️ System Administration
+- **Backup Management**: Automated and manual backup solutions
+- **Scheduled Jobs**: Automated tasks for reminders, cleanup, and reporting
+- **System Settings**: Configurable application settings
+- **Activity Logging**: Comprehensive audit trail
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Nuxt 3 with TypeScript
+- **Backend**: Nuxt 3 Server API
+- **Database**: MySQL with Prisma ORM
+- **File Storage**: Cloudinary
+- **Email Service**: SMTP
+- **Authentication**: Custom session-based authentication
+
+## 📋 Prerequisites
+
+Before running this application, make sure you have:
+
+- Node.js (v18 or higher)
+- MySQL database
+- Cloudinary account
+- SMTP email service credentials
+
+## ⚙️ Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd rt-management-system
+   ```
+
+2. **Install dependencies**
+   ```bash
+   yarn install
+   ```
+
+3. **Environment Configuration**
+   
+   Create a `.env` file in the root directory:
+   ```env
+   # Database
+   DATABASE_URL="mysql://username:password@localhost:3306/rt_management"
+   
+   # Cloudinary Configuration
+   CLOUDINARY_CLOUD_NAME=your_cloud_name
+   CLOUDINARY_API_KEY=your_api_key
+   CLOUDINARY_API_SECRET=your_api_secret
+   
+   # SMTP Configuration
+   SMTP_HOST=your_smtp_host
+   SMTP_PORT=587
+   SMTP_USER=your_email@example.com
+   SMTP_PASS=your_email_password
+   SMTP_FROM=your_email@example.com
+   
+   # Application
+   NUXT_SECRET_KEY=your_secret_key_for_sessions
+   BASE_URL=http://localhost:3000
+   ```
+
+4. **Database Setup**
+   ```bash
+   # Generate Prisma client
+   npx prisma generate
+   
+   # Run database migrations
+   npx prisma db push
+   
+   # (Optional) Seed initial data
+   npx prisma db seed
+   ```
+
+5. **Development Server**
+   ```bash
+   yarn run dev
+   ```
+
+   The application will be available at `http://localhost:3000`
+
+## 🚀 Production Deployment
+
+1. **Build the application**
+   ```bash
+   yarn run build
+   ```
+
+2. **Start production server**
+   ```bash
+   yarn run start
+   ```
+
+3. **Environment Variables**
+   
+   Ensure all production environment variables are properly configured:
+   - Update `BASE_URL` to your production domain
+   - Use production database credentials
+   - Configure production SMTP settings
+   - Set secure `NUXT_SECRET_KEY`
+
+## 📁 Project Structure
+
+```
+rt-management-system/
+├── prisma/
+│   ├── schema.prisma          # Database schema
+│   └── migrations/            # Database migrations
+├── server/
+│   └── api/                   # Nuxt server API routes
+├── pages/                     # Application pages
+├── components/                # Vue components
+├── composables/               # Vue composables
+├── middleware/                # Route middleware
+├── types/                     # TypeScript type definitions
+├── utils/                     # Utility functions
+└── public/                    # Static assets
+```
+
+## 🔧 Configuration
+
+### Database Configuration
+The application uses Prisma as the ORM. Configure your database connection in the `.env` file and run migrations to set up the schema.
+
+### Cloudinary Setup
+1. Create a Cloudinary account
+2. Get your cloud name, API key, and API secret
+3. Configure folder structure for organized file storage
+
+### SMTP Configuration
+Configure your email service provider settings for sending announcements and notifications.
+
+## 👤 Default Admin Setup
+
+After initial setup, create a super admin user through the database or create a seeding script:
+
+```sql
+INSERT INTO users (id, email, password, name, role) 
+VALUES ('admin123', 'admin@rt.local', 'hashed_password', 'Super Admin', 'SUPER_ADMIN');
+```
+
+## 📚 API Documentation
+
+### Authentication Endpoints
+```
+POST   /api/auth/login           # User login
+POST   /api/auth/logout          # User logout
+POST   /api/auth/register        # User registration
+GET    /api/auth/me              # Get current user
+POST   /api/auth/refresh         # Refresh session
+POST   /api/auth/forgot-password # Password reset request
+POST   /api/auth/reset-password  # Reset password
+```
+
+### User Management
+```
+GET    /api/users                # Get all users
+GET    /api/users/:id            # Get user by ID
+POST   /api/users                # Create new user
+PUT    /api/users/:id            # Update user
+DELETE /api/users/:id            # Delete user
+GET    /api/users/profile/:id    # Get user profile
+PUT    /api/users/profile/:id    # Update user profile
+POST   /api/users/avatar/:id     # Upload user avatar
+DELETE /api/users/avatar/:id     # Delete user avatar
+```
+
+### Citizen Management (Warga)
+```
+GET    /api/warga                # Get all citizens
+GET    /api/warga/:id            # Get citizen by ID
+POST   /api/warga                # Create new citizen
+PUT    /api/warga/:id            # Update citizen
+DELETE /api/warga/:id            # Delete citizen
+GET    /api/warga/search         # Search citizens
+GET    /api/warga/by-nik/:nik    # Get citizen by NIK
+GET    /api/warga/by-kk/:noKk    # Get citizens by KK number
+POST   /api/warga/import         # Import citizens from CSV/Excel
+GET    /api/warga/export         # Export citizens data
+```
+
+### Family Management
+```
+GET    /api/families             # Get all families
+GET    /api/families/:id         # Get family by ID
+POST   /api/families             # Create new family
+PUT    /api/families/:id         # Update family
+DELETE /api/families/:id         # Delete family
+GET    /api/families/by-kk/:noKk # Get family by KK number
+POST   /api/families/:id/members # Add family member
+DELETE /api/families/:id/members/:memberId # Remove family member
+PUT    /api/families/:id/head/:memberId    # Set family head
+```
+
+### Document Management
+```
+GET    /api/documents            # Get all documents
+GET    /api/documents/:id        # Get document by ID
+POST   /api/documents            # Create new document
+PUT    /api/documents/:id        # Update document
+DELETE /api/documents/:id        # Delete document
+GET    /api/documents/by-warga/:wargaId # Get documents by citizen
+POST   /api/documents/:id/approve     # Approve document
+POST   /api/documents/:id/reject      # Reject document
+GET    /api/documents/:id/download    # Download document
+POST   /api/documents/generate        # Generate document from template
+GET    /api/documents/archive         # Get archived documents
+POST   /api/documents/:id/archive     # Archive document
+```
+
+### Document Templates
+```
+GET    /api/document-templates    # Get all templates
+GET    /api/document-templates/:id # Get template by ID
+POST   /api/document-templates    # Create new template
+PUT    /api/document-templates/:id # Update template
+DELETE /api/document-templates/:id # Delete template
+POST   /api/document-templates/:id/preview # Preview template
+```
+
+### Financial Management
+```
+GET    /api/transactions         # Get all transactions
+GET    /api/transactions/:id     # Get transaction by ID
+POST   /api/transactions         # Create new transaction
+PUT    /api/transactions/:id     # Update transaction
+DELETE /api/transactions/:id     # Delete transaction
+POST   /api/transactions/:id/verify   # Verify transaction
+POST   /api/transactions/:id/proof    # Upload transaction proof
+GET    /api/transactions/summary      # Get financial summary
+GET    /api/transactions/report       # Get financial report
+```
+
+### Budget Management
+```
+GET    /api/budgets              # Get all budgets
+GET    /api/budgets/:id          # Get budget by ID
+POST   /api/budgets              # Create new budget
+PUT    /api/budgets/:id          # Update budget
+DELETE /api/budgets/:id          # Delete budget
+GET    /api/budgets/year/:year   # Get budget by year
+GET    /api/budgets/:id/items    # Get budget items
+POST   /api/budgets/:id/items    # Add budget item
+PUT    /api/budgets/:id/items/:itemId # Update budget item
+DELETE /api/budgets/:id/items/:itemId # Delete budget item
+```
+
+### Payment Management
+```
+GET    /api/payments             # Get all payments
+GET    /api/payments/:id         # Get payment by ID
+POST   /api/payments             # Create new payment
+PUT    /api/payments/:id         # Update payment
+DELETE /api/payments/:id         # Delete payment
+GET    /api/payments/by-warga/:wargaId # Get payments by citizen
+POST   /api/payments/:id/pay          # Process payment
+POST   /api/payments/:id/verify       # Verify payment
+POST   /api/payments/:id/proof        # Upload payment proof
+GET    /api/payments/overdue          # Get overdue payments
+GET    /api/payments/monthly-report   # Get monthly payment report
+```
+
+### Announcement Management
+```
+GET    /api/announcements        # Get all announcements
+GET    /api/announcements/:id    # Get announcement by ID
+POST   /api/announcements        # Create new announcement
+PUT    /api/announcements/:id    # Update announcement
+DELETE /api/announcements/:id    # Delete announcement
+POST   /api/announcements/:id/publish   # Publish announcement
+GET    /api/announcements/published     # Get published announcements
+POST   /api/announcements/:id/read      # Mark as read
+GET    /api/announcements/unread        # Get unread announcements
+```
+
+### Email Campaign Management
+```
+GET    /api/email-campaigns      # Get all campaigns
+GET    /api/email-campaigns/:id  # Get campaign by ID
+POST   /api/email-campaigns      # Create new campaign
+PUT    /api/email-campaigns/:id  # Update campaign
+DELETE /api/email-campaigns/:id  # Delete campaign
+POST   /api/email-campaigns/:id/send     # Send campaign
+GET    /api/email-campaigns/:id/stats    # Get campaign statistics
+GET    /api/email-campaigns/:id/emails   # Get campaign emails
+```
+
+### Email Template Management
+```
+GET    /api/email-templates      # Get all email templates
+GET    /api/email-templates/:id  # Get template by ID
+POST   /api/email-templates      # Create new template
+PUT    /api/email-templates/:id  # Update template
+DELETE /api/email-templates/:id  # Delete template
+POST   /api/email-templates/:id/preview # Preview template
+```
+
+### File Management
+```
+POST   /api/files/upload         # Upload file to Cloudinary
+GET    /api/files                # Get all file uploads
+GET    /api/files/:id            # Get file by ID
+DELETE /api/files/:id            # Delete file
+POST   /api/files/upload-avatar  # Upload user avatar
+POST   /api/files/upload-proof   # Upload transaction/payment proof
+POST   /api/files/upload-document # Upload document file
+GET    /api/files/by-folder/:folder # Get files by folder
+```
+
+### RT Profile & Settings
+```
+GET    /api/rt-profile           # Get RT profile
+PUT    /api/rt-profile           # Update RT profile
+POST   /api/rt-profile/logo      # Upload RT logo
+GET    /api/rt-settings          # Get RT settings
+PUT    /api/rt-settings/:key     # Update RT setting
+POST   /api/rt-settings          # Create new setting
+DELETE /api/rt-settings/:key     # Delete setting
+```
+
+### System Management
+```
+GET    /api/system/settings      # Get system settings
+PUT    /api/system/settings/:key # Update system setting
+GET    /api/system/backups       # Get all backups
+POST   /api/system/backups       # Create new backup
+GET    /api/system/backups/:id   # Get backup by ID
+DELETE /api/system/backups/:id   # Delete backup
+POST   /api/system/restore/:id   # Restore from backup
+```
+
+### Activity Logs
+```
+GET    /api/activity-logs        # Get all activity logs
+GET    /api/activity-logs/:userId # Get logs by user
+POST   /api/activity-logs        # Create activity log
+DELETE /api/activity-logs/:id    # Delete activity log
+GET    /api/activity-logs/export # Export activity logs
+```
+
+### Scheduled Jobs
+```
+GET    /api/scheduled-jobs       # Get all scheduled jobs
+GET    /api/scheduled-jobs/:id   # Get job by ID
+POST   /api/scheduled-jobs       # Create new job
+PUT    /api/scheduled-jobs/:id   # Update job
+DELETE /api/scheduled-jobs/:id   # Delete job
+POST   /api/scheduled-jobs/:id/run # Run job manually
+GET    /api/scheduled-jobs/:id/logs # Get job execution logs
+```
+
+### Reports & Analytics
+```
+GET    /api/reports/dashboard    # Get dashboard statistics
+GET    /api/reports/financial    # Get financial reports
+GET    /api/reports/citizens     # Get citizen reports
+GET    /api/reports/documents    # Get document reports
+GET    /api/reports/payments     # Get payment reports
+GET    /api/reports/export/:type # Export reports (PDF/Excel)
+```
+
+### Query Parameters
+Most GET endpoints support the following query parameters:
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 10)
+- `sort`: Sort field (e.g., 'createdAt', 'name')
+- `order`: Sort order ('asc' or 'desc')
+- `search`: Search term
+- `filter`: Filter criteria (JSON string)
+- `include`: Include related data
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue in the GitHub repository
+- Contact the development team
+- Check the documentation wiki
+
+## 🎯 Roadmap
+
+- [ ] Mobile application (React Native/Flutter)
+- [ ] WhatsApp integration for notifications
+- [ ] Advanced reporting and analytics
+- [ ] Multi-RT support for RW management
+- [ ] Integration with government systems
+- [ ] Real-time notifications
+- [ ] Advanced document workflow
+- [ ] Payment gateway integration
+
+## 🔒 Security
+
+- Session-based authentication
+- Role-based access control
+- Input validation and sanitization
+- File upload security with Cloudinary
+- Activity logging and audit trails
+- Secure password hashing
 
 ---
-
-## **🎨 FRONTEND TASKS**
-
-### **👨‍💻 FRONTEND DEVELOPER 1**
-**Focus: Setup, Admin Dashboard & Warga Management**
-
-#### **🔧 Initial Setup Wizard**
-- **rt_profile_setup_form** - Setup RT profile (rt_number, rw_number, location)
-- **leadership_setup_form** - Input ketua, sekretaris, bendahara
-- **contact_setup_form** - Phone, email RT
-- **settings_setup_form** - Basic RT settings (timezone, currency)
-- **setup_completion_page** - Welcome page dengan overview
-- **setup_progress_indicator** - Progress steps dengan validation
-
-#### **🏠 Admin Dashboard (Based on RtProfile)**
-- **admin_main_dashboard** - Dashboard dengan statistics cards
-- **rt_profile_management** - View/edit RT profile info
-- **rt_settings_page** - Manage email settings, payment settings, document settings
-- **statistics_overview** - Total warga, families, pending documents, kas
-- **activity_timeline** - Real-time activity logs dari ActivityLog model
-- **quick_actions_panel** - Quick access ke fungsi utama
-
-#### **👥 Warga & Family Management (Sesuai Schema)**
-- **warga_list_page** - Table dengan filter by status, gender, family
-- **warga_create_form** - Form sesuai Warga model (NIK, personal info, contact)
-- **warga_detail_page** - Detail view dengan tabs (info, family, documents, payments)
-- **warga_edit_form** - Edit form dengan validation NIK unique
-- **warga_search_component** - Search dengan fulltext pada full_name
-- **family_management_page** - Manage families berdasarkan Family model
-- **family_tree_visualization** - Visual family relationships
-- **warga_status_management** - Update status (ACTIVE, MOVED, DECEASED)
-- **bulk_warga_operations** - Import/export warga data
-
-#### **💰 Financial Management (Transaction & Budget)**
-- **transaction_list_page** - List berdasarkan TransactionCategory
-- **transaction_create_form** - Form input dengan category selection
-- **transaction_detail_modal** - Detail dengan receipt preview
-- **budget_management_page** - Budget vs actual tracking
-- **financial_dashboard** - Charts untuk income/expense analysis
-- **transaction_category_management** - CRUD categories dengan color coding
-- **financial_reports_generator** - Generate laporan periode tertentu
-
-#### **📊 Charts & Analytics**
-- **financial_overview_charts** - Chart.js untuk cash flow
-- **warga_demographics_charts** - Gender, age distribution
-- **payment_collection_charts** - Iuran collection rate
-- **monthly_summary_charts** - Monthly income/expense trends
-
----
-
-### **👨‍💻 FRONTEND DEVELOPER 2**
-**Focus: User Interface, Documents & Communication**
-
-#### **🔐 Authentication System (Single Tenant)**
-- **login_page** - Login dengan role-based redirect
-- **setup_check_middleware** - Redirect ke setup jika RT belum setup
-- **role_based_navigation** - Navigation sesuai UserRole
-- **user_profile_management** - Edit user profile
-- **password_change_form** - Change password dengan validation
-
-#### **👤 User Dashboard (Untuk Warga)**
-- **warga_dashboard** - Dashboard untuk role WARGA
-- **personal_info_view** - View info pribadi dari Warga model
-- **family_info_display** - Info keluarga berdasarkan Family relationship
-- **document_request_interface** - Request surat dengan DocumentType enum
-- **payment_history_view** - Riwayat payments
-- **announcement_viewer** - View pengumuman untuk warga
-
-#### **📄 Document Management (Sesuai DocumentType Enum)**
-- **document_request_form** - Form request dengan DocumentType selection
-- **document_list_admin** - List untuk admin dengan DocumentStatus filter
-- **document_approval_interface** - Approve/reject dengan approval_notes
-- **document_template_manager** - Manage DocumentTemplate
-- **pdf_generation_preview** - Preview generated document
-- **digital_signature_canvas** - Signature pad untuk document signing
-- **document_numbering_display** - Display document_number generation
-- **document_history_tracking** - Track document status changes
-
-#### **📢 Announcement System (Sesuai AnnouncementTargetType)**
-- **announcement_create_form** - Form dengan AnnouncementTargetType selection
-- **announcement_list_page** - List dengan AnnouncementStatus filter
-- **announcement_editor** - WYSIWYG editor untuk content_html
-- **recipient_selector_component** - Select berdasarkan target_type
-- **email_analytics_dashboard** - Email delivery statistics
-- **announcement_preview_modal** - Preview sebelum send
-- **email_log_viewer** - View EmailLog untuk tracking
-
-#### **💳 Iuran & Payment System**
-- **iuran_create_form** - Form dengan category dan amount
-- **iuran_list_management** - List dengan IuranStatus filter
-- **payment_interface** - Interface untuk warga bayar iuran
-- **payment_proof_upload** - Upload bukti pembayaran
-- **payment_verification_admin** - Admin verify payments
-- **payment_method_selector** - Select PaymentMethod (QRIS, BANK, CASH)
-- **payment_dashboard** - Collection dashboard dengan analytics
-- **qris_code_display** - Display static QRIS dari settings
-
-#### **🔄 Shared Components**
-- **role_aware_navigation** - Navigation berdasarkan UserRole
-- **notification_system** - Toast notifications
-- **file_upload_component** - File upload dengan validation
-- **data_table_component** - Reusable table dengan sorting/filtering
-- **modal_dialogs** - Reusable modals
-- **form_validation_components** - Validation dengan Prisma schema rules
-
----
-
-## **⚙️ BACKEND TASKS**
-
-### **👨‍💻 BACKEND DEVELOPER 1**
-**Focus: Core System, Setup & Warga Management**
-
-#### **🔧 Initial Setup System**
-- **rt_profile_controller** - CRUD untuk RtProfile model
-- **rt_settings_controller** - Manage RtSettings (email, payment, document)
-- **setup_wizard_service** - Handle setup completion flow
-- **initial_data_seeder** - Seed default categories, templates
-- **setup_validation_service** - Validate setup completion
-
-#### **🔐 Authentication & User Management**
-- **auth_controller** - Login/logout dengan role checking
-- **user_management_controller** - CRUD users sesuai UserRole enum
-- **role_permission_middleware** - Check permissions berdasarkan role
-- **session_management** - Handle user sessions
-- **security_middleware** - CSRF, rate limiting
-- **activity_log_service** - Log ke ActivityLog model
-
-#### **👥 Warga & Family Management API**
-- **warga_controller** - CRUD sesuai Warga model
-- **warga_search_service** - Implement fulltext search pada full_name
-- **family_controller** - CRUD Family dengan family relationships
-- **warga_validation_service** - Validate NIK uniqueness, data integrity
-- **bulk_operations_service** - Import/export warga
-- **warga_status_service** - Handle status changes (ACTIVE, MOVED, etc)
-- **family_relationship_service** - Manage FamilyRelation enum
-
-#### **💰 Financial System API**
-- **transaction_controller** - CRUD Transaction dengan TransactionCategory
-- **transaction_category_controller** - Manage categories
-- **budget_controller** - CRUD Budget model
-- **financial_calculation_service** - Calculate totals, balances
-- **financial_reports_service** - Generate reports by period
-- **audit_trail_service** - Financial audit logging
-
-#### **📊 Analytics & Reports**
-- **dashboard_analytics_service** - Generate dashboard statistics
-- **financial_analytics_service** - Financial charts data
-- **warga_analytics_service** - Demographics analysis
-- **report_generator_service** - PDF/Excel report generation
-
----
-
-### **👨‍💻 BACKEND DEVELOPER 2**
-**Focus: Communication, Documents & Payment Systems**
-
-#### **📧 Email Management System**
-- **email_service** - Send emails menggunakan RtSettings SMTP
-- **email_queue_service** - Queue system untuk bulk emails
-- **email_template_service** - Process AnnouncementTemplate
-- **email_tracking_service** - Update EmailLog status
-- **email_bounce_handler** - Handle bounced emails
-- **email_analytics_service** - Email statistics
-
-#### **📢 Announcement System API**
-- **announcement_controller** - CRUD Announcement
-- **announcement_service** - Business logic untuk sending
-- **recipient_resolver_service** - Resolve recipients berdasarkan AnnouncementTargetType
-- **announcement_recipient_service** - Manage AnnouncementRecipient
-- **scheduled_announcement_service** - Handle scheduled sending
-- **email_personalization_service** - Personalize content per recipient
-
-#### **📄 Document Management System**
-- **document_controller** - CRUD Document sesuai DocumentType
-- **document_workflow_service** - Handle DocumentStatus workflow
-- **pdf_generation_service** - Generate PDF dari DocumentTemplate
-- **document_template_controller** - CRUD DocumentTemplate
-- **digital_signature_service** - Handle signature_data
-- **document_numbering_service** - Auto-generate document_number using DocumentCounter
-- **document_archive_service** - Archive completed documents
-
-#### **💳 Iuran & Payment System**
-- **iuran_controller** - CRUD Iuran dengan IuranStatus
-- **payment_controller** - Handle Payment dengan PaymentMethod
-- **payment_verification_service** - Verify uploaded payment proofs
-- **payment_tracking_service** - Track PaymentStatus
-- **iuran_generation_service** - Auto-generate monthly iuran
-- **payment_reminder_service** - Send payment reminders
-- **collection_analytics_service** - Payment collection analytics
-- **qris_management_service** - Handle QRIS dari RtSettings
-
-#### **🔗 Integration & Utilities**
-- **file_upload_service** - Handle FileUpload model
-- **file_validation_service** - Validate uploaded files
-- **image_processing_service** - Process images (compress, resize)
-- **system_settings_service** - Manage SystemSetting model
-- **backup_service** - Database backup functionality
-- **health_check_service** - System health monitoring
-- **job_scheduler_service** - Background job processing
-
----
-
-## **🔄 APPLICATION FLOW**
-
-### **Initial Setup Flow:**
-1. **Check Setup Status** - Check RtProfile.is_setup_completed
-2. **Setup Wizard** - Complete RT profile, settings, admin user
-3. **Mark Complete** - Set is_setup_completed = true
-4. **Redirect to Login** - Normal application flow
-
-### **Authentication Flow:**
-1. **Login** - Standard login dengan User model
-2. **Role Check** - Redirect berdasarkan UserRole
-3. **Session Management** - Maintain user session
-4. **Activity Logging** - Log ke ActivityLog model
-
-### **User Role Access:**
-- **KETUA_RT** - Full access ke semua fitur
-- **SEKRETARIS** - Documents, announcements, warga management
-- **BENDAHARA** - Financial, payments, transactions
-- **STAFF** - Limited access sesuai assignment
-- **WARGA** - View personal info, request documents, pay iuran
-
-### **Key Features Per Schema:**
-- **Multi-document Types** - 9 jenis surat sesuai DocumentType enum
-- **Family Management** - Complete family relationships
-- **Financial Tracking** - Income/expense dengan categories
-- **Payment Methods** - QRIS, Bank Transfer, Cash
-- **Email System** - Announcements dengan tracking
-- **Digital Signatures** - Document signing capability
-- **Audit Trail** - Complete activity logging

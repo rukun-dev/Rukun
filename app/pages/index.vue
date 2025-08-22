@@ -1,12 +1,12 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+  <div class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100">
     <!-- Header Navigation -->
     <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
       <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center space-x-2">
             <div
-                class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
               <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
@@ -19,18 +19,22 @@
           </div>
 
           <div class="hidden md:flex items-center space-x-8">
-            <a href="#features" class="text-gray-600 hover:text-blue-600 transition-colors">Fitur</a>
-            <a href="#benefits" class="text-gray-600 hover:text-blue-600 transition-colors">Keunggulan</a>
-            <a href="#pricing" class="text-gray-600 hover:text-blue-600 transition-colors">Harga</a>
-            <a href="#contact" class="text-gray-600 hover:text-blue-600 transition-colors">Kontak</a>
+            <a href="#features" class="text-gray-600 hover:text-orange-600 transition-colors">Fitur</a>
+            <a href="#benefits" class="text-gray-600 hover:text-orange-600 transition-colors">Keunggulan</a>
+            <a href="#pricing" class="text-gray-600 hover:text-orange-600 transition-colors">Harga</a>
+            <a href="#contact" class="text-gray-600 hover:text-orange-600 transition-colors">Kontak</a>
           </div>
 
           <div class="flex items-center space-x-4">
-            <Button variant="ghost" size="sm">Masuk</Button>
-            <Button size="sm"
-                    class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-              Demo Gratis
-            </Button>
+            <NuxtLink to="/login">
+              <Button variant="ghost" size="sm">Masuk</Button>
+            </NuxtLink>
+            <NuxtLink to="/login">
+              <Button size="sm"
+                      class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                Demo Gratis
+              </Button>
+            </NuxtLink>
           </div>
         </div>
       </nav>
@@ -38,17 +42,17 @@
 
     <!-- Hero Section -->
     <section class="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-indigo-600/5"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-orange-600/5"></div>
       <div class="max-w-7xl mx-auto relative">
         <div class="grid lg:grid-cols-2 gap-12 items-center">
           <div class="text-center lg:text-left">
-            <Badge variant="secondary" class="mb-4 bg-blue-100 text-blue-800 hover:bg-blue-200">
+            <Badge variant="secondary" class="mb-4 bg-orange-100 text-orange-800 hover:bg-orange-200">
               🚀 Platform Digital RT Terdepan
             </Badge>
             <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
               Modernisasi
               <span
-                  class="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Administrasi RT</span>
+                  class="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent"> Administrasi RT</span>
               Anda
             </h1>
             <p class="text-xl text-gray-600 mb-8 leading-relaxed">
@@ -56,14 +60,16 @@
               efisien. Tinggalkan cara manual, beralih ke digital!
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button size="lg"
-                      class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 h-12 px-8">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Coba Demo Sekarang
-              </Button>
+              <NuxtLink to="/login">
+                <Button size="lg"
+                        class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 h-12 px-8">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Coba Demo Sekarang
+                </Button>
+              </NuxtLink>
               <Button variant="outline" size="lg" class="h-12 px-8 border-2">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -76,11 +82,11 @@
             <!-- Stats -->
             <div class="flex flex-wrap gap-8 mt-12 justify-center lg:justify-start">
               <div class="text-center">
-                <div class="text-3xl font-bold text-blue-600">500+</div>
+                <div class="text-3xl font-bold text-orange-600">500+</div>
                 <div class="text-sm text-gray-600">RT Pengguna</div>
               </div>
               <div class="text-center">
-                <div class="text-3xl font-bold text-indigo-600">50K+</div>
+                <div class="text-3xl font-bold text-orange-600">50K+</div>
                 <div class="text-sm text-gray-600">Data Warga</div>
               </div>
               <div class="text-center">
@@ -92,7 +98,7 @@
 
           <div class="relative">
             <div
-                class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-8 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-8 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
               <div class="bg-white rounded-lg p-6 space-y-4">
                 <div class="flex items-center space-x-3">
                   <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -110,16 +116,16 @@
                 <div class="bg-gray-50 rounded-lg p-4">
                   <div class="flex justify-between items-center mb-2">
                     <span class="text-sm font-medium text-gray-700">Progress Pendataan</span>
-                    <span class="text-sm text-blue-600 font-semibold">85%</span>
+                    <span class="text-sm text-orange-600 font-semibold">85%</span>
                   </div>
                   <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full w-[85%]"></div>
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full w-[85%]"></div>
                   </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 text-center">
-                  <div class="bg-blue-50 rounded-lg p-3">
-                    <div class="text-lg font-bold text-blue-600">324</div>
+                  <div class="bg-orange-50 rounded-lg p-3">
+                    <div class="text-lg font-bold text-orange-600">324</div>
                     <div class="text-xs text-gray-600">Dokumen Diproses</div>
                   </div>
                   <div class="bg-green-50 rounded-lg p-3">
@@ -150,10 +156,10 @@
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           <!-- Feature Cards -->
           <Card
-              class="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-blue-50 to-indigo-50">
+              class="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-orange-50 to-orange-100">
             <CardContent class="p-6">
               <div
-                  class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -234,10 +240,10 @@
           </Card>
 
           <Card
-              class="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-cyan-50 to-blue-50">
+              class="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-orange-50 to-orange-100">
             <CardContent class="p-6">
               <div
-                  class="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -279,7 +285,7 @@
     </section>
 
     <!-- Benefits Section -->
-    <section id="benefits" class="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-blue-50">
+    <section id="benefits" class="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-orange-50">
       <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16">
           <Badge variant="secondary" class="mb-4">🎯 Keunggulan Sistem</Badge>
@@ -310,7 +316,7 @@
 
             <div class="flex items-start space-x-4">
               <div
-                  class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                  class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
@@ -359,7 +365,7 @@
                 class="bg-white rounded-2xl shadow-2xl p-8 transform hover:scale-105 transition-transform duration-500">
               <div class="text-center mb-6">
                 <div
-                    class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -378,9 +384,9 @@
                   <span class="text-sm font-medium text-gray-700">Migrasi Data</span>
                   <span class="text-sm text-green-600 font-semibold">✓ Selesai</span>
                 </div>
-                <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                <div class="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
                   <span class="text-sm font-medium text-gray-700">Go Live</span>
-                  <span class="text-sm text-blue-600 font-semibold">🚀 Aktif</span>
+                  <span class="text-sm text-orange-600 font-semibold">🚀 Aktif</span>
                 </div>
               </div>
 
@@ -418,7 +424,7 @@
 
         <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <!-- Starter Plan -->
-          <Card class="relative border-2 border-gray-200 hover:border-blue-300 transition-colors">
+          <Card class="relative border-2 border-gray-200 hover:border-orange-300 transition-colors">
             <CardContent class="p-8 text-center">
               <h3 class="text-2xl font-bold text-gray-900 mb-2">Starter</h3>
               <p class="text-gray-600 mb-6">Perfect untuk RT kecil dengan kebutuhan dasar</p>
@@ -452,22 +458,24 @@
                   Email support
                 </li>
               </ul>
-              <Button variant="outline" size="lg" class="w-full">
-                Mulai Gratis
-              </Button>
+              <NuxtLink to="/login">
+                <Button variant="outline" size="lg" class="w-full">
+                  Mulai Gratis
+                </Button>
+              </NuxtLink>
             </CardContent>
           </Card>
 
           <!-- Professional Plan -->
-          <Card class="relative border-2 border-blue-500 hover:border-blue-600 transition-colors transform scale-105">
+          <Card class="relative border-2 border-orange-500 hover:border-orange-600 transition-colors transform scale-105">
             <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <Badge class="bg-blue-500 text-white">Paling Populer</Badge>
+              <Badge class="bg-orange-500 text-white">Paling Populer</Badge>
             </div>
             <CardContent class="p-8 text-center">
               <h3 class="text-2xl font-bold text-gray-900 mb-2">Professional</h3>
               <p class="text-gray-600 mb-6">Ideal untuk RT dengan kebutuhan lengkap</p>
               <div class="mb-8">
-                <span class="text-4xl font-bold text-blue-600">299K</span>
+                <span class="text-4xl font-bold text-orange-600">299K</span>
                 <span class="text-gray-600">/bulan</span>
               </div>
               <ul class="space-y-3 mb-8 text-left">
@@ -508,10 +516,12 @@
                   Priority support
                 </li>
               </ul>
-              <Button size="lg"
-                      class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                Pilih Professional
-              </Button>
+              <NuxtLink to="/login">
+                <Button size="lg"
+                        class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                  Pilih Professional
+                </Button>
+              </NuxtLink>
             </CardContent>
           </Card>
 
@@ -556,9 +566,11 @@
                   Dedicated support
                 </li>
               </ul>
-              <Button variant="outline" size="lg" class="w-full border-purple-500 text-purple-600 hover:bg-purple-50">
-                Hubungi Sales
-              </Button>
+              <NuxtLink to="/login">
+                <Button variant="outline" size="lg" class="w-full border-purple-500 text-purple-600 hover:bg-purple-50">
+                  Hubungi Sales
+                </Button>
+              </NuxtLink>
             </CardContent>
           </Card>
         </div>
@@ -577,7 +589,7 @@
     </section>
 
     <!-- Testimonials Section -->
-    <section class="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-indigo-50">
+    <section class="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-50 to-orange-100">
       <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16">
           <Badge variant="secondary" class="mb-4">💬 Testimoni</Badge>
@@ -603,7 +615,7 @@
               </p>
               <div class="flex items-center">
                 <div
-                    class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold">
+                    class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-semibold">
                   BS
                 </div>
                 <div class="ml-3">
@@ -666,34 +678,38 @@
     </section>
 
     <!-- CTA Section -->
-    <section class="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-indigo-600">
+    <section class="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-orange-500 to-orange-600">
       <div class="max-w-4xl mx-auto text-center">
         <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">
           Siap Modernisasi RT Anda?
         </h2>
-        <p class="text-xl text-blue-100 mb-8">
+        <p class="text-xl text-orange-100 mb-8">
           Bergabung dengan 500+ RT yang sudah merasakan kemudahan sistem digital.
           Mulai gratis hari ini dan rasakan perbedaannya!
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Button size="lg" class="bg-white text-blue-600 hover:bg-gray-100 h-12 px-8">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            Mulai Trial Gratis 30 Hari
-          </Button>
-          <Button variant="outline" size="lg"
-                  class="border-white text-white bg-blue-600 hover:bg-white hover:text-blue-600 h-12 px-8">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-            </svg>
-            Konsultasi Gratis
-          </Button>
+          <NuxtLink to="/login">
+            <Button size="lg" class="bg-white text-orange-600 hover:bg-gray-100 h-12 px-8">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Mulai Trial Gratis 30 Hari
+            </Button>
+          </NuxtLink>
+          <NuxtLink to="/login">
+            <Button variant="outline" size="lg"
+                    class="border-white text-white bg-orange-600 hover:bg-white hover:text-orange-600 h-12 px-8">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+              </svg>
+              Konsultasi Gratis
+            </Button>
+          </NuxtLink>
         </div>
 
-        <div class="flex flex-wrap justify-center items-center gap-8 mt-12 text-blue-100">
+        <div class="flex flex-wrap justify-center items-center gap-8 mt-12 text-orange-100">
           <div class="flex items-center space-x-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -723,7 +739,7 @@
           <div class="lg:col-span-2">
             <div class="flex items-center space-x-2 mb-4">
               <div
-                  class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                  class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
@@ -740,21 +756,21 @@
             </p>
             <div class="flex space-x-4">
               <a href="#"
-                 class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors">
+                 class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-orange-600 transition-colors">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path
                       d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
                 </svg>
               </a>
               <a href="#"
-                 class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors">
+                 class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-orange-600 transition-colors">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path
                       d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
                 </svg>
               </a>
               <a href="#"
-                 class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors">
+                 class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-orange-600 transition-colors">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path
                       d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.0019 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189Z"/>
@@ -839,8 +855,8 @@ interface Statistic {
 }
 
 const statistics: Statistic[] = [
-  {value: '500+', label: 'RT Pengguna', color: 'text-blue-600'},
-  {value: '50K+', label: 'Data Warga', color: 'text-indigo-600'},
+  {value: '500+', label: 'RT Pengguna', color: 'text-orange-600'},
+      {value: '50K+', label: 'Data Warga', color: 'text-orange-600'},
   {value: '99.9%', label: 'Uptime', color: 'text-purple-600'}
 ]
 
@@ -860,8 +876,8 @@ const features: Feature[] = [
     title: 'Manajemen Warga',
     description: 'Database lengkap warga dengan NIK, KK, hubungan keluarga, dan profil detail untuk pendataan yang akurat.',
     benefits: ['✓ Integrasi Kartu Keluarga (KK)', '✓ Pencarian berdasarkan NIK', '✓ Import/Export data Excel'],
-    gradient: 'from-blue-50 to-indigo-50',
-    iconBg: 'from-blue-500 to-indigo-500'
+    gradient: 'from-orange-50 to-orange-100',
+        iconBg: 'from-orange-500 to-orange-600'
   },
   {
     icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
@@ -919,7 +935,7 @@ const pricingPlans: PricingPlan[] = [
     popular: true,
     buttonText: 'Pilih Professional',
     buttonVariant: 'default',
-    priceColor: 'text-blue-600'
+    priceColor: 'text-orange-600'
   },
   {
     name: 'Enterprise',
@@ -958,7 +974,7 @@ const testimonials: Testimonial[] = [
     avatar: 'BS',
     rating: 5,
     comment: 'Luar biasa! Dulu butuh 2 jam untuk buat surat pengantar, sekarang cuma 5 menit. Warga juga senang karena proses lebih cepat dan transparan.',
-    avatarBg: 'from-blue-500 to-indigo-500'
+    avatarBg: 'from-orange-500 to-orange-600'
   },
   {
     name: 'Siti Wulandari',

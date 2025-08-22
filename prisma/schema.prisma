@@ -9,61 +9,61 @@ datasource db {
 
 // User Management & Authentication
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  password    String
-  name        String
-  phone       String?
+  id             String   @id @default(cuid())
+  email          String   @unique
+  password       String
+  name           String
+  phone          String?
   // Cloudinary Integration for Avatar
-  avatar      String?  // Cloudinary URL for avatar
+  avatar         String? // Cloudinary URL for avatar
   avatarPublicId String? // Cloudinary public_id for avatar
-  isActive    Boolean  @default(true)
-  role        Role     @default(WARGA)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  isActive       Boolean  @default(true)
+  role           Role     @default(WARGA)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
   // Relations
-  profile     UserProfile?
-  sessions    Session[]
-  activityLogs ActivityLog[]
-  createdWargas Warga[] @relation("CreatedBy")
-  families    Family[]
-  documents   Document[]
-  transactions Transaction[]
-  payments    Payment[]
-  announcements Announcement[]
+  profile        UserProfile?
+  sessions       Session[]
+  activityLogs   ActivityLog[]
+  createdWargas  Warga[]         @relation("CreatedBy")
+  families       Family[]
+  documents      Document[]
+  transactions   Transaction[]
+  payments       Payment[]
+  announcements  Announcement[]
   emailCampaigns EmailCampaign[]
-  
+
   @@map("users")
 }
 
 model UserProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  nik         String?  @unique
-  birthDate   DateTime?
-  birthPlace  String?
-  address     String?
-  job         String?
-  education   String?
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  nik           String?   @unique
+  birthDate     DateTime?
+  birthPlace    String?
+  address       String?
+  job           String?
+  education     String?
   maritalStatus String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("user_profiles")
 }
 
 model Session {
   id        String   @id @default(cuid())
   userId    String
-  token     String   @unique
+  token     String   @db.Text
   expiresAt DateTime
   createdAt DateTime @default(now())
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("sessions")
 }
 
@@ -75,29 +75,29 @@ model ActivityLog {
   ipAddress   String?
   userAgent   String?
   createdAt   DateTime @default(now())
-  
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("activity_logs")
 }
 
 // RT Settings
 model RtProfile {
-  id          String   @id @default(cuid())
-  rtNumber    String   @unique
-  rwNumber    String
-  kelurahan   String
-  kecamatan   String
-  kabupaten   String
-  provinsi    String
-  postalCode  String?
-  description String?
+  id           String   @id @default(cuid())
+  rtNumber     String   @unique
+  rwNumber     String
+  kelurahan    String
+  kecamatan    String
+  kabupaten    String
+  provinsi     String
+  postalCode   String?
+  description  String?
   // Cloudinary Integration for RT Logo
-  logo        String?  // Cloudinary URL for RT logo
+  logo         String? // Cloudinary URL for RT logo
   logoPublicId String? // Cloudinary public_id for logo
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   @@map("rt_profiles")
 }
 
@@ -108,17 +108,17 @@ model RtSettings {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@map("rt_settings")
 }
 
 // Warga (Citizens) Management
 model Warga {
-  id            String    @id @default(cuid())
-  nik           String    @unique
-  noKk          String    // Nomor Kartu Keluarga
+  id            String        @id @default(cuid())
+  nik           String        @unique
+  noKk          String // Nomor Kartu Keluarga
   name          String
-  email         String?   @unique
+  email         String?       @unique
   phone         String?
   birthDate     DateTime?
   birthPlace    String?
@@ -137,18 +137,18 @@ model Warga {
   postalCode    String?
   fatherName    String?
   motherName    String?
-  isActive      Boolean   @default(true)
+  isActive      Boolean       @default(true)
   createdById   String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
   // Relations
-  createdBy     User      @relation("CreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdBy     User           @relation("CreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   familyMembers FamilyMember[]
   documents     Document[]
   transactions  Transaction[]
   payments      Payment[]
-  
+
   @@map("wargas")
 }
 
@@ -169,24 +169,24 @@ model Family {
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  members     FamilyMember[]
-  
+
+  createdBy User           @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  members   FamilyMember[]
+
   @@map("families")
 }
 
 model FamilyMember {
-  id            String         @id @default(cuid())
-  familyId      String
-  wargaId       String
-  relationship  FamilyRelation @default(MEMBER)
-  isHeadFamily  Boolean        @default(false)
-  createdAt     DateTime       @default(now())
-  
-  family        Family         @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  warga         Warga          @relation(fields: [wargaId], references: [id], onDelete: Cascade)
-  
+  id           String         @id @default(cuid())
+  familyId     String
+  wargaId      String
+  relationship FamilyRelation @default(MEMBER)
+  isHeadFamily Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  warga  Warga  @relation(fields: [wargaId], references: [id], onDelete: Cascade)
+
   @@unique([familyId, wargaId])
   @@map("family_members")
 }
@@ -209,73 +209,73 @@ model Document {
   isArchived  Boolean        @default(false)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
-  
-  requester   User?          @relation(fields: [requesterId], references: [id], onDelete: SetNull)
-  warga       Warga?         @relation(fields: [wargaId], references: [id], onDelete: SetNull)
-  template    DocumentTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  workflow    DocumentWorkflow[]
-  
+
+  requester User?              @relation(fields: [requesterId], references: [id], onDelete: SetNull)
+  warga     Warga?             @relation(fields: [wargaId], references: [id], onDelete: SetNull)
+  template  DocumentTemplate?  @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  workflow  DocumentWorkflow[]
+
   @@map("documents")
 }
 
 model DocumentTemplate {
-  id          String   @id @default(cuid())
-  name        String
-  type        DocumentType
-  content     String
-  variables   String?  // JSON format
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  documents   Document[]
-  
+  id        String       @id @default(cuid())
+  name      String
+  type      DocumentType
+  content   String
+  variables String? // JSON format
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  documents Document[]
+
   @@map("document_templates")
 }
 
 model DocumentWorkflow {
-  id          String   @id @default(cuid())
-  documentId  String
-  step        Int
-  status      WorkflowStatus
-  approver    String?
-  notes       String?
-  createdAt   DateTime @default(now())
-  
-  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  
+  id         String         @id @default(cuid())
+  documentId String
+  step       Int
+  status     WorkflowStatus
+  approver   String?
+  notes      String?
+  createdAt  DateTime       @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
   @@map("document_workflows")
 }
 
 // Financial Management
 model Transaction {
-  id              String          @id @default(cuid())
-  type            TransactionType
-  category        String
-  amount          Decimal         @db.Decimal(15, 2)
-  description     String
-  date            DateTime
-  wargaId         String?
-  createdById     String
+  id            String          @id @default(cuid())
+  type          TransactionType
+  category      String
+  amount        Decimal         @db.Decimal(15, 2)
+  description   String
+  date          DateTime
+  wargaId       String?
+  createdById   String
   // Cloudinary Integration
-  proofUrl        String?         // Cloudinary URL untuk bukti transaksi
-  proofPublicId   String?         // Cloudinary public_id untuk delete/update
-  proofFileName   String?         // Nama file asli bukti
-  proofFileSize   Int?            // Ukuran file bukti
-  proofMimeType   String?         // Tipe MIME file bukti
-  proofWidth      Int?            // Lebar gambar (dari Cloudinary)
-  proofHeight     Int?            // Tinggi gambar (dari Cloudinary)
-  notes           String?         // Catatan tambahan
-  verifiedBy      String?         // User yang memverifikasi
-  verifiedAt      DateTime?       // Waktu verifikasi
-  isVerified      Boolean         @default(false)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  
-  warga           Warga?          @relation(fields: [wargaId], references: [id], onDelete: SetNull)
-  createdBy       User            @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  budgetItems     BudgetItem[]
-  
+  proofUrl      String? // Cloudinary URL untuk bukti transaksi
+  proofPublicId String? // Cloudinary public_id untuk delete/update
+  proofFileName String? // Nama file asli bukti
+  proofFileSize Int? // Ukuran file bukti
+  proofMimeType String? // Tipe MIME file bukti
+  proofWidth    Int? // Lebar gambar (dari Cloudinary)
+  proofHeight   Int? // Tinggi gambar (dari Cloudinary)
+  notes         String? // Catatan tambahan
+  verifiedBy    String? // User yang memverifikasi
+  verifiedAt    DateTime? // Waktu verifikasi
+  isVerified    Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  warga       Warga?       @relation(fields: [wargaId], references: [id], onDelete: SetNull)
+  createdBy   User         @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  budgetItems BudgetItem[]
+
   @@map("transactions")
 }
 
@@ -288,95 +288,95 @@ model Budget {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  items       BudgetItem[]
-  
+
+  items BudgetItem[]
+
   @@unique([year, name])
   @@map("budgets")
 }
 
 model BudgetItem {
-  id            String      @id @default(cuid())
+  id            String   @id @default(cuid())
   budgetId      String
   transactionId String?
   category      String
-  plannedAmount Decimal     @db.Decimal(15, 2)
-  actualAmount  Decimal?    @db.Decimal(15, 2)
+  plannedAmount Decimal  @db.Decimal(15, 2)
+  actualAmount  Decimal? @db.Decimal(15, 2)
   description   String?
-  
-  budget        Budget      @relation(fields: [budgetId], references: [id], onDelete: Cascade)
-  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
-  
+
+  budget      Budget       @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  transaction Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
   @@map("budget_items")
 }
 
 model Payment {
-  id              String        @id @default(cuid())
-  type            PaymentType
-  amount          Decimal       @db.Decimal(15, 2)
-  description     String
-  dueDate         DateTime
-  paidDate        DateTime?
-  status          PaymentStatus @default(PENDING)
-  wargaId         String
-  createdById     String
+  id            String        @id @default(cuid())
+  type          PaymentType
+  amount        Decimal       @db.Decimal(15, 2)
+  description   String
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        PaymentStatus @default(PENDING)
+  wargaId       String
+  createdById   String
   // Cloudinary Integration
-  proofUrl        String?       // Cloudinary URL untuk bukti pembayaran
-  proofPublicId   String?       // Cloudinary public_id untuk delete/update
-  proofFileName   String?       // Nama file asli bukti  
-  proofFileSize   Int?          // Ukuran file bukti
-  proofMimeType   String?       // Tipe MIME file bukti
-  proofWidth      Int?          // Lebar gambar (dari Cloudinary)
-  proofHeight     Int?          // Tinggi gambar (dari Cloudinary)
-  notes           String?       // Catatan tambahan
-  verifiedBy      String?       // User yang memverifikasi pembayaran
-  verifiedAt      DateTime?     // Waktu verifikasi
-  isVerified      Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  warga           Warga         @relation(fields: [wargaId], references: [id], onDelete: Restrict)
-  createdBy       User          @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  
+  proofUrl      String? // Cloudinary URL untuk bukti pembayaran
+  proofPublicId String? // Cloudinary public_id untuk delete/update
+  proofFileName String? // Nama file asli bukti  
+  proofFileSize Int? // Ukuran file bukti
+  proofMimeType String? // Tipe MIME file bukti
+  proofWidth    Int? // Lebar gambar (dari Cloudinary)
+  proofHeight   Int? // Tinggi gambar (dari Cloudinary)
+  notes         String? // Catatan tambahan
+  verifiedBy    String? // User yang memverifikasi pembayaran
+  verifiedAt    DateTime? // Waktu verifikasi
+  isVerified    Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  warga     Warga @relation(fields: [wargaId], references: [id], onDelete: Restrict)
+  createdBy User  @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
   @@map("payments")
 }
 
 // Announcement & Communication
 model Announcement {
-  id          String   @id @default(cuid())
+  id          String           @id @default(cuid())
   title       String
   content     String
   type        AnnouncementType @default(INFO)
-  priority    Priority @default(NORMAL)
-  isPublished Boolean  @default(false)
+  priority    Priority         @default(NORMAL)
+  isPublished Boolean          @default(false)
   publishedAt DateTime?
   expiresAt   DateTime?
   createdById String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  recipients  AnnouncementRecipient[]
-  
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  createdBy  User                    @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  recipients AnnouncementRecipient[]
+
   @@map("announcements")
 }
 
 model AnnouncementRecipient {
-  id             String       @id @default(cuid())
+  id             String        @id @default(cuid())
   announcementId String
   recipientType  RecipientType
   recipientId    String?
-  isRead         Boolean      @default(false)
+  isRead         Boolean       @default(false)
   readAt         DateTime?
-  
-  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
-  
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
   @@map("announcement_recipients")
 }
 
 // Email Management
 model EmailCampaign {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   name        String
   subject     String
   content     String
@@ -385,113 +385,113 @@ model EmailCampaign {
   scheduledAt DateTime?
   sentAt      DateTime?
   createdById String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  template    EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  emails      Email[]
-  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  createdBy User           @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  template  EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  emails    Email[]
+
   @@map("email_campaigns")
 }
 
 model EmailTemplate {
-  id          String   @id @default(cuid())
-  name        String
-  subject     String
-  content     String
-  variables   String?  // JSON format
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  campaigns   EmailCampaign[]
-  emails      Email[]
-  
+  id        String   @id @default(cuid())
+  name      String
+  subject   String
+  content   String
+  variables String? // JSON format
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  campaigns EmailCampaign[]
+  emails    Email[]
+
   @@map("email_templates")
 }
 
 model Email {
-  id          String      @id @default(cuid())
-  campaignId  String?
-  templateId  String?
-  to          String
-  subject     String
-  content     String
-  status      EmailStatus @default(QUEUED)
-  sentAt      DateTime?
-  openedAt    DateTime?
-  clickedAt   DateTime?
-  bouncedAt   DateTime?
+  id           String      @id @default(cuid())
+  campaignId   String?
+  templateId   String?
+  to           String
+  subject      String
+  content      String
+  status       EmailStatus @default(QUEUED)
+  sentAt       DateTime?
+  openedAt     DateTime?
+  clickedAt    DateTime?
+  bouncedAt    DateTime?
   errorMessage String?
-  createdAt   DateTime    @default(now())
-  
-  campaign    EmailCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  template    EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  
+  createdAt    DateTime    @default(now())
+
+  campaign EmailCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  template EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
   @@map("emails")
 }
 
 // File Management with Cloudinary
 model FileUpload {
-  id          String   @id @default(cuid())
-  filename    String
-  originalName String
+  id            String   @id @default(cuid())
+  filename      String
+  originalName  String
   // Cloudinary Integration
   cloudinaryUrl String // Cloudinary secure URL
-  publicId    String   // Cloudinary public_id untuk management
-  resourceType String  // image, video, raw, auto
-  format      String?  // jpg, png, pdf, etc
-  width       Int?     // Untuk image/video
-  height      Int?     // Untuk image/video
-  size        Int      // File size dalam bytes
-  mimeType    String
-  uploadedBy  String
-  folder      String?  // Cloudinary folder organization
-  tags        String?  // Cloudinary tags (comma separated)
-  createdAt   DateTime @default(now())
-  
+  publicId      String // Cloudinary public_id untuk management
+  resourceType  String // image, video, raw, auto
+  format        String? // jpg, png, pdf, etc
+  width         Int? // Untuk image/video
+  height        Int? // Untuk image/video
+  size          Int // File size dalam bytes
+  mimeType      String
+  uploadedBy    String
+  folder        String? // Cloudinary folder organization
+  tags          String? // Cloudinary tags (comma separated)
+  createdAt     DateTime @default(now())
+
   @@map("file_uploads")
 }
 
 // System Settings & Utilities
 model SystemSetting {
-  id          String   @id @default(cuid())
-  key         String   @unique
+  id          String      @id @default(cuid())
+  key         String      @unique
   value       String
   type        SettingType @default(STRING)
   description String?
-  isSystem    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  isSystem    Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
   @@map("system_settings")
 }
 
 model Backup {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   filename    String
   path        String
   size        Int
   type        BackupType
   status      BackupStatus @default(IN_PROGRESS)
-  createdAt   DateTime @default(now())
+  createdAt   DateTime     @default(now())
   completedAt DateTime?
-  
+
   @@map("backups")
 }
 
 model ScheduledJob {
-  id          String    @id @default(cuid())
-  name        String
-  type        JobType
-  schedule    String    // cron format
-  lastRun     DateTime?
-  nextRun     DateTime?
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id        String    @id @default(cuid())
+  name      String
+  type      JobType
+  schedule  String // cron format
+  lastRun   DateTime?
+  nextRun   DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
   @@map("scheduled_jobs")
 }
 

@@ -26,3 +26,14 @@ logs
 !.env.example
 
 /app/generated/prisma
+
+# Testing files
+cookies.txt
+*.cookie
+
+# Migration scripts (temporary)
+migrate-*.sql
+
+# Temporary files
+*.tmp
+*.temp

@@ -10,7 +10,6 @@ export default defineEventHandler(async (event) => {
     try {
         const token = getCookie(event, 'auth-token')
         if (!token) {
-            setResponseStatus(event, 401)
             return responses.unauthorized(
                 'No authentication token provided',
                 { code: 'NO_TOKEN', requestId, event }
@@ -19,7 +18,6 @@ export default defineEventHandler(async (event) => {
 
         const secret = process.env.JWT_SECRET
         if (!secret) {
-            setResponseStatus(event, 500)
             return responses.serverError(
                 'Authentication misconfiguration',
                 process.env.NODE_ENV === 'development' ? 'JWT_SECRET is not set' : undefined,
@@ -41,7 +39,6 @@ export default defineEventHandler(async (event) => {
                 code: 'INVALID_TOKEN',
                 message: 'Invalid authentication token'
             }
-            setResponseStatus(event, 401)
             return responses.unauthorized(message, { code, requestId, event })
         }
 
@@ -53,7 +50,6 @@ export default defineEventHandler(async (event) => {
         })
 
         if (!session) {
-            setResponseStatus(event, 401)
             return responses.unauthorized(
                 'Session expired or invalid',
                 { code: 'SESSION_EXPIRED', requestId, event }
@@ -84,7 +80,6 @@ export default defineEventHandler(async (event) => {
         })
 
         if (!user) {
-            setResponseStatus(event, 401)
             return responses.unauthorized(
                 'User not found',
                 { code: 'USER_NOT_FOUND', requestId, event }
@@ -92,7 +87,6 @@ export default defineEventHandler(async (event) => {
         }
 
         if (!user.isActive) {
-            setResponseStatus(event, 401)
             return responses.unauthorized(
                 'User account is deactivated',
                 { code: 'ACCOUNT_DEACTIVATED', requestId, event }
@@ -146,7 +140,6 @@ export default defineEventHandler(async (event) => {
     } catch (error: unknown) {
         const executionTime = `${Date.now() - startedAt}ms`
         const debug = error instanceof Error ? error.message : 'Internal error'
-        setResponseStatus(event, 500)
         return responses.serverError(
             'Failed to retrieve user information',
             process.env.NODE_ENV === 'development' ? debug : undefined,

@@ -71,7 +71,7 @@ model ActivityLog {
   id          String   @id @default(cuid())
   userId      String
   action      String
-  description String?
+  description String?  @db.Text
   ipAddress   String?
   userAgent   String?
   createdAt   DateTime @default(now())
@@ -323,7 +323,7 @@ model Payment {
   // Cloudinary Integration
   proofUrl      String? // Cloudinary URL untuk bukti pembayaran
   proofPublicId String? // Cloudinary public_id untuk delete/update
-  proofFileName String? // Nama file asli bukti  
+  proofFileName String? // Nama file asli bukti
   proofFileSize Int? // Ukuran file bukti
   proofMimeType String? // Tipe MIME file bukti
   proofWidth    Int? // Lebar gambar (dari Cloudinary)
@@ -458,7 +458,7 @@ model FileUpload {
 model SystemSetting {
   id          String      @id @default(cuid())
   key         String      @unique
-  value       String
+  value       String      @db.Text
   type        SettingType @default(STRING)
   description String?
   isSystem    Boolean     @default(false)

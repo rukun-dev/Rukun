@@ -32,6 +32,7 @@ export type Permission =
   | "manage:finances"
   | "manage:documents"
   | "manage:announcements"
+  | "manage:families"
   | "*";
 
 // Comprehensive role permissions mapping

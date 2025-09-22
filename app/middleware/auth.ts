@@ -1,17 +1,18 @@
 export default defineNuxtRouteMiddleware((to, from) => {
-  // TODO: Implement actual authentication check
-  // This is a placeholder for authentication logic
+  // Implement actual authentication check
   
-  // Check if user is authenticated
-  // In a real implementation, this would check:
-  // - JWT token in cookies/localStorage
-  // - Session validation
-  // - User authentication state
+  // Check if user is authenticated by looking for auth token in localStorage
+  // This assumes that after successful login, a token is stored in localStorage
+  const isAuthenticated = process.client ? !!localStorage.getItem('auth_token') : false
   
-  const isAuthenticated = false // Placeholder - replace with actual auth check
-  
-  if (!isAuthenticated) {
-    // Redirect to login page if not authenticated
+  if (!isAuthenticated && to.path !== '/' && to.path !== '/login' && to.path !== '/register' && 
+      to.path !== '/forgot-password' && !to.path.startsWith('/reset-password')) {
+    // Redirect to login page if not authenticated and trying to access protected routes
     return navigateTo('/login')
+  }
+  
+  // If user is authenticated and trying to access login/register pages, redirect to dashboard
+  if (isAuthenticated && (to.path === '/login' || to.path === '/register')) {
+    return navigateTo('/dashboard')
   }
 })

@@ -1,445 +1,510 @@
-# RT Management System
+# 🏘️ Rukun App - RT Management System
 
 A comprehensive digital management system for Indonesian RT (Rukun Tetangga) communities, built with modern web technologies to streamline administrative tasks, citizen data management, financial tracking, and community communication.
 
+## 🚀 **PROJECT STATUS UPDATE**
+
+### ✅ **BACKEND DEVELOPER 1 - COMPLETED** 🎉
+**All authentication, user management, and system APIs are fully implemented and production-ready!**
+
+**📋 Completed Features:**
+- **🔐 Complete Authentication System** - Registration, login, logout, password management
+- **👥 User Management APIs** - Full CRUD operations with advanced search and analytics
+- **📸 Avatar Management** - Cloudinary integration for user profile pictures
+- **🏢 RT Profile System** - Complete RT management with logo upload capabilities
+- **📊 Activity Logging** - Comprehensive audit trail with batch processing
+- **⚙️ System Settings** - Dynamic configuration management
+- **🛡️ Advanced Security** - Role-based access control, rate limiting, session management
+
+**📡 Ready for Frontend Integration:** All BE1 APIs documented in Postman collection with examples and tests.
+
+## 📊 Development Progress
+
+### ✅ Completed Components
+| Component | Developer | Status | Progress |
+|-----------|-----------|--------|----------|
+| **Authentication System** | BE1 | ✅ Complete | 100% |
+| **User Management** | BE1 | ✅ Complete | 100% |
+| **Profile Management** | BE1 | ✅ Complete | 100% |
+| **RT Profile System** | BE1 | ✅ Complete | 100% |
+| **Activity Logging** | BE1 | ✅ Complete | 100% |
+| **System Settings** | BE1 | ✅ Complete | 100% |
+| **File Upload (Avatar/Logo)** | BE1 | ✅ Complete | 100% |
+
+### 🔄 In Progress / Pending
+| Component | Developer | Status | Next Steps |
+|-----------|-----------|--------|------------|
+| **Citizens Management** | BE2 | 🟡 Pending | Start development |
+| **Document System** | BE2 | 🟡 Pending | Start development |
+| **Announcements** | BE2 | 🟡 Pending | Start development |
+| **Frontend Authentication** | FE1 | 🟡 Pending | Integrate with BE1 APIs |
+| **Frontend Dashboard** | FE1 | 🟡 Pending | Integrate with BE1 APIs |
+| **Frontend User Management** | FE1 | 🟡 Pending | Integrate with BE1 APIs |
+
+### 🎯 Next Phase Priorities
+1. **Frontend Integration (FE1)** - Connect to completed BE1 APIs
+2. **Citizens Management APIs (BE2)** - Start development
+3. **Integration Testing** - Test BE1 APIs with frontend
+4. **Document System APIs (BE2)** - Prepare for development
+
+## 🔗 Frontend Integration Guide
+
+### 📋 Available APIs (Ready for Integration)
+
+**Base URL:** `http://localhost:3000` (development)
+
+#### 🔐 Authentication Endpoints
+```typescript
+// User Registration
+POST /api/auth/register
+Body: { name, email, password, phone, role }
+
+// User Login  
+POST /api/auth/login
+Body: { email, password }
+
+// Get Current User
+GET /api/auth/me
+Headers: { Cookie: session_token }
+
+// Logout
+POST /api/auth/logout
+
+// Change Password
+POST /api/auth/change-password
+Body: { currentPassword, newPassword }
+
+// Forgot Password
+POST /api/auth/forgot-password
+Body: { email }
+
+// Reset Password
+POST /api/auth/reset-password
+Body: { token, email, newPassword }
+```
+
+#### 👥 User Management Endpoints
+```typescript
+// Get All Users (with pagination)
+GET /api/users?page=1&limit=10&search=query&role=WARGA
+
+// Create User
+POST /api/users
+Body: { name, email, password, phone, role }
+
+// Get User by ID
+GET /api/users/:id
+
+// Update User
+PUT /api/users/:id
+Body: { name, email, phone, role, isActive }
+
+// Delete User
+DELETE /api/users/:id
+
+// Advanced User Search
+GET /api/users/search?q=searchTerm&filters={}
+
+// User Analytics
+GET /api/users/analytics
+```
+
+#### 📸 Profile & Avatar Management
+```typescript
+// Get User Profile
+GET /api/users/profile/:id
+
+// Update User Profile
+PUT /api/users/profile/:id
+Body: { name, phone, address, bio }
+
+// Upload Avatar
+POST /api/users/avatar/upload
+Body: FormData with 'avatar' file
+
+// Get User Avatar
+GET /api/users/avatar/:id
+
+// Delete Avatar
+DELETE /api/users/avatar/:id
+```
+
+#### 🏢 RT Profile Management
+```typescript
+// Get RT Profile
+GET /api/rt-profile
+
+// Update RT Profile
+PUT /api/rt-profile
+Body: { name, address, ketua, sekretaris, etc }
+
+// Upload RT Logo
+POST /api/rt-profile/logo
+Body: FormData with 'logo' file
+```
+
+#### 📊 System & Logging
+```typescript
+// Get Activity Logs
+GET /api/activity-logs?page=1&limit=10&userId=123
+
+// Get System Settings
+GET /api/system/settings
+
+// Update System Settings
+PUT /api/system/settings
+Body: { key: value, key2: value2 }
+```
+
+### 🛠️ Integration Tips
+
+#### **Authentication Flow**
+1. Use `POST /api/auth/login` for authentication
+2. Session cookie is automatically set (HTTP-only)
+3. Use `GET /api/auth/me` to check authentication status
+4. All protected routes require session cookie
+
+#### **Error Handling**
+All APIs return standardized responses:
+```typescript
+interface ApiResponse<T> {
+  success: boolean
+  status_code: number
+  message: string
+  data: T | null
+  error: ApiError | null
+  meta: {
+    request_id: string
+    timestamp: string
+    execution_time: string
+  }
+  pagination?: {
+    current_page: number
+    per_page: number
+    total: number
+    total_pages: number
+  }
+}
+```
+
+#### **File Uploads**
+- Use `FormData` for file uploads
+- Supported formats: JPG, PNG, WebP
+- Max size: 5MB
+- Auto-optimization via Cloudinary
+
+#### **Role-Based Access**
+Check user role from `/api/auth/me` response:
+- `SUPER_ADMIN` (100) - Full access
+- `KETUA_RT` (80) - Management access  
+- `SEKRETARIS` (60) - Administrative access
+- `BENDAHARA` (60) - Financial focus
+- `STAFF` (40) - Limited access
+- `WARGA` (20) - Basic access
+
+### 📚 Postman Collection
+Import the complete API collection from `postman/Rukun App API Backend 1 Collection.postman_collection.json` for:
+- Full API documentation
+- Example requests/responses
+- Test scenarios
+- Environment variables
+
 ## 🚀 Features
 
-### 👥 User & Citizen Management
-- **Multi-role Authentication**: Super Admin, Ketua RT, Sekretaris, Bendahara, Staff, and Warga
-- **Comprehensive Citizen Database**: Complete warga (citizen) profiles with NIK, family relationships, and personal details
-- **Family Management**: Kartu Keluarga (KK) integration with family member relationships
-- **Profile Management**: Detailed user profiles with Cloudinary avatar integration
+### 🔐 Advanced Authentication & Authorization
+- **Session-based Authentication**: Secure JWT tokens with HTTP-only cookies
+- **Role-Based Access Control (RBAC)**: 6-level hierarchical permission system
+- **Multi-factor Security**: Password complexity, rate limiting, session management
+- **Password Reset Flow**: Email-based secure password reset with token expiration
+- **Activity Logging**: Comprehensive audit trail for all user actions
 
-### 📋 Document Management
-- **Digital Document Processing**: Automated generation of RT documents (Surat Pengantar, Surat Keterangan, etc.)
-- **Document Templates**: Customizable templates with variable support
-- **Approval Workflow**: Multi-step document approval process
-- **Document Archiving**: Organized document storage and retrieval
+### 👥 User & Role Management
+- **6-Level Role Hierarchy**: SUPER_ADMIN → KETUA_RT → SEKRETARIS/BENDAHARA → STAFF → WARGA
+- **Granular Permissions**: Fine-grained access control for different resources
+- **User Profile Management**: Complete profiles with avatar support via Cloudinary
+- **Bulk Operations**: Mass user management capabilities
+
+### 📋 Document & Administration
+- **Digital Document Processing**: Automated RT document generation
+- **Approval Workflows**: Multi-step document approval system
+- **Template Management**: Customizable document templates
+- **File Management**: Secure cloud storage with Cloudinary integration
 
 ### 💰 Financial Management
-- **Transaction Tracking**: Income and expense management with proof attachments
-- **Budget Planning**: Annual budget creation and monitoring
-- **Payment System**: Monthly fees, cleaning fees, donations, and penalty tracking
-- **Financial Reporting**: Comprehensive financial analytics and reports
+- **Transaction Tracking**: Income/expense management with proof attachments
+- **Payment Processing**: Monthly fees, donations, penalty tracking
+- **Budget Management**: Annual budget planning and monitoring
+- **Financial Reporting**: Comprehensive analytics and reports
 
-### 📢 Communication & Announcements
-- **Digital Announcements**: Priority-based community announcements
-- **Email Campaigns**: Bulk email communication with templates
-- **Targeted Messaging**: Role-based and specific recipient targeting
-- **Read Status Tracking**: Monitor announcement engagement
+### 📢 Communication System
+- **Announcement Management**: Priority-based community announcements
+- **Email Campaigns**: Bulk email with template support
+- **Role-based Messaging**: Targeted communication by user roles
+- **Read Status Tracking**: Monitor engagement metrics
 
-### 🗃️ File Management
-- **Cloudinary Integration**: Secure cloud storage for documents, images, and files
-- **Multi-format Support**: Images, documents, videos with automatic optimization
-- **Organized Storage**: Folder-based organization with tagging system
+## 🏗️ System Architecture
 
-### 🛠️ System Administration
-- **Backup Management**: Automated and manual backup solutions
-- **Scheduled Jobs**: Automated tasks for reminders, cleanup, and reporting
-- **System Settings**: Configurable application settings
-- **Activity Logging**: Comprehensive audit trail
+### 🛡️ Security Layers
+
+#### **Authentication Middleware**
+```typescript
+// Automatic route protection based on URL patterns
+const protectedPrefixes = [
+    '/api/protected/',
+    '/api/user/',
+    '/api/admin/',
+    '/api/dashboard',
+    '/api/reports',
+    '/api/residents',
+    '/api/announcements'
+]
+```
+
+#### **Role-Based Access Control (RBAC)**
+| Role | Level | Permissions | Access Control |
+|------|-------|------------|----------------|
+| **SUPER_ADMIN** | 100 | `*` (All) | Full system access |
+| **KETUA_RT** | 80 | Manage users, finances, documents | RT leadership functions |
+| **SEKRETARIS** | 60 | Documents, announcements (read finances) | Administrative tasks |
+| **BENDAHARA** | 60 | Financial management (read-only others) | Treasury functions |
+| **STAFF** | 40 | Limited read/write access | Operational support |
+| **WARGA** | 20 | Own profile, public info, announcements | Basic citizen access |
+
+#### **Permission System**
+- **Read Permissions**: `read:all`, `read:residents`, `read:announcements`, `read:reports`
+- **Write Permissions**: `write:residents`, `write:announcements`, `write:reports`
+- **Management Permissions**: `manage:users`, `manage:finances`, `manage:documents`
+- **Special Permissions**: `*` (super admin), `read:own_profile`, `write:own_profile`
+
+### 🔧 Core Utilities
+
+#### **Activity Logger**
+```typescript
+// Batched logging system with auto-flush
+class ActivityLogger {
+    private logQueue: ActivityLogData[] = []
+    private batchSize: number = 50
+    private flushInterval: number = 5000 // 5 seconds
+}
+```
+- **Batch Processing**: Groups logs for better performance
+- **Auto-flush**: Time and size-based automatic writing
+- **Pre-built Helpers**: Common activity logging functions
+- **Error Resilience**: Retry mechanism for failed writes
+
+#### **Authentication Utils**
+- **Multi-header IP Detection**: Supports various proxy configurations
+- **Role Hierarchy**: Numerical levels for role comparison
+- **Permission Checking**: Fine-grained access control
+- **Session Management**: Database-backed session validation
+
+#### **Cloudinary Service**
+- **Specialized Uploads**: Different optimization for avatars, logos, documents
+- **Auto-transformation**: Image optimization and format conversion
+- **Cleanup Utilities**: Maintenance functions for old files
+- **Health Monitoring**: Service status checking
+
+#### **Response System**
+```typescript
+interface ApiResponse<T> {
+    success: boolean
+    status_code: number
+    message: string
+    data: T | null
+    error: ApiError | null
+    meta: ResponseMeta
+    pagination?: PaginationMeta
+    next_step?: NextStepInfo
+    links?: ApiLinks
+}
+```
+- **Standardized Format**: Consistent API responses
+- **Request Tracking**: Performance monitoring with execution time
+- **Rich Metadata**: Pagination, next steps, related links
+- **Error Categorization**: Specific error codes and detailed messages
+
+### ✅ Validation System
+
+#### **User Validation**
+- **Indonesian Phone Format**: `+62/62/0` with 8-13 digits
+- **Strong Password Policy**: Uppercase, lowercase, numbers, 8+ chars
+- **Email Normalization**: Automatic lowercase and trimming
+- **NIK Validation**: 16-digit Indonesian ID number format
+
+#### **RT Profile Validation**
+- **Indonesian Address System**: RT, RW, Kelurahan, Kecamatan, Kabupaten, Provinsi
+- **Postal Code Format**: Exactly 5 digits
+- **Administrative Hierarchy**: Proper Indonesian administrative structure
+
+#### **Query Parameter Validation**
+- **Pagination**: Page numbers, limits with bounds checking
+- **Sorting**: Field validation with allowed sort fields
+- **Search**: Query sanitization and length limits
+- **Filtering**: JSON-based filter validation
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Nuxt 3 with TypeScript
-- **Backend**: Nuxt 3 Server API
-- **Database**: MySQL with Prisma ORM
-- **File Storage**: Cloudinary
-- **Email Service**: SMTP
-- **Authentication**: Custom session-based authentication
+### **Core Technologies**
+- **Frontend**: Nuxt 3 + TypeScript + Vue 3 Composition API
+- **Backend**: Nuxt 3 Server API with H3
+- **Database**: MySQL + Prisma ORM
+- **File Storage**: Cloudinary CDN
+- **Email**: Nodemailer + SMTP
+- **Validation**: Zod schema validation
+
+### **Security & Performance**
+- **Authentication**: JWT + HTTP-only cookies
+- **Password Hashing**: bcrypt with salt rounds 12
+- **Rate Limiting**: IP-based request throttling
+- **Connection Pooling**: Prisma connection management
+- **Image Optimization**: Automatic WebP conversion
+
+### **Developer Experience**
+- **Type Safety**: Full TypeScript integration
+- **Code Generation**: Prisma schema-to-types
+- **Hot Reload**: Development server with HMR
+- **Error Handling**: Comprehensive error responses
 
 ## 📋 Prerequisites
 
-Before running this application, make sure you have:
+- **Node.js**: v18 or higher
+- **Database**: MySQL 8.0+
+- **Cloud Storage**: Cloudinary account
+- **Email Service**: SMTP provider
+- **Memory**: 2GB+ RAM recommended
+- **Storage**: 10GB+ available space
 
-- Node.js (v18 or higher)
-- MySQL database
-- Cloudinary account
-- SMTP email service credentials
+## 🚀 Installation & Setup
 
-## ⚙️ Installation
+### 1. **Clone Repository**
+```bash
+git clone <repository-url>
+cd rukun-app
+```
 
-1. **Clone the repository**
+### 2. **Install Dependencies**
+```bash
+npm install
+```
+
+### 3. **Environment Configuration**
+Create `.env` file in root directory:
+```env
+# Database Configuration
+DATABASE_URL="mysql://username:password@localhost:3306/rukun_app"
+
+# Cloudinary Configuration (for file uploads)
+CLOUDINARY_CLOUD_NAME="your_cloud_name"
+CLOUDINARY_API_KEY="your_api_key"  
+CLOUDINARY_API_SECRET="your_api_secret"
+
+# Email Configuration (for password reset)
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="your-email@gmail.com"
+SMTP_PASSWORD="your-app-password"
+
+# Application Configuration
+JWT_SECRET="your-super-secret-jwt-key"
+SESSION_SECRET="your-session-secret-key"
+APP_URL="http://localhost:3000"
+
+# Development
+NODE_ENV="development"
+```
+
+### 4. **Database Setup**
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Run database migrations
+npx prisma db push
+
+# Seed initial data (optional)
+npx prisma db seed
+```
+
+### 5. **Start Development Server**
+```bash
+# Development mode with hot reload
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm run start
+```
+
+### 6. **Verify Installation**
+- Open browser: `http://localhost:3000`
+- Check API status: `http://localhost:3000/api/health`
+- Import Postman collection from `/postman` folder
+- Test authentication endpoints
+
+## 🧪 Testing the APIs
+
+### **Quick Test Sequence:**
+1. **Register a new user:**
    ```bash
-   git clone <repository-url>
-   cd rt-management-system
+   curl -X POST http://localhost:3000/api/auth/register \
+   -H "Content-Type: application/json" \
+   -d '{"name":"Test User","email":"test@example.com","password":"Test123!","phone":"08123456789","role":"WARGA"}'
    ```
 
-2. **Install dependencies**
+2. **Login:**
    ```bash
-   yarn install
+   curl -X POST http://localhost:3000/api/auth/login \
+   -H "Content-Type: application/json" \
+   -d '{"email":"test@example.com","password":"Test123!"}' \
+   -c cookies.txt
    ```
 
-3. **Environment Configuration**
-   
-   Create a `.env` file in the root directory:
-   ```env
-   # Database
-   DATABASE_URL="mysql://username:password@localhost:3306/rt_management"
-   
-   # Cloudinary Configuration
-   CLOUDINARY_CLOUD_NAME=your_cloud_name
-   CLOUDINARY_API_KEY=your_api_key
-   CLOUDINARY_API_SECRET=your_api_secret
-   
-   # SMTP Configuration
-   SMTP_HOST=your_smtp_host
-   SMTP_PORT=587
-   SMTP_USER=your_email@example.com
-   SMTP_PASS=your_email_password
-   SMTP_FROM=your_email@example.com
-   
-   # Application
-   NUXT_SECRET_KEY=your_secret_key_for_sessions
-   BASE_URL=http://localhost:3000
-   ```
-
-4. **Database Setup**
+3. **Get current user:**
    ```bash
-   # Generate Prisma client
-   npx prisma generate
-   
-   # Run database migrations
-   npx prisma db push
-   
-   # (Optional) Seed initial data
-   npx prisma db seed
+   curl -X GET http://localhost:3000/api/auth/me \
+   -b cookies.txt
    ```
 
-5. **Development Server**
+4. **Get all users:**
    ```bash
-   yarn run dev
+   curl -X GET http://localhost:3000/api/users \
+   -b cookies.txt
    ```
 
-   The application will be available at `http://localhost:3000`
+### **Using Postman Collection:**
+1. Import `postman/Rukun App API Backend 1 Collection.postman_collection.json`
+2. Set environment variable `base_url` to `http://localhost:3000`
+3. Run authentication tests
+4. Explore all available endpoints
 
-## 🚀 Production Deployment
+## 🔧 Development Guidelines
 
-1. **Build the application**
-   ```bash
-   yarn run build
-   ```
-
-2. **Start production server**
-   ```bash
-   yarn run start
-   ```
-
-3. **Environment Variables**
-   
-   Ensure all production environment variables are properly configured:
-   - Update `BASE_URL` to your production domain
-   - Use production database credentials
-   - Configure production SMTP settings
-   - Set secure `NUXT_SECRET_KEY`
-
-## 📁 Project Structure
-
+### **Project Structure**
 ```
-rt-management-system/
-├── prisma/
-│   ├── schema.prisma          # Database schema
-│   └── migrations/            # Database migrations
-├── server/
-│   └── api/                   # Nuxt server API routes
-├── pages/                     # Application pages
-├── components/                # Vue components
-├── composables/               # Vue composables
-├── middleware/                # Route middleware
-├── types/                     # TypeScript type definitions
-├── utils/                     # Utility functions
-└── public/                    # Static assets
+rukun-app/
+├── prisma/              # Database schema and migrations
+├── server/              # Nuxt 3 server API routes
+│   └── api/            # API endpoints
+├── postman/            # API documentation & tests
+├── components/         # Vue components (frontend)
+├── pages/              # Nuxt pages (frontend)
+├── utils/              # Shared utilities
+├── middleware/         # Authentication & validation
+└── types/              # TypeScript type definitions
 ```
 
-## 🔧 Configuration
+### **Adding New Features**
+1. **Backend APIs**: Add routes in `server/api/`
+2. **Database**: Update Prisma schema, run migrations
+3. **Frontend**: Create components and pages
+4. **Testing**: Add requests to Postman collection
+5. **Documentation**: Update README and TASK.md
 
-### Database Configuration
-The application uses Prisma as the ORM. Configure your database connection in the `.env` file and run migrations to set up the schema.
-
-### Cloudinary Setup
-1. Create a Cloudinary account
-2. Get your cloud name, API key, and API secret
-3. Configure folder structure for organized file storage
-
-### SMTP Configuration
-Configure your email service provider settings for sending announcements and notifications.
-
-## 👤 Default Admin Setup
-
-After initial setup, create a super admin user through the database or create a seeding script:
-
-```sql
-INSERT INTO users (id, email, password, name, role) 
-VALUES ('admin123', 'admin@rt.local', 'hashed_password', 'Super Admin', 'SUPER_ADMIN');
-```
-
-## 📚 API Documentation
-
-### Authentication Endpoints
-```
-POST   /api/auth/login           # User login
-POST   /api/auth/logout          # User logout
-POST   /api/auth/register        # User registration
-GET    /api/auth/me              # Get current user
-POST   /api/auth/refresh         # Refresh session
-POST   /api/auth/forgot-password # Password reset request
-POST   /api/auth/reset-password  # Reset password
-```
-
-### User Management
-```
-GET    /api/users                # Get all users
-GET    /api/users/:id            # Get user by ID
-POST   /api/users                # Create new user
-PUT    /api/users/:id            # Update user
-DELETE /api/users/:id            # Delete user
-GET    /api/users/profile/:id    # Get user profile
-PUT    /api/users/profile/:id    # Update user profile
-POST   /api/users/avatar/:id     # Upload user avatar
-DELETE /api/users/avatar/:id     # Delete user avatar
-```
-
-### Citizen Management (Warga)
-```
-GET    /api/warga                # Get all citizens
-GET    /api/warga/:id            # Get citizen by ID
-POST   /api/warga                # Create new citizen
-PUT    /api/warga/:id            # Update citizen
-DELETE /api/warga/:id            # Delete citizen
-GET    /api/warga/search         # Search citizens
-GET    /api/warga/by-nik/:nik    # Get citizen by NIK
-GET    /api/warga/by-kk/:noKk    # Get citizens by KK number
-POST   /api/warga/import         # Import citizens from CSV/Excel
-GET    /api/warga/export         # Export citizens data
-```
-
-### Family Management
-```
-GET    /api/families             # Get all families
-GET    /api/families/:id         # Get family by ID
-POST   /api/families             # Create new family
-PUT    /api/families/:id         # Update family
-DELETE /api/families/:id         # Delete family
-GET    /api/families/by-kk/:noKk # Get family by KK number
-POST   /api/families/:id/members # Add family member
-DELETE /api/families/:id/members/:memberId # Remove family member
-PUT    /api/families/:id/head/:memberId    # Set family head
-```
-
-### Document Management
-```
-GET    /api/documents            # Get all documents
-GET    /api/documents/:id        # Get document by ID
-POST   /api/documents            # Create new document
-PUT    /api/documents/:id        # Update document
-DELETE /api/documents/:id        # Delete document
-GET    /api/documents/by-warga/:wargaId # Get documents by citizen
-POST   /api/documents/:id/approve     # Approve document
-POST   /api/documents/:id/reject      # Reject document
-GET    /api/documents/:id/download    # Download document
-POST   /api/documents/generate        # Generate document from template
-GET    /api/documents/archive         # Get archived documents
-POST   /api/documents/:id/archive     # Archive document
-```
-
-### Document Templates
-```
-GET    /api/document-templates    # Get all templates
-GET    /api/document-templates/:id # Get template by ID
-POST   /api/document-templates    # Create new template
-PUT    /api/document-templates/:id # Update template
-DELETE /api/document-templates/:id # Delete template
-POST   /api/document-templates/:id/preview # Preview template
-```
-
-### Financial Management
-```
-GET    /api/transactions         # Get all transactions
-GET    /api/transactions/:id     # Get transaction by ID
-POST   /api/transactions         # Create new transaction
-PUT    /api/transactions/:id     # Update transaction
-DELETE /api/transactions/:id     # Delete transaction
-POST   /api/transactions/:id/verify   # Verify transaction
-POST   /api/transactions/:id/proof    # Upload transaction proof
-GET    /api/transactions/summary      # Get financial summary
-GET    /api/transactions/report       # Get financial report
-```
-
-### Budget Management
-```
-GET    /api/budgets              # Get all budgets
-GET    /api/budgets/:id          # Get budget by ID
-POST   /api/budgets              # Create new budget
-PUT    /api/budgets/:id          # Update budget
-DELETE /api/budgets/:id          # Delete budget
-GET    /api/budgets/year/:year   # Get budget by year
-GET    /api/budgets/:id/items    # Get budget items
-POST   /api/budgets/:id/items    # Add budget item
-PUT    /api/budgets/:id/items/:itemId # Update budget item
-DELETE /api/budgets/:id/items/:itemId # Delete budget item
-```
-
-### Payment Management
-```
-GET    /api/payments             # Get all payments
-GET    /api/payments/:id         # Get payment by ID
-POST   /api/payments             # Create new payment
-PUT    /api/payments/:id         # Update payment
-DELETE /api/payments/:id         # Delete payment
-GET    /api/payments/by-warga/:wargaId # Get payments by citizen
-POST   /api/payments/:id/pay          # Process payment
-POST   /api/payments/:id/verify       # Verify payment
-POST   /api/payments/:id/proof        # Upload payment proof
-GET    /api/payments/overdue          # Get overdue payments
-GET    /api/payments/monthly-report   # Get monthly payment report
-```
-
-### Announcement Management
-```
-GET    /api/announcements        # Get all announcements
-GET    /api/announcements/:id    # Get announcement by ID
-POST   /api/announcements        # Create new announcement
-PUT    /api/announcements/:id    # Update announcement
-DELETE /api/announcements/:id    # Delete announcement
-POST   /api/announcements/:id/publish   # Publish announcement
-GET    /api/announcements/published     # Get published announcements
-POST   /api/announcements/:id/read      # Mark as read
-GET    /api/announcements/unread        # Get unread announcements
-```
-
-### Email Campaign Management
-```
-GET    /api/email-campaigns      # Get all campaigns
-GET    /api/email-campaigns/:id  # Get campaign by ID
-POST   /api/email-campaigns      # Create new campaign
-PUT    /api/email-campaigns/:id  # Update campaign
-DELETE /api/email-campaigns/:id  # Delete campaign
-POST   /api/email-campaigns/:id/send     # Send campaign
-GET    /api/email-campaigns/:id/stats    # Get campaign statistics
-GET    /api/email-campaigns/:id/emails   # Get campaign emails
-```
-
-### Email Template Management
-```
-GET    /api/email-templates      # Get all email templates
-GET    /api/email-templates/:id  # Get template by ID
-POST   /api/email-templates      # Create new template
-PUT    /api/email-templates/:id  # Update template
-DELETE /api/email-templates/:id  # Delete template
-POST   /api/email-templates/:id/preview # Preview template
-```
-
-### File Management
-```
-POST   /api/files/upload         # Upload file to Cloudinary
-GET    /api/files                # Get all file uploads
-GET    /api/files/:id            # Get file by ID
-DELETE /api/files/:id            # Delete file
-POST   /api/files/upload-avatar  # Upload user avatar
-POST   /api/files/upload-proof   # Upload transaction/payment proof
-POST   /api/files/upload-document # Upload document file
-GET    /api/files/by-folder/:folder # Get files by folder
-```
-
-### RT Profile & Settings
-```
-GET    /api/rt-profile           # Get RT profile
-PUT    /api/rt-profile           # Update RT profile
-POST   /api/rt-profile/logo      # Upload RT logo
-GET    /api/rt-settings          # Get RT settings
-PUT    /api/rt-settings/:key     # Update RT setting
-POST   /api/rt-settings          # Create new setting
-DELETE /api/rt-settings/:key     # Delete setting
-```
-
-### System Management
-```
-GET    /api/system/settings      # Get system settings
-PUT    /api/system/settings/:key # Update system setting
-GET    /api/system/backups       # Get all backups
-POST   /api/system/backups       # Create new backup
-GET    /api/system/backups/:id   # Get backup by ID
-DELETE /api/system/backups/:id   # Delete backup
-POST   /api/system/restore/:id   # Restore from backup
-```
-
-### Activity Logs
-```
-GET    /api/activity-logs        # Get all activity logs
-GET    /api/activity-logs/:userId # Get logs by user
-POST   /api/activity-logs        # Create activity log
-DELETE /api/activity-logs/:id    # Delete activity log
-GET    /api/activity-logs/export # Export activity logs
-```
-
-### Scheduled Jobs
-```
-GET    /api/scheduled-jobs       # Get all scheduled jobs
-GET    /api/scheduled-jobs/:id   # Get job by ID
-POST   /api/scheduled-jobs       # Create new job
-PUT    /api/scheduled-jobs/:id   # Update job
-DELETE /api/scheduled-jobs/:id   # Delete job
-POST   /api/scheduled-jobs/:id/run # Run job manually
-GET    /api/scheduled-jobs/:id/logs # Get job execution logs
-```
-
-### Reports & Analytics
-```
-GET    /api/reports/dashboard    # Get dashboard statistics
-GET    /api/reports/financial    # Get financial reports
-GET    /api/reports/citizens     # Get citizen reports
-GET    /api/reports/documents    # Get document reports
-GET    /api/reports/payments     # Get payment reports
-GET    /api/reports/export/:type # Export reports (PDF/Excel)
-```
-
-### Query Parameters
-Most GET endpoints support the following query parameters:
-- `page`: Page number (default: 1)
-- `limit`: Items per page (default: 10)
-- `sort`: Sort field (e.g., 'createdAt', 'name')
-- `order`: Sort order ('asc' or 'desc')
-- `search`: Search term
-- `filter`: Filter criteria (JSON string)
-- `include`: Include related data
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-For support and questions:
-- Create an issue in the GitHub repository
-- Contact the development team
-- Check the documentation wiki
-
-## 🎯 Roadmap
-
-- [ ] Mobile application (React Native/Flutter)
-- [ ] WhatsApp integration for notifications
-- [ ] Advanced reporting and analytics
-- [ ] Multi-RT support for RW management
-- [ ] Integration with government systems
-- [ ] Real-time notifications
-- [ ] Advanced document workflow
-- [ ] Payment gateway integration
-
-## 🔒 Security
-
-- Session-based authentication
-- Role-based access control
-- Input validation and sanitization
-- File upload security with Cloudinary
-- Activity logging and audit trails
-- Secure password hashing
-
----
+### **Code Standards**
+- **TypeScript**: Strict type checking enabled
+- **Validation**: Use Zod schemas for all inputs
+- **Error Handling**: Standardized API responses
+- **Security**: Authentication required for protected routes
+- **Logging**: Activity logging for all user actions

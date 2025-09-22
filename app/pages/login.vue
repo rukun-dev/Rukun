@@ -29,6 +29,7 @@
                 class="mt-1"
                 :class="{ 'border-red-500': errors.email }"
                 placeholder="Masukkan email Anda"
+                :disabled="loading"
               />
               <p v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</p>
             </div>
@@ -44,11 +45,13 @@
                   required
                   :class="{ 'border-red-500': errors.password }"
                   placeholder="Masukkan password Anda"
+                  :disabled="loading"
                 />
                 <button
                   type="button"
                   @click="showPassword = !showPassword"
                   class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  :disabled="loading"
                 >
                   <svg v-if="!showPassword" class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -62,21 +65,34 @@
               <p v-if="errors.password" class="mt-1 text-sm text-red-600">{{ errors.password }}</p>
             </div>
 
+            <!-- Remember Me & Forgot Password -->
             <div class="flex items-center justify-between">
               <div class="flex items-center">
-                <Checkbox id="remember" v-model="form.remember" />
-                <Label for="remember" class="ml-2 text-sm text-gray-600">Ingat saya</Label>
+                <input
+                  id="remember-me"
+                  v-model="form.rememberMe"
+                  name="remember-me"
+                  type="checkbox"
+                  class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                  :disabled="loading"
+                />
+                <Label for="remember-me" class="ml-2 block text-sm text-gray-700">
+                  Ingat saya
+                </Label>
               </div>
-              <NuxtLink to="/forgot-password" class="text-sm text-orange-600 hover:text-orange-500">
-                Lupa password?
-              </NuxtLink>
+
+              <div class="text-sm">
+                <NuxtLink to="/forgot-password" class="font-medium text-orange-600 hover:text-orange-500">
+                  Lupa password?
+                </NuxtLink>
+              </div>
             </div>
 
             <div>
               <Button
                 type="submit"
                 :disabled="loading"
-                class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -86,19 +102,50 @@
               </Button>
             </div>
 
+            <!-- Error Messages -->
             <div v-if="errors.general" class="text-center">
-              <p class="text-sm text-red-600">{{ errors.general }}</p>
+              <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-red-800">{{ errors.general }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Success Message -->
+            <div v-if="successMessage" class="text-center">
+              <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-green-800">{{ successMessage }}</p>
+                    <p class="text-xs text-green-600 mt-1">Mengarahkan ke dashboard...</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </form>
         </CardContent>
       </Card>
+
+
 
       <!-- Footer -->
       <div class="text-center">
         <p class="text-sm text-gray-600">
           Belum punya akun?
           <NuxtLink to="/register" class="font-medium text-orange-600 hover:text-orange-500">
-            Registrasi
+            Daftar di sini
           </NuxtLink>
         </p>
       </div>
@@ -112,12 +159,72 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
+
+// Types
+interface UserSession {
+  expires_at: string
+}
+
+interface UserProfile {
+  id: string
+  nik: string | null
+  address: string | null
+}
+
+interface UserInfo {
+  id: string
+  name: string
+  email: string
+  phone: string
+  role: string
+  avatar: string | null
+  avatarPublicId: string | null
+  profile: UserProfile
+  session: UserSession
+  links?: {
+    related?: {
+      profile?: string
+      dashboard?: string
+      logout?: string
+    }
+  }
+}
+
+interface LoginResponse {
+  success: boolean
+  status_code: number
+  message: string
+  data: {
+    user: UserInfo
+  } | null
+  error: any
+  meta: {
+    timestamp: string
+    request_id: string
+    version: string
+    execution_time: string
+    ip_address: string
+  }
+  pagination: null
+  next_step: {
+    action: string
+    endpoint: string
+    method: string
+    required: string[]
+  }
+  links: {
+    self: string
+    related: {
+      profile: string
+      dashboard: string
+      logout: string
+    }
+  }
+}
 
 // Meta
 definePageMeta({
-  layout: false,
-  auth: false
+  layout: false
 })
 
 useSeoMeta({
@@ -125,14 +232,22 @@ useSeoMeta({
   description: 'Masuk ke sistem manajemen RT digital'
 })
 
+// Get runtime config for base URL
+const config = useRuntimeConfig()
+const baseUrl = config.public.baseUrl || 'http://localhost:3000'
+
 // Reactive data
 const form = reactive({
   email: '',
   password: '',
-  remember: false
+  rememberMe: false
 })
 
-const errors = reactive({
+const errors = reactive<{
+  email: string
+  password: string
+  general: string
+}>({
   email: '',
   password: '',
   general: ''
@@ -140,13 +255,14 @@ const errors = reactive({
 
 const loading = ref(false)
 const showPassword = ref(false)
+const successMessage = ref('')
 
 // Validation
 const validateForm = () => {
   // Reset errors
-  errors.email = ''
-  errors.password = ''
-  errors.general = ''
+  Object.keys(errors).forEach(key => {
+    errors[key as keyof typeof errors] = ''
+  })
 
   let isValid = true
 
@@ -163,52 +279,100 @@ const validateForm = () => {
   if (!form.password) {
     errors.password = 'Password wajib diisi'
     isValid = false
-  } else if (form.password.length < 6) {
-    errors.password = 'Password minimal 6 karakter'
-    isValid = false
   }
 
   return isValid
 }
+
+
 
 // Handle login
 const handleLogin = async () => {
   if (!validateForm()) return
 
   loading.value = true
+  successMessage.value = ''
 
   try {
-    // Implement actual authentication logic with fetch API
-    const response = await fetch('/api/auth/login', {
+    // Prepare request body sesuai dengan API schema dari postman collection
+    const requestBody = {
+      email: form.email,
+      password: form.password
+    }
+
+    console.log('Sending login request:', { email: requestBody.email })
+
+    // Call API endpoint sesuai dengan collection
+    const response = await $fetch<LoginResponse>(`/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        email: form.email,
-        password: form.password,
-        remember: form.remember
-      }),
+      body: requestBody,
     })
     
-    const data = await response.json()
-    
-    if (response.ok) {
-      // Handle successful login
-      // In a real implementation, you might store tokens in localStorage or cookies
-      // and set up authentication state
-      
-      // Redirect to dashboard
-      await navigateTo('/dashboard')
+    console.log('Login response:', response)
+
+    // Handle successful response berdasarkan struktur response dari collection
+    if (response.success && response.data?.user) {
+      successMessage.value = response.message || 'Login berhasil!'
+
+      // Store user info in localStorage or state management if needed
+      // localStorage.setItem('user', JSON.stringify(response.data.user))
+
+      // Note: Auth token is set as HTTP-only cookie by the server
+      // so we don't need to handle it manually
+
+      // Redirect based on next_step from response
+      setTimeout(() => {
+        const dashboardUrl = response.next_step?.endpoint || response.links?.related?.dashboard || '/dashboard'
+        navigateTo(dashboardUrl.replace('/api/protected', '')) // Remove API prefix for frontend routes
+      }, 2000)
     } else {
-      // Handle login failure
-      errors.general = data.message || 'Email atau password salah. Silakan coba lagi.'
+      // Handle error case
+      errors.general = response.message || 'Terjadi kesalahan saat login'
     }
-  } catch (error) {
-    console.error('Error during login:', error)
-    errors.general = 'Email atau password salah. Silakan coba lagi.'
+  } catch (error: any) {
+    console.error('Login error:', error)
+    
+    // Handle different types of errors
+    if (error.status === 401) {
+      // Unauthorized - invalid credentials
+      errors.general = error.data?.message || 'Email atau password salah'
+    } else if (error.status === 400) {
+      // Bad request - validation errors
+      if (error.data?.message) {
+        errors.general = error.data.message
+      } else {
+        errors.general = 'Data yang dimasukkan tidak valid'
+      }
+    } else if (error.status === 422) {
+      // Unprocessable entity - validation errors
+      if (error.data?.errors) {
+        Object.entries(error.data.errors).forEach(([key, message]) => {
+          if (key in errors) {
+            errors[key as keyof typeof errors] = Array.isArray(message) ? message[0] : message
+          }
+        })
+      }
+    } else if (error.status === 429) {
+      // Too many requests
+      errors.general = 'Terlalu banyak percobaan login. Silakan coba lagi nanti.'
+    } else {
+      // Generic error
+      errors.general = error.data?.message || 'Terjadi kesalahan saat login. Silakan coba lagi.'
+    }
   } finally {
     loading.value = false
   }
 }
+
+// Auto-fill demo credentials (for development)
+onMounted(() => {
+  // Remove this in production
+  if (process.dev) {
+    form.email = 'rvnkrwn@gmail.com'
+    form.password = 'Katasandi123'
+  }
+})
 </script>

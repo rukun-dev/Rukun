@@ -842,11 +842,6 @@ interface MetaTag {
   content: string
 }
 
-interface HeadConfig {
-  title: string
-  meta: MetaTag[]
-}
-
 // Statistics data with types
 interface Statistic {
   value: string
@@ -1010,7 +1005,7 @@ const navItems: NavItem[] = [
 ]
 
 // Meta tags for SEO
-const headConfig: HeadConfig = {
+useHead({
   title: 'RT Management System - Solusi Digital untuk Administrasi RT Indonesia',
   meta: [
     {
@@ -1029,9 +1024,7 @@ const headConfig: HeadConfig = {
     {property: 'og:type', content: 'website'},
     {name: 'twitter:card', content: 'summary_large_image'}
   ]
-}
-
-useHead(headConfig)
+})
 
 // Smooth scrolling handler with proper typing
 const handleSmoothScroll = (event: Event): void => {

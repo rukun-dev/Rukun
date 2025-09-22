@@ -75,7 +75,7 @@
             <DropdownMenuTrigger as-child>
               <Button variant="ghost" class="flex items-center space-x-3 p-2">
                 <Avatar class="h-8 w-8">
-                  <AvatarImage :src="user.avatar" :alt="user.name" />
+                  <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
                   <AvatarFallback>{{ getInitials(user.name) }}</AvatarFallback>
                 </Avatar>
                 <div class="hidden md:block text-left">

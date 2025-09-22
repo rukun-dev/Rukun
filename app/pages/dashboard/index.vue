@@ -178,7 +178,16 @@
         <CardTitle>Aksi Cepat</CardTitle>
       </CardHeader>
       <CardContent>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <Button as-child variant="outline" class="h-20 flex-col space-y-2">
+            <NuxtLink to="/dashboard/profile">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+              <span class="text-xs">Profil Saya</span>
+            </NuxtLink>
+          </Button>
+          
           <Button v-if="canAccessUserManagement" as-child variant="outline" class="h-20 flex-col space-y-2">
             <NuxtLink to="/register">
               <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,12 +247,24 @@ useSeoMeta({
   description: 'Dashboard sistem manajemen RT digital'
 })
 
-// TODO: Replace with actual user data from authentication
+// Mengambil data user dari localStorage yang disimpan saat login
 const user = ref({
   id: '1',
   name: 'John Doe',
   email: 'john@example.com',
   role: 'ADMIN'
+})
+
+// Mengambil data user dari localStorage saat komponen dimount
+onMounted(() => {
+  try {
+    const storedUser = localStorage.getItem('user_data')
+    if (storedUser) {
+      user.value = JSON.parse(storedUser)
+    }
+  } catch (error) {
+    console.error('Error loading user data from localStorage:', error)
+  }
 })
 
 // TODO: Replace with actual data from API

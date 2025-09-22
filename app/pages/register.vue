@@ -179,7 +179,19 @@
             </div>
 
             <div v-if="successMessage" class="text-center">
-              <p class="text-sm text-green-600">{{ successMessage }}</p>
+              <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-green-800">{{ successMessage }}</p>
+                    <p class="text-xs text-green-600 mt-1">Anda akan diarahkan ke halaman login dalam beberapa detik...</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </form>
         </CardContent>
@@ -205,11 +217,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-
 // Meta
 definePageMeta({
   layout: false
-  // Removed admin middleware to allow public access to registration
 })
 
 useSeoMeta({
@@ -217,16 +227,28 @@ useSeoMeta({
   description: 'Registrasi pengguna baru untuk sistem manajemen RT'
 })
 
+// Get runtime config for base URL
+const config = useRuntimeConfig()
+const baseUrl = config.public.baseUrl || 'http://localhost:3000'
+
 // Reactive data
 const form = reactive({
   name: '',
   email: '',
   phone: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  role: 'WARGA' // Default role sesuai API
 })
 
-const errors = reactive({
+const errors = reactive<{
+  name: string
+  email: string
+  phone: string
+  password: string
+  confirmPassword: string
+  general: string
+}>({
   name: '',
   email: '',
   phone: '',
@@ -293,7 +315,7 @@ const getStrengthBarColor = () => {
 const validateForm = () => {
   // Reset errors
   Object.keys(errors).forEach(key => {
-    errors[key] = ''
+    errors[key as keyof typeof errors] = ''
   })
 
   let isValid = true
@@ -368,19 +390,76 @@ const handleRegister = async () => {
   successMessage.value = ''
 
   try {
-    // TODO: Implement actual registration logic
-    // This is a placeholder for the registration API call
-    await new Promise(resolve => setTimeout(resolve, 1500)) // Simulate API call
-    
-    successMessage.value = 'Registrasi berhasil! Pengguna dapat login dengan email dan password yang telah dibuat.'
-    
-    // Reset form
-    Object.keys(form).forEach(key => {
-      form[key] = ''
+    // Prepare request body sesuai dengan API schema dari postman collection
+    const requestBody = {
+      name: form.name,
+      email: form.email,
+      password: form.password,
+      phone: form.phone || null, // Optional field
+      role: form.role
+    }
+
+    console.log('Sending registration request:', requestBody)
+
+    // Call API endpoint sesuai dengan collection
+    const response = await $fetch(`/api/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: requestBody,
     })
     
-  } catch (error) {
-    errors.general = 'Terjadi kesalahan saat registrasi. Silakan coba lagi.'
+    console.log('Registration response:', response)
+
+    // Handle successful response berdasarkan struktur response dari collection
+    if (response.success) {
+      successMessage.value = response.message || 'Registrasi berhasil! Anda dapat login dengan kredensial yang telah dibuat.'
+      
+      // Reset form
+      Object.keys(form).forEach(key => {
+        if (key === 'role') {
+          form[key as keyof typeof form] = 'WARGA' // Reset to default
+        } else {
+          form[key as keyof typeof form] = ''
+        }
+      })
+
+      // Redirect to login after successful registration (optional)
+      setTimeout(() => {
+        navigateTo('/login')
+      }, 3000) // Redirect after 3 seconds
+    } else {
+      // Handle error case
+      errors.general = response.message || 'Terjadi kesalahan saat registrasi'
+    }
+  } catch (error: any) {
+    console.error('Registration error:', error)
+    
+    // Handle different types of errors
+    if (error.status === 409) {
+      // Conflict error - email already registered
+      errors.email = 'Email sudah terdaftar'
+    } else if (error.status === 400) {
+      // Bad request - validation errors
+      if (error.data?.message) {
+        errors.general = error.data.message
+      } else {
+        errors.general = 'Data yang dimasukkan tidak valid'
+      }
+    } else if (error.status === 422) {
+      // Unprocessable entity - validation errors
+      if (error.data?.errors) {
+        Object.entries(error.data.errors).forEach(([key, message]) => {
+          if (key in errors) {
+            errors[key as keyof typeof errors] = Array.isArray(message) ? message[0] : message
+          }
+        })
+      }
+    } else {
+      // Generic error
+      errors.general = error.data?.message || 'Terjadi kesalahan saat registrasi. Silakan coba lagi.'
+    }
   } finally {
     loading.value = false
   }

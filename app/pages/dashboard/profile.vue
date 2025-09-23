@@ -8,12 +8,49 @@
       </p>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="space-y-6">
+      <div class="bg-white shadow rounded-lg p-6">
+        <div class="animate-pulse">
+          <div class="flex items-center space-x-6">
+            <div class="w-20 h-20 bg-gray-300 rounded-full"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-6 bg-gray-300 rounded w-1/3"></div>
+              <div class="h-4 bg-gray-300 rounded w-1/4"></div>
+              <div class="h-4 bg-gray-300 rounded w-1/2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-6">
+      <div class="flex items-center">
+        <svg class="h-5 w-5 text-red-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-red-800">{{ error }}</p>
+      </div>
+    </div>
+
     <!-- Profile Content -->
-    <div class="space-y-6">
+    <div v-else-if="user" class="space-y-6">
       <!-- Profile Overview Card -->
       <div class="bg-white shadow rounded-lg">
         <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-medium text-gray-900">Informasi Profil</h2>
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-medium text-gray-900">Informasi Profil</h2>
+            <div class="flex items-center space-x-2">
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                  :style="{ width: `${completionPercentage}%` }"
+                ></div>
+              </div>
+              <span class="text-sm text-gray-600">{{ completionPercentage }}%</span>
+            </div>
+          </div>
         </div>
         <div class="p-6">
           <div class="flex items-center space-x-6">
@@ -40,16 +77,7 @@
               <h3 class="text-xl font-semibold text-gray-900">{{ user.name }}</h3>
               <p class="text-sm text-gray-500">{{ user.role }}</p>
               <p class="text-sm text-gray-600 mt-1">{{ user.email }}</p>
-              <div class="mt-3 flex space-x-3">
-                <button 
-                  @click="showEditForm = true"
-                  class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Edit Profil
-                </button>
+              <div class="mt-3">
                 <button 
                   @click="showPasswordForm = true"
                   class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -86,12 +114,32 @@
               <p class="mt-1 text-sm text-gray-900">{{ user.phone || '-' }}</p>
             </div>
             <div>
+              <label class="text-sm font-medium text-gray-500">NIK</label>
+              <p class="mt-1 text-sm text-gray-900">{{ profileData?.nik || '-' }}</p>
+            </div>
+            <div>
               <label class="text-sm font-medium text-gray-500">Tanggal Lahir</label>
-              <p class="mt-1 text-sm text-gray-900">{{ formatDate(user.birthDate) || '-' }}</p>
+              <p class="mt-1 text-sm text-gray-900">{{ formatDate(profileData?.birth_date) }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-500">Tempat Lahir</label>
+              <p class="mt-1 text-sm text-gray-900">{{ profileData?.birth_place || '-' }}</p>
             </div>
             <div>
               <label class="text-sm font-medium text-gray-500">Alamat</label>
-              <p class="mt-1 text-sm text-gray-900">{{ user.address || '-' }}</p>
+              <p class="mt-1 text-sm text-gray-900">{{ profileData?.address || '-' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-500">Pekerjaan</label>
+              <p class="mt-1 text-sm text-gray-900">{{ profileData?.job || '-' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-500">Pendidikan</label>
+              <p class="mt-1 text-sm text-gray-900">{{ profileData?.education || '-' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-500">Status Pernikahan</label>
+              <p class="mt-1 text-sm text-gray-900">{{ profileData?.marital_status || '-' }}</p>
             </div>
           </div>
         </div>
@@ -120,15 +168,15 @@
             </div>
             <div>
               <label class="text-sm font-medium text-gray-500">Bergabung Sejak</label>
-              <p class="mt-1 text-sm text-gray-900">{{ formatDate(user.createdAt) }}</p>
+              <p class="mt-1 text-sm text-gray-900">{{ formatDate(user?.created_at) }}</p>
             </div>
             <div>
-              <label class="text-sm font-medium text-gray-500">Login Terakhir</label>
-              <p class="mt-1 text-sm text-gray-900">{{ formatDate(user.lastLogin) }}</p>
+              <label class="text-sm font-medium text-gray-500">Terakhir Diupdate</label>
+              <p class="mt-1 text-sm text-gray-900">{{ formatDate(user?.updated_at) }}</p>
             </div>
             <div>
-              <label class="text-sm font-medium text-gray-500">Total Login</label>
-              <p class="mt-1 text-sm text-gray-900">{{ user.loginCount || 0 }} kali</p>
+              <label class="text-sm font-medium text-gray-500">Total Aktivitas</label>
+              <p class="mt-1 text-sm text-gray-900">{{ statistics?.total_activities || 0 }} aktivitas</p>
             </div>
           </div>
         </div>
@@ -140,12 +188,12 @@
           <h3 class="text-lg font-medium text-gray-900">Aktivitas Terbaru</h3>
         </div>
         <div class="p-6">
-          <div class="flow-root">
+          <div v-if="recentActivities?.preview?.length" class="flow-root">
             <ul class="-mb-8">
-              <li v-for="(activity, index) in recentActivities" :key="activity.id">
-                <div class="relative pb-8" :class="{ 'pb-0': index === recentActivities.length - 1 }">
+              <li v-for="(activity, index) in recentActivities.preview" :key="activity.id">
+                <div class="relative pb-8" :class="{ 'pb-0': index === (recentActivities?.preview?.length || 1) - 1 }">
                   <span 
-                    v-if="index !== recentActivities.length - 1"
+                    v-if="index !== (recentActivities?.preview?.length || 1) - 1"
                     class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" 
                     aria-hidden="true"
                   ></span>
@@ -159,16 +207,22 @@
                     </div>
                     <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
                       <div>
-                        <p class="text-sm text-gray-500">{{ activity.description }}</p>
+                        <p class="text-sm text-gray-500">{{ activity.description || activity.action }}</p>
                       </div>
                       <div class="text-right text-sm whitespace-nowrap text-gray-500">
-                        {{ formatDate(activity.createdAt) }}
+                        {{ formatDateTime(activity.created_at) }}
                       </div>
                     </div>
                   </div>
                 </div>
               </li>
             </ul>
+          </div>
+          <div v-else class="text-center py-8">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <p class="mt-2 text-sm text-gray-500">Belum ada aktivitas terbaru</p>
           </div>
         </div>
       </div>
@@ -177,18 +231,12 @@
     <!-- Modals -->
     <AvatarUpload 
       v-if="showAvatarUpload"
-      :current-avatar="user.avatar"
+      :current-avatar="user?.avatar"
       @close="closeAvatarUpload"
       @upload="handleAvatarUpload"
     />
 
-    <ProfileEditForm 
-      v-if="showEditForm"
-      :user="user"
-      @close="showEditForm = false"
-      @save="handleProfileUpdate"
-      @open-avatar-upload="openAvatarFromEdit"
-    />
+
 
     <PasswordChangeForm 
       v-if="showPasswordForm"
@@ -199,7 +247,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import AvatarUpload from '../../components/dashboard/AvatarUpload.vue'
+import PasswordChangeForm from '../../components/dashboard/PasswordChangeForm.vue'
 
 // Layout
 definePageMeta({
@@ -207,84 +257,67 @@ definePageMeta({
   middleware: 'auth'
 })
 
+// Composables
+const { user: currentUser } = useAuth()
+const { 
+  profile, 
+  loading, 
+  error, 
+  user, 
+  profileData, 
+  statistics, 
+  recentActivities, 
+  profileSuggestions,
+  completionPercentage,
+  fetchProfile, 
+  updateProfile, 
+  uploadAvatar, 
+  formatDate, 
+  formatDateTime 
+} = useProfile()
+
 // State
 const showAvatarUpload = ref(false)
-const showEditForm = ref(false)
 const showPasswordForm = ref(false)
 
-// Mock user data (replace with actual API call)
-const user = reactive({
-  id: 1,
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  phone: '+62 812-3456-7890',
-  birthDate: '1990-01-15',
-  address: 'Jl. Contoh No. 123, RT 001/RW 002',
-  avatar: null,
-  role: 'ADMIN',
-  createdAt: '2023-01-01',
-  lastLogin: '2024-01-15T10:30:00Z',
-  loginCount: 45
-})
-
-// Mock recent activities
-const recentActivities = ref([
-  {
-    id: 1,
-    description: 'Login ke sistem',
-    createdAt: '2024-01-15T10:30:00Z'
-  },
-  {
-    id: 2,
-    description: 'Mengupdate profil',
-    createdAt: '2024-01-14T15:20:00Z'
-  },
-  {
-    id: 3,
-    description: 'Mengubah password',
-    createdAt: '2024-01-13T09:15:00Z'
-  }
-])
+// Computed
 
 // Methods
-const formatDate = (dateString: string) => {
-  if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
-
-const handleAvatarUpload = (avatarData: any) => {
-  user.avatar = avatarData.url
-  showAvatarUpload.value = false
-  console.log('Avatar uploaded:', avatarData)
+const handleAvatarUpload = async (avatarUrl: string) => {
+  try {
+    // Avatar URL is already uploaded by AvatarUpload component
+    // Just close the modal and refresh profile data
+    showAvatarUpload.value = false
+    
+    // Refresh profile data to show new avatar
+    if (currentUser.value?.id) {
+      await fetchProfile()
+    }
+    
+    console.log('Avatar uploaded successfully:', avatarUrl)
+  } catch (err) {
+    console.error('Failed to refresh profile after avatar upload:', err)
+  }
 }
 
 const closeAvatarUpload = () => {
   showAvatarUpload.value = false
 }
 
-const handleProfileUpdate = (profileData: any) => {
-  Object.assign(user, profileData)
-  showEditForm.value = false
-  console.log('Profile updated:', profileData)
-}
-
-const openAvatarFromEdit = () => {
-  showEditForm.value = false
-  showAvatarUpload.value = true
-}
-
-const handlePasswordChange = (passwordData: any) => {
+const handlePasswordChange = () => {
   showPasswordForm.value = false
   console.log('Password changed successfully')
 }
 
-onMounted(() => {
-  // TODO: Fetch user data from API
-  console.log('Profile page mounted')
+onMounted(async () => {
+  try {
+    if (currentUser.value?.id) {
+      await fetchProfile(currentUser.value.id)
+      console.log('Profile data loaded:', profile.value)
+    }
+  } catch (err) {
+    console.error('Failed to load profile:', err)
+  }
 })
 </script>
 

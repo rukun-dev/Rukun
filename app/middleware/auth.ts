@@ -1,18 +1,32 @@
-export default defineNuxtRouteMiddleware((to, from) => {
-  // Implement actual authentication check
+export default defineNuxtRouteMiddleware(async (to, from) => {
+  // Skip middleware on server-side rendering for public routes
+  if (process.server) {
+    return
+  }
+
+  const { isAuthenticated, fetchUser, isLoading } = useAuth()
   
-  // Check if user is authenticated by looking for auth token in localStorage
-  // This assumes that after successful login, a token is stored in localStorage
-  const isAuthenticated = process.client ? !!localStorage.getItem('auth_token') : false
+  // Try to fetch user data if not already authenticated
+  if (!isAuthenticated.value && !isLoading.value) {
+    try {
+      await fetchUser()
+    } catch (error) {
+      // Silently handle fetch errors - user will be treated as unauthenticated
+      console.debug('Auth middleware: Failed to fetch user', error)
+    }
+  }
+
+  // Define public routes that don't require authentication
+  const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/unauthorized']
+  const isPublicRoute = publicRoutes.includes(to.path) || to.path.startsWith('/reset-password')
   
-  if (!isAuthenticated && to.path !== '/' && to.path !== '/login' && to.path !== '/register' && 
-      to.path !== '/forgot-password' && !to.path.startsWith('/reset-password')) {
-    // Redirect to login page if not authenticated and trying to access protected routes
+  // Redirect to login if not authenticated and trying to access protected routes
+  if (!isAuthenticated.value && !isPublicRoute) {
     return navigateTo('/login')
   }
   
-  // If user is authenticated and trying to access login/register pages, redirect to dashboard
-  if (isAuthenticated && (to.path === '/login' || to.path === '/register')) {
+  // Redirect to dashboard if authenticated and trying to access auth pages
+  if (isAuthenticated.value && (to.path === '/login' || to.path === '/register')) {
     return navigateTo('/dashboard')
   }
 })

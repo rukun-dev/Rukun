@@ -135,6 +135,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useAuth } from '../../composables/useAuth'
 
 // Props & Emits
 interface Props {
@@ -152,6 +153,9 @@ const emit = defineEmits<{
 
 // Template refs
 const fileInputRef = ref<HTMLInputElement>()
+
+// Composables
+const { user } = useAuth()
 
 // Reactive state
 const selectedFile = ref<File | null>(null)
@@ -266,27 +270,33 @@ const uploadAvatar = async () => {
   error.value = ''
   
   try {
+    // Check if user is authenticated
+    if (!user.value?.id) {
+      throw new Error('User tidak ditemukan')
+    }
+    
     // Create FormData for file upload
     const formData = new FormData()
     formData.append('avatar', selectedFile.value)
     
-    // TODO: Replace with actual API endpoint
-    const response = await fetch('/api/upload/avatar', {
+    // Use the correct API endpoint
+    const response = await fetch(`/api/users/avatar/${user.value.id}`, {
       method: 'POST',
       body: formData
     })
     
     if (!response.ok) {
-      throw new Error('Upload gagal')
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Upload gagal')
     }
     
     const data = await response.json()
     
     // Emit the uploaded avatar URL
-    emit('upload', data.url)
+    emit('upload', data.data.avatar)
     
-  } catch (err) {
-    error.value = 'Upload gagal. Silakan coba lagi.'
+  } catch (err: any) {
+    error.value = err.message || 'Upload gagal. Silakan coba lagi.'
   } finally {
     uploading.value = false
   }

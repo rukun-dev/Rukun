@@ -286,6 +286,9 @@ const validateForm = () => {
 
 
 
+// Use auth composable
+const { login } = useAuth()
+
 // Handle login
 const handleLogin = async () => {
   if (!validateForm()) return
@@ -294,74 +297,24 @@ const handleLogin = async () => {
   successMessage.value = ''
 
   try {
-    // Prepare request body sesuai dengan API schema dari postman collection
-    const requestBody = {
-      email: form.email,
-      password: form.password
-    }
+    console.log('Attempting login with:', { email: form.email })
 
-    console.log('Sending login request:', { email: requestBody.email })
-
-    // Call API endpoint sesuai dengan collection
-    const response = await $fetch<LoginResponse>(`/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: requestBody,
-    })
+    // Use the login function from useAuth composable
+    const result = await login(form.email, form.password)
     
-    console.log('Login response:', response)
-
-    // Handle successful response berdasarkan struktur response dari collection
-    if (response.success && response.data?.user) {
-      successMessage.value = response.message || 'Login berhasil!'
-
-      // Store user info in localStorage or state management if needed
-      // localStorage.setItem('user', JSON.stringify(response.data.user))
-
-      // Note: Auth token is set as HTTP-only cookie by the server
-      // so we don't need to handle it manually
-
-      // Redirect based on next_step from response
+    if (result.success) {
+      successMessage.value = 'Login berhasil!'
+      
+      // Redirect to dashboard after successful login
       setTimeout(() => {
-        const dashboardUrl = response.next_step?.endpoint || response.links?.related?.dashboard || '/dashboard'
-        navigateTo(dashboardUrl.replace('/api/protected', '')) // Remove API prefix for frontend routes
-      }, 2000)
+        navigateTo('/dashboard')
+      }, 1500)
     } else {
-      // Handle error case
-      errors.general = response.message || 'Terjadi kesalahan saat login'
+      errors.general = result.message || 'Login gagal'
     }
   } catch (error: any) {
     console.error('Login error:', error)
-    
-    // Handle different types of errors
-    if (error.status === 401) {
-      // Unauthorized - invalid credentials
-      errors.general = error.data?.message || 'Email atau password salah'
-    } else if (error.status === 400) {
-      // Bad request - validation errors
-      if (error.data?.message) {
-        errors.general = error.data.message
-      } else {
-        errors.general = 'Data yang dimasukkan tidak valid'
-      }
-    } else if (error.status === 422) {
-      // Unprocessable entity - validation errors
-      if (error.data?.errors) {
-        Object.entries(error.data.errors).forEach(([key, message]) => {
-          if (key in errors) {
-            errors[key as keyof typeof errors] = Array.isArray(message) ? message[0] : message
-          }
-        })
-      }
-    } else if (error.status === 429) {
-      // Too many requests
-      errors.general = 'Terlalu banyak percobaan login. Silakan coba lagi nanti.'
-    } else {
-      // Generic error
-      errors.general = error.data?.message || 'Terjadi kesalahan saat login. Silakan coba lagi.'
-    }
+    errors.general = 'Terjadi kesalahan saat login. Silakan coba lagi.'
   } finally {
     loading.value = false
   }

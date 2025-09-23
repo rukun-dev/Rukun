@@ -27,18 +27,26 @@
 
     <!-- Navigation -->
     <nav class="flex-1 space-y-1 px-4 py-4 overflow-y-auto">
-      <!-- Dashboard -->
-      <NuxtLink
-        to="/dashboard"
-        class="group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
-        :class="isActiveRoute('/dashboard') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
-      >
-        <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/dashboard') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
-        </svg>
-        Dashboard
-      </NuxtLink>
+      <!-- Loading State -->
+      <div v-if="isLoading" class="flex items-center justify-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span class="ml-2 text-sm text-gray-500">Loading...</span>
+      </div>
+
+      <!-- Navigation Content (only show when authenticated and not loading) -->
+      <template v-else-if="isAuthenticated">
+        <!-- Dashboard -->
+        <NuxtLink
+          to="/dashboard"
+          class="group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
+          :class="isActiveRoute('/dashboard') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+        >
+          <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/dashboard') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
+          </svg>
+          Dashboard
+        </NuxtLink>
 
       <!-- User Management (Admin/Ketua RT only) -->
       <div v-if="canAccessUserManagement">
@@ -203,6 +211,17 @@
           Pengaturan
         </NuxtLink>
       </div>
+      </template>
+
+      <!-- Not Authenticated State -->
+      <div v-else class="flex items-center justify-center py-8">
+        <div class="text-center">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+          <p class="mt-2 text-sm text-gray-500">Please login to access dashboard</p>
+        </div>
+      </div>
     </nav>
   </div>
 </template>
@@ -219,20 +238,21 @@ defineEmits<{
 
 const route = useRoute()
 
-// TODO: Replace with actual user role from authentication
-const userRole = ref('ADMIN') // Placeholder
+// Use authentication composable
+const { 
+  user, 
+  userRole, 
+  isAuthenticated, 
+  isLoading,
+  canAccessUserManagement,
+  canAccessFinance,
+  canAccessReports,
+  initAuth 
+} = useAuth()
 
-// Role-based access control
-const canAccessUserManagement = computed(() => {
-  return ['ADMIN', 'KETUA_RT'].includes(userRole.value)
-})
-
-const canAccessFinance = computed(() => {
-  return ['ADMIN', 'BENDAHARA'].includes(userRole.value)
-})
-
-const canAccessReports = computed(() => {
-  return ['ADMIN', 'KETUA_RT', 'SEKRETARIS'].includes(userRole.value)
+// Initialize authentication on component mount
+onMounted(async () => {
+  await initAuth()
 })
 
 // Check if route is ace

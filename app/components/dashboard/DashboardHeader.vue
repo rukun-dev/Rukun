@@ -71,7 +71,7 @@
           </DropdownMenu>
 
           <!-- User menu -->
-          <DropdownMenu>
+          <DropdownMenu v-if="isAuthenticated && user">
             <DropdownMenuTrigger as-child>
               <Button variant="ghost" class="flex items-center space-x-3 p-2">
                 <Avatar class="h-8 w-8">
@@ -146,14 +146,8 @@ defineEmits<{
 
 const route = useRoute()
 
-// TODO: Replace with actual user data from authentication
-const user = ref({
-  id: '1',
-  name: 'John Doe',
-  email: 'john@example.com',
-  role: 'ADMIN',
-  avatar: null
-})
+// Use authentication composable to get current user data
+const { user, userRole, isAuthenticated, logout } = useAuth()
 
 // TODO: Replace with actual notifications from API
 const notifications = ref([
@@ -233,9 +227,7 @@ const formatTime = (date: Date) => {
 // Handle logout
 const handleLogout = async () => {
   try {
-    // TODO: Implement actual logout logic
-    // Clear authentication tokens, session, etc.
-    await navigateTo('/login')
+    await logout()
   } catch (error) {
     console.error('Logout error:', error)
   }

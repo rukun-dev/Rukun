@@ -1,14 +1,14 @@
 <template>
   <div class="space-y-6">
     <!-- Welcome Section -->
-    <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold">Selamat Datang, {{ user.name }}!</h1>
-          <p class="text-orange-100 mt-1">{{ getRoleLabel(user.role) }} - RT Management System</p>
+          <h1 class="text-2xl font-bold">Selamat Datang, {{ user?.name || 'User' }}!</h1>
+          <p class="text-blue-100 mt-1">{{ user?.role ? getRoleLabel(user.role) : 'User' }} - RT Management System</p>
         </div>
         <div class="hidden md:block">
-          <svg class="h-16 w-16 text-orange-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="h-16 w-16 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
           </svg>
         </div>
@@ -21,8 +21,8 @@
         <CardContent class="p-6">
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
               </div>
@@ -97,7 +97,7 @@
         <CardHeader>
           <CardTitle class="flex items-center justify-between">
             <span>Pembayaran Terbaru</span>
-            <NuxtLink to="/dashboard/payments" class="text-sm text-orange-600 hover:text-orange-500">
+            <NuxtLink to="/dashboard/payments" class="text-sm text-blue-600 hover:text-blue-500">
               Lihat Semua
             </NuxtLink>
           </CardTitle>
@@ -137,7 +137,7 @@
         <CardHeader>
           <CardTitle class="flex items-center justify-between">
             <span>Pengumuman Terbaru</span>
-            <NuxtLink to="/dashboard/announcements" class="text-sm text-orange-600 hover:text-orange-500">
+            <NuxtLink to="/dashboard/announcements" class="text-sm text-blue-600 hover:text-blue-500">
               Lihat Semua
             </NuxtLink>
           </CardTitle>
@@ -247,23 +247,13 @@ useSeoMeta({
   description: 'Dashboard sistem manajemen RT digital'
 })
 
-// Mengambil data user dari localStorage yang disimpan saat login
-const user = ref({
-  id: '1',
-  name: 'John Doe',
-  email: 'john@example.com',
-  role: 'ADMIN'
-})
+// Menggunakan composable useAuth untuk mendapatkan data user yang sedang login
+const { user, isAuthenticated, fetchUser } = useAuth()
 
-// Mengambil data user dari localStorage saat komponen dimount
-onMounted(() => {
-  try {
-    const storedUser = localStorage.getItem('user_data')
-    if (storedUser) {
-      user.value = JSON.parse(storedUser)
-    }
-  } catch (error) {
-    console.error('Error loading user data from localStorage:', error)
+// Mengambil data user saat komponen dimount
+onMounted(async () => {
+  if (!isAuthenticated.value) {
+    await fetchUser()
   }
 })
 
@@ -316,22 +306,17 @@ const recentAnnouncements = ref([
   }
 ])
 
-// Role-based access control
-const canAccessUserManagement = computed(() => {
-  return ['ADMIN', 'KETUA_RT'].includes(user.value.role)
-})
-
-const canAccessReports = computed(() => {
-  return ['ADMIN', 'KETUA_RT', 'SEKRETARIS'].includes(user.value.role)
-})
+// Role-based access control dari useAuth
+const { canAccessUserManagement, canAccessReports } = useAuth()
 
 // Helper functions
 const getRoleLabel = (role: string) => {
   const roleLabels: Record<string, string> = {
-    'ADMIN': 'Administrator',
+    'SUPER_ADMIN': 'Super Administrator',
     'KETUA_RT': 'Ketua RT',
     'SEKRETARIS': 'Sekretaris',
     'BENDAHARA': 'Bendahara',
+    'STAFF': 'Staff',
     'WARGA': 'Warga'
   }
   return roleLabels[role] || role

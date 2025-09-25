@@ -289,7 +289,7 @@ import { ref, reactive, computed } from 'vue'
 // Emits
 const emit = defineEmits<{
   close: []
-  save: []
+  save: [passwordData: { currentPassword: string; newPassword: string }]
 }>()
 
 // Reactive state
@@ -462,7 +462,10 @@ const changePassword = async () => {
     }
 
     // Success - emit save event
-    emit('save')
+    emit('save', {
+      currentPassword: formData.currentPassword,
+      newPassword: formData.newPassword
+    })
     
     // Reset form
     formData.currentPassword = ''

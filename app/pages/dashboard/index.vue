@@ -27,9 +27,9 @@
                 </svg>
               </div>
             </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500">Total Warga</p>
-              <p class="text-2xl font-semibold text-gray-900">{{ stats.totalWarga }}</p>
+            <div class="ml-4 min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500 truncate">Total Warga</p>
+              <p class="text-2xl font-semibold text-gray-900 truncate">{{ stats.totalWarga }}</p>
             </div>
           </div>
         </CardContent>
@@ -45,9 +45,9 @@
                 </svg>
               </div>
             </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500">Total Keluarga</p>
-              <p class="text-2xl font-semibold text-gray-900">{{ stats.totalFamilies }}</p>
+            <div class="ml-4 min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500 truncate">Total Keluarga</p>
+              <p class="text-2xl font-semibold text-gray-900 truncate">{{ stats.totalFamilies }}</p>
             </div>
           </div>
         </CardContent>
@@ -63,9 +63,9 @@
                 </svg>
               </div>
             </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500">Iuran Bulan Ini</p>
-              <p class="text-2xl font-semibold text-gray-900">Rp {{ formatCurrency(stats.monthlyPayments) }}</p>
+            <div class="ml-4 min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500 truncate">Iuran Bulan Ini</p>
+              <p class="text-2xl font-semibold text-gray-900 truncate">Rp {{ formatCurrency(stats.monthlyPayments) }}</p>
             </div>
           </div>
         </CardContent>
@@ -81,9 +81,9 @@
                 </svg>
               </div>
             </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500">Pengumuman Aktif</p>
-              <p class="text-2xl font-semibold text-gray-900">{{ stats.activeAnnouncements }}</p>
+            <div class="ml-4 min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500 truncate">Pengumuman Aktif</p>
+              <p class="text-2xl font-semibold text-gray-900 truncate">{{ stats.activeAnnouncements }}</p>
             </div>
           </div>
         </CardContent>

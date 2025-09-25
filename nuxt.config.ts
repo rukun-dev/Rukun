@@ -6,6 +6,9 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ["@/assets/css/main.css"],
 
+  runtimeConfig: {
+    exnestApiKey: process.env.API_KEY},
+
   vite: {
     plugins: [tailwindcss()],
     optimizeDeps: {

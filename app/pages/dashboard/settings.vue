@@ -298,62 +298,12 @@
       </div>
     </div>
 
-    <!-- Password Change Modal -->
-    <div v-if="showPasswordChange" class="fixed inset-0 z-50 overflow-y-auto">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-black/50 transition-opacity" @click="showPasswordChange = false"></div>
-        
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-10">
-          <div class="bg-white px-6 py-5">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Ubah Password</h3>
-            <form @submit.prevent="updatePassword" class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Password Saat Ini</label>
-                <input
-                  v-model="currentPassword"
-                  type="password"
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Password Baru</label>
-                <input
-                  v-model="newPassword"
-                  type="password"
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Konfirmasi Password Baru</label>
-                <input
-                  v-model="confirmPassword"
-                  type="password"
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div class="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  @click="showPasswordChange = false"
-                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  Ubah Password
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Password Change Form -->
+    <PasswordChangeForm 
+      v-if="showPasswordChange"
+      @close="closePasswordForm"
+      @save="handlePasswordChange"
+    />
 
     <!-- Confirmation Modals -->
     <div v-if="showDeactivateConfirm" class="fixed inset-0 z-50 overflow-y-auto">
@@ -440,13 +390,17 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import PasswordChangeForm from '../../components/dashboard/PasswordChangeForm.vue'
 
-// Page meta
+// Meta
 definePageMeta({
-  title: 'Pengaturan',
-  description: 'Kelola pengaturan akun dan preferensi Anda',
   layout: 'dashboard',
   middleware: 'auth'
+})
+
+useSeoMeta({
+  title: 'Pengaturan - RT Management System',
+  description: 'Pengaturan akun dan preferensi sistem'
 })
 
 // Reactive state
@@ -458,9 +412,6 @@ const showDeleteConfirm = ref(false)
 // Form data
 const newEmail = ref('')
 const passwordConfirm = ref('')
-const currentPassword = ref('')
-const newPassword = ref('')
-const confirmPassword = ref('')
 
 // User settings (mock data)
 const userSettings = ref({
@@ -493,23 +444,21 @@ const updateEmail = async () => {
   }
 }
 
-const updatePassword = async () => {
-  if (newPassword.value !== confirmPassword.value) {
-    alert('Password baru dan konfirmasi tidak cocok')
-    return
-  }
+const closePasswordForm = () => {
+  showPasswordChange.value = false
+}
 
+const handlePasswordChange = async (passwordData: { currentPassword: string; newPassword: string }) => {
   try {
     // TODO: Implement API call
-    console.log('Updating password')
+    console.log('Updating password:', passwordData)
     showPasswordChange.value = false
-    currentPassword.value = ''
-    newPassword.value = ''
-    confirmPassword.value = ''
   } catch (error) {
     console.error('Failed to update password:', error)
   }
 }
+
+
 
 const toggleTwoFactor = async () => {
   try {

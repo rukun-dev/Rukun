@@ -116,6 +116,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+// Global loading
+const { showLoading, hideLoading } = useGlobalLoading()
+
 // Meta
 definePageMeta({
   layout: false,
@@ -180,6 +183,7 @@ const handleForgotPassword = async () => {
   if (!validateForm()) return
 
   loading.value = true
+  showLoading('Mengirim email reset password...', 'Mohon tunggu sebentar')
 
   try {
     // Implement actual forgot password logic with fetch API
@@ -204,6 +208,7 @@ const handleForgotPassword = async () => {
     errors.general = 'Terjadi kesalahan. Silakan coba lagi.'
   } finally {
     loading.value = false
+    hideLoading()
   }
 }
 
@@ -212,6 +217,7 @@ const resendEmail = async () => {
   if (resendCooldown.value > 0) return
 
   resendLoading.value = true
+  showLoading('Mengirim ulang email...', 'Mohon tunggu sebentar')
 
   try {
     // Implement actual resend email logic with fetch API
@@ -238,6 +244,7 @@ const resendEmail = async () => {
     errors.general = 'Gagal mengirim ulang email. Silakan coba lagi.'
   } finally {
     resendLoading.value = false
+    hideLoading()
   }
 }
 

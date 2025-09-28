@@ -5,6 +5,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   }
 
   const { isAuthenticated, fetchUser, isLoading } = useAuth()
+  const { showLoading, hideLoading } = useGlobalLoading()
   
   // Debug logging
   console.log('🔐 Auth Middleware - Route:', to.path)
@@ -37,14 +38,22 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // For protected routes, ensure user is authenticated
   console.log('🔐 Auth Middleware - Processing protected route')
   
+  // Show loading if authentication is in progress
+  if (isLoading.value) {
+    showLoading('Memverifikasi akses...', 'Mohon tunggu sebentar')
+  }
+  
   // If not authenticated and not loading, try one more fetch (fallback)
   if (!isAuthenticated.value && !isLoading.value) {
     console.log('🔐 Auth Middleware - Fallback fetch for protected route')
+    showLoading('Memverifikasi akses...', 'Memeriksa status login Anda')
+    
     try {
       await fetchUser()
       console.log('🔐 Auth Middleware - Fallback fetch completed:', isAuthenticated.value)
     } catch (error) {
       console.log('🔐 Auth Middleware - Fallback fetch failed, redirecting to login')
+      hideLoading()
       return navigateTo('/login')
     }
   }
@@ -58,6 +67,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     // If still loading after timeout, redirect to login for safety
     if (isLoading.value) {
       console.log('🔐 Auth Middleware - Still loading after timeout, redirecting to login')
+      hideLoading()
       return navigateTo('/login')
     }
   }
@@ -65,8 +75,11 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // Final check: redirect to login if still not authenticated
   if (!isAuthenticated.value) {
     console.log('🔐 Auth Middleware - Final check failed, redirecting to login')
+    hideLoading()
     return navigateTo('/login')
   }
   
+  // Hide loading when access is granted
+  hideLoading()
   console.log('🔐 Auth Middleware - Access granted to protected route')
 })

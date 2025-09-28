@@ -224,7 +224,8 @@ interface LoginResponse {
 
 // Meta
 definePageMeta({
-  layout: false
+  layout: false,
+  middleware: 'auth'
 })
 
 useSeoMeta({

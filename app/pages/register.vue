@@ -219,7 +219,8 @@ import { Label } from '@/components/ui/label'
 
 // Meta
 definePageMeta({
-  layout: false
+  layout: false,
+  middleware: 'auth'
 })
 
 useSeoMeta({

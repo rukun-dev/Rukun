@@ -203,6 +203,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+// Global loading
+const { showLoading, hideLoading } = useGlobalLoading()
+
 // Meta
 definePageMeta({
   layout: false,
@@ -318,6 +321,7 @@ const handleResetPassword = async () => {
   if (!validateForm()) return
 
   loading.value = true
+  showLoading('Mereset password...', 'Mohon tunggu sebentar')
 
   try {
     const response = await fetch(`/api/auth/reset-password`, {
@@ -349,6 +353,7 @@ const handleResetPassword = async () => {
     errors.general = 'Terjadi kesalahan saat reset password. Silakan coba lagi.'
   } finally {
     loading.value = false
+    hideLoading()
   }
 }
 

@@ -392,6 +392,9 @@
 import { ref, computed } from 'vue'
 import PasswordChangeForm from '../../components/dashboard/PasswordChangeForm.vue'
 
+// Global loading
+const { showLoading, hideLoading } = useGlobalLoading()
+
 // Meta
 definePageMeta({
   layout: 'dashboard',
@@ -432,6 +435,7 @@ const lastPasswordChange = computed(() => {
 
 // Methods
 const updateEmail = async () => {
+  showLoading('Memperbarui email...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     console.log('Updating email to:', newEmail.value)
@@ -441,6 +445,8 @@ const updateEmail = async () => {
     passwordConfirm.value = ''
   } catch (error) {
     console.error('Failed to update email:', error)
+  } finally {
+    hideLoading()
   }
 }
 
@@ -449,77 +455,99 @@ const closePasswordForm = () => {
 }
 
 const handlePasswordChange = async (passwordData: { currentPassword: string; newPassword: string }) => {
+  showLoading('Memperbarui password...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     console.log('Updating password:', passwordData)
     showPasswordChange.value = false
   } catch (error) {
     console.error('Failed to update password:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 
 
 const toggleTwoFactor = async () => {
+  showLoading('Memperbarui autentikasi dua faktor...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     userSettings.value.twoFactorEnabled = !userSettings.value.twoFactorEnabled
     console.log('Two factor authentication:', userSettings.value.twoFactorEnabled ? 'enabled' : 'disabled')
   } catch (error) {
     console.error('Failed to toggle two factor:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const updateProfileVisibility = async () => {
+  showLoading('Memperbarui visibilitas profil...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     console.log('Profile visibility updated to:', userSettings.value.profileVisibility)
   } catch (error) {
     console.error('Failed to update profile visibility:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const toggleActivityStatus = async () => {
+  showLoading('Memperbarui status aktivitas...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     userSettings.value.showActivityStatus = !userSettings.value.showActivityStatus
     console.log('Activity status:', userSettings.value.showActivityStatus ? 'enabled' : 'disabled')
   } catch (error) {
     console.error('Failed to toggle activity status:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const toggleEmailNotifications = async () => {
+  showLoading('Memperbarui notifikasi email...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     userSettings.value.emailNotifications = !userSettings.value.emailNotifications
     console.log('Email notifications:', userSettings.value.emailNotifications ? 'enabled' : 'disabled')
   } catch (error) {
     console.error('Failed to toggle email notifications:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const togglePushNotifications = async () => {
+  showLoading('Memperbarui notifikasi push...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     userSettings.value.pushNotifications = !userSettings.value.pushNotifications
     console.log('Push notifications:', userSettings.value.pushNotifications ? 'enabled' : 'disabled')
   } catch (error) {
     console.error('Failed to toggle push notifications:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const toggleMarketingEmails = async () => {
+  showLoading('Memperbarui email marketing...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     userSettings.value.marketingEmails = !userSettings.value.marketingEmails
     console.log('Marketing emails:', userSettings.value.marketingEmails ? 'enabled' : 'disabled')
   } catch (error) {
     console.error('Failed to toggle marketing emails:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const deactivateAccount = async () => {
+  showLoading('Menonaktifkan akun...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     console.log('Deactivating account')
@@ -527,10 +555,13 @@ const deactivateAccount = async () => {
     // Redirect to login or home page
   } catch (error) {
     console.error('Failed to deactivate account:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const deleteAccount = async () => {
+  showLoading('Menghapus akun...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     console.log('Deleting account')
@@ -538,6 +569,8 @@ const deleteAccount = async () => {
     // Redirect to home page
   } catch (error) {
     console.error('Failed to delete account:', error)
+  } finally {
+    hideLoading()
   }
 }
 </script>

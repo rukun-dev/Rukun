@@ -251,6 +251,9 @@ import { ref, onMounted } from 'vue'
 import AvatarUpload from '../../components/dashboard/AvatarUpload.vue'
 import PasswordChangeForm from '../../components/dashboard/PasswordChangeForm.vue'
 
+// Global loading
+const { showLoading, hideLoading } = useGlobalLoading()
+
 // Layout
 definePageMeta({
   layout: 'dashboard',
@@ -284,6 +287,7 @@ const showPasswordForm = ref(false)
 
 // Methods
 const handleAvatarUpload = async (avatarUrl: string) => {
+  showLoading('Memperbarui avatar...', 'Mohon tunggu sebentar')
   try {
     // Avatar URL is already uploaded by AvatarUpload component
     // Just close the modal and refresh profile data
@@ -297,6 +301,8 @@ const handleAvatarUpload = async (avatarUrl: string) => {
     console.log('Avatar uploaded successfully:', avatarUrl)
   } catch (err) {
     console.error('Failed to refresh profile after avatar upload:', err)
+  } finally {
+    hideLoading()
   }
 }
 
@@ -310,6 +316,7 @@ const handlePasswordChange = () => {
 }
 
 onMounted(async () => {
+  showLoading('Memuat data profil...', 'Mohon tunggu sebentar')
   try {
     if (currentUser.value?.id) {
       await fetchProfile(currentUser.value.id)
@@ -317,6 +324,8 @@ onMounted(async () => {
     }
   } catch (err) {
     console.error('Failed to load profile:', err)
+  } finally {
+    hideLoading()
   }
 })
 </script>

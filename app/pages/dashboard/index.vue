@@ -236,6 +236,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
+// Global loading
+const { showLoading, hideLoading } = useGlobalLoading()
+
+// Langsung tampilkan loading saat komponen dimuat
+showLoading('Memuat data dashboard...', 'Mohon tunggu sebentar')
+
 // Meta
 definePageMeta({
   layout: 'dashboard',
@@ -250,19 +256,38 @@ useSeoMeta({
 // Menggunakan composable useAuth untuk mendapatkan data user yang sedang login
 const { user, isAuthenticated, fetchUser } = useAuth()
 
-// Mengambil data user saat komponen dimount
-onMounted(async () => {
-  if (!isAuthenticated.value) {
-    await fetchUser()
-  }
+// Data dashboard
+const stats = ref({
+  totalWarga: 0,
+  totalFamilies: 0,
+  monthlyPayments: 0,
+  activeAnnouncements: 0
 })
 
-// TODO: Replace with actual data from API
-const stats = ref({
-  totalWarga: 156,
-  totalFamilies: 45,
-  monthlyPayments: 7800000,
-  activeAnnouncements: 3
+// Fungsi untuk memuat data dashboard
+const fetchDashboardData = async () => {
+  // TODO: Replace with actual API call
+  // Simulasi API call
+  await new Promise(resolve => setTimeout(resolve, 1500))
+  
+  stats.value = {
+    totalWarga: 156,
+    totalFamilies: 45,
+    monthlyPayments: 7800000,
+    activeAnnouncements: 3
+  }
+}
+
+// Mengambil data user saat komponen dimount
+onMounted(async () => {
+  try {
+    if (!isAuthenticated.value) {
+      await fetchUser()
+    }
+    await fetchDashboardData()
+  } finally {
+    hideLoading()
+  }
 })
 
 const recentPayments = ref([

@@ -1,14 +1,24 @@
 <template>
   <div class="space-y-8">
-    <!-- Page Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Pengaturan</h1>
-        <p class="text-gray-600">Kelola pengaturan akun dan preferensi Anda</p>
+    <!-- Loading State -->
+    <div v-if="loading" class="flex justify-center items-center py-12">
+      <div class="flex items-center space-x-2">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        <span class="text-gray-600">Memuat pengaturan...</span>
       </div>
     </div>
 
-    <!-- Account Settings -->
+    <!-- Content -->
+    <div v-else>
+      <!-- Page Header -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Pengaturan</h1>
+          <p class="text-gray-600">Kelola pengaturan akun dan preferensi Anda</p>
+        </div>
+      </div>
+
+      <!-- Account Settings -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200">
       <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold text-gray-900">Akun</h2>
@@ -68,32 +78,6 @@
       </div>
       
       <div class="p-6 space-y-6">
-        <!-- Two Factor Authentication -->
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-sm font-medium text-gray-900">Autentikasi Dua Faktor</h3>
-            <p class="text-sm text-gray-500">Tambahkan lapisan keamanan ekstra untuk akun Anda</p>
-          </div>
-          <div class="flex items-center">
-            <span class="text-sm text-gray-500 mr-3">
-              {{ userSettings.twoFactorEnabled ? 'Aktif' : 'Nonaktif' }}
-            </span>
-            <button
-              @click="toggleTwoFactor"
-              :class="[
-                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-                userSettings.twoFactorEnabled ? 'bg-blue-600' : 'bg-gray-200'
-              ]"
-            >
-              <span
-                :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                  userSettings.twoFactorEnabled ? 'translate-x-5' : 'translate-x-0'
-                ]"
-              />
-            </button>
-          </div>
-        </div>
 
         <!-- Profile Visibility -->
         <div class="flex items-center justify-between">
@@ -386,10 +370,11 @@
       </div>
     </div>
   </div>
+</div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import PasswordChangeForm from '../../components/dashboard/PasswordChangeForm.vue'
 
 // Global loading
@@ -411,6 +396,7 @@ const showEmailChange = ref(false)
 const showPasswordChange = ref(false)
 const showDeactivateConfirm = ref(false)
 const showDeleteConfirm = ref(false)
+const loading = ref(true)
 
 // Form data
 const newEmail = ref('')
@@ -419,7 +405,6 @@ const passwordConfirm = ref('')
 // User settings (mock data)
 const userSettings = ref({
   email: 'user@example.com',
-  twoFactorEnabled: false,
   profileVisibility: 'public',
   showActivityStatus: true,
   emailNotifications: true,
@@ -432,6 +417,26 @@ const lastPasswordChange = computed(() => {
   // Mock data - in real app, this would come from API
   return '3 bulan yang lalu'
 })
+
+// Lifecycle
+onMounted(async () => {
+  showLoading('Memuat pengaturan...', 'Mohon tunggu sebentar')
+  try {
+    // TODO: Fetch user settings from API
+    await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
+    loading.value = false
+  } catch (error) {
+    console.error('Failed to load settings:', error)
+    loading.value = false
+  } finally {
+    hideLoading()
+  }
+})
+
+// Handle SSR - make sure loading is false on server render
+if (process.server) {
+  loading.value = false
+}
 
 // Methods
 const updateEmail = async () => {
@@ -468,19 +473,6 @@ const handlePasswordChange = async (passwordData: { currentPassword: string; new
 }
 
 
-
-const toggleTwoFactor = async () => {
-  showLoading('Memperbarui autentikasi dua faktor...', 'Mohon tunggu sebentar')
-  try {
-    // TODO: Implement API call
-    userSettings.value.twoFactorEnabled = !userSettings.value.twoFactorEnabled
-    console.log('Two factor authentication:', userSettings.value.twoFactorEnabled ? 'enabled' : 'disabled')
-  } catch (error) {
-    console.error('Failed to toggle two factor:', error)
-  } finally {
-    hideLoading()
-  }
-}
 
 const updateProfileVisibility = async () => {
   showLoading('Memperbarui visibilitas profil...', 'Mohon tunggu sebentar')

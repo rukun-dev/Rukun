@@ -1,48 +1,14 @@
 <template>
   <Toaster richColors position="top-right" />
-  <RouterView />
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-    <!-- Header Navigation -->
-    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center space-x-2">
-            <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <div>
-              <h1 class="text-xl font-bold text-gray-900">RT Management</h1>
-              <p class="text-xs text-gray-500">Sistem Digital RT</p>
-            </div>
-          </div>
+  <div class="min-h-screen bg-white">
 
-          <!-- Breadcrumb -->
-          <div class="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
-            <span>Dashboard</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-            <span class="text-blue-600 font-medium">Manajemen Kartu Keluarga</span>
-          </div>
-        </div>
-      </nav>
-    </header>
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Page Header -->
+      <!-- Page Content -->
       <div class="mb-8">
         <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-3xl font-bold text-gray-900 mb-2">
-              Manajemen Kartu Keluarga
-            </h2>
-            <p class="text-gray-600">
-              Kelola data kartu keluarga RT dengan mudah dan efisien
-            </p>
-          </div>
+          <div></div>
           
           <!-- Tombol Tambah Kartu Keluarga -->
           <button
@@ -101,9 +67,8 @@
             <h3 class="text-lg font-semibold text-gray-900">Data Kartu Keluarga</h3>
             <div class="flex items-center space-x-4">
               <span class="text-sm text-gray-600">
-                Menampilkan {{ startIndex + 1 }}-{{
-                  Math.min(startIndex + itemsPerPage, filteredKeluarga.length)
-                }} dari {{ filteredKeluarga.length }} data
+                Menampilkan halaman {{ currentPage }} dari {{ apiPagination?.total_pages || 1 }}, 
+                total {{ apiPagination?.total_count || 0 }} data
               </span>
               <select
                 v-model.number="itemsPerPage"
@@ -287,15 +252,15 @@
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
               <button
-                @click="currentPage = 1"
-                :disabled="currentPage === 1"
+                @click="() => goToPage(1)"
+                :disabled="!(apiPagination?.has_previous)"
                 class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 First
               </button>
               <button
-                @click="currentPage--"
-                :disabled="currentPage === 1"
+                @click="() => previousPage()"
+                :disabled="!(apiPagination?.has_previous)"
                 class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
@@ -306,7 +271,7 @@
               <button
                 v-for="page in visiblePages"
                 :key="page"
-                @click="currentPage = page"
+                @click="(e) => { e.preventDefault(); goToPage(page); }"
                 :class="
                   currentPage === page
                     ? 'bg-blue-600 text-white'
@@ -320,15 +285,15 @@
 
             <div class="flex items-center space-x-2">
               <button
-                @click="currentPage++"
-                :disabled="currentPage === totalPages"
+                @click="() => nextPage()"
+                :disabled="!(apiPagination?.has_next)"
                 class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>
               <button
-                @click="currentPage = totalPages"
-                :disabled="currentPage === totalPages"
+                @click="(e) => { e.preventDefault(); goToPage(apiPagination?.total_pages || 1); }"
+                :disabled="!(apiPagination?.has_next)"
                 class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Last
@@ -462,6 +427,11 @@ import KeluargaDetail from "@/components/ui-keluarga/KeluargaDetail.vue";
 import KeluargaCreate from "@/components/form/keluarga/KeluargaCreate.vue";
 import KeluargaEdit from "@/components/form/keluarga/KeluargaEdit.vue";
 
+definePageMeta({
+  layout: 'dashboard',
+  middleware: 'auth'
+})
+
 // Types
 interface FilterType {
   searchTerm: string;
@@ -469,26 +439,34 @@ interface FilterType {
   status: string;
 }
 
-// Use composablex
-const {
-  keluargaList,
-  loading,
-  error,
-  searchTerm,
-  filterRt,
-  filterStatus,
-  currentPage,
-  itemsPerPage,
-  filteredKeluarga,
-  paginatedKeluarga,
-  totalPages,
-  stats,
-  loadKeluarga,
-  addKeluarga,
-  updateKeluarga,
-  deleteKeluarga,
-  resetFilters
-} = useKeluarga();
+// Use composable
+const keluargaComposable = useKeluarga();
+const keluargaList = keluargaComposable.keluargaList;
+const loading = keluargaComposable.loading;
+const error = keluargaComposable.error;
+const searchTerm = keluargaComposable.searchTerm;
+const filterRt = keluargaComposable.filterRt;
+const filterStatus = keluargaComposable.filterStatus;
+const currentPage = keluargaComposable.currentPage;
+const itemsPerPage = keluargaComposable.itemsPerPage;
+const apiPagination = keluargaComposable.apiPagination;
+const filteredKeluarga = keluargaComposable.filteredKeluarga;
+const paginatedKeluarga = keluargaComposable.paginatedKeluarga;
+const totalPages = keluargaComposable.totalPages;
+const stats = keluargaComposable.stats;
+const loadKeluarga = keluargaComposable.loadKeluarga;
+const addKeluarga = keluargaComposable.addKeluarga;
+const updateKeluarga = keluargaComposable.updateKeluarga;
+const deleteKeluarga = keluargaComposable.deleteKeluarga;
+const resetFilters = keluargaComposable.resetFilters;
+const nextPage = keluargaComposable.nextPage;
+const previousPage = keluargaComposable.previousPage;
+const goToPage = keluargaComposable.goToPage;
+
+// Load data on component mount
+onMounted(() => {
+  loadKeluarga();
+});
 
 // Modal state
 const showCreate = ref(false);
@@ -498,6 +476,24 @@ const showDetail = ref(false);
 const editingKeluarga = ref<KeluargaData | null>(null);
 const selectedKeluarga = ref<KeluargaData | null>(null);
 const toDelete = ref<KeluargaData | null>(null);
+
+// Ensure pagination variables are properly initialized
+const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value + 1);
+const visiblePages = computed(() => {
+  const pages: number[] = [];
+  const total = apiPagination?.total_pages || 1;
+  const cur = currentPage.value;
+  let start = Math.max(1, cur - 2);
+  let end = Math.min(total, cur + 2);
+  
+  if (end - start < 4) {
+    if (start === 1) end = Math.min(total, start + 4);
+    else if (end === total) start = Math.max(1, end - 4);
+  }
+  
+  for (let i = start; i <= end; i++) pages.push(i);
+  return pages;
+});
 
 // File input ref
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -520,26 +516,6 @@ const filters = computed({
     filterStatus.value = v.status ?? "";
     currentPage.value = 1; // Reset page when filters change
   },
-});
-
-// Computed properties
-const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value + 1);
-
-// Visible pages for pagination
-const visiblePages = computed(() => {
-  const pages: number[] = [];
-  const total = totalPages.value;
-  const cur = currentPage.value;
-  let start = Math.max(1, cur - 2);
-  let end = Math.min(total, cur + 2);
-  
-  if (end - start < 4) {
-    if (start === 1) end = Math.min(total, start + 4);
-    else if (end === total) start = Math.max(1, end - 4);
-  }
-  
-  for (let i = start; i <= end; i++) pages.push(i);
-  return pages;
 });
 
 // Helper functions
@@ -569,17 +545,26 @@ const openEdit = (keluarga: KeluargaData) => {
   showEdit.value = true;
 };
 
-const saveKeluarga = (payload: Omit<KeluargaData, 'id' | 'createdAt' | 'updatedAt'>) => {
-  if (editingKeluarga.value) {
-    // Update existing keluarga
-    updateKeluarga(editingKeluarga.value.id, payload);
-    showEdit.value = false;
-    toast.success(`Data kartu keluarga berhasil diperbarui`);
-  } else {
-    // Add new keluarga
-    addKeluarga(payload);
-    showCreate.value = false;
-    toast.success(`Data kartu keluarga berhasil ditambahkan`);
+const saveKeluarga = async (payload: Omit<KeluargaData, 'id' | 'createdAt' | 'updatedAt'>) => {
+  try {
+    loading.value = true;
+    
+    if (editingKeluarga.value) {
+      // Update existing keluarga
+      await updateKeluarga(editingKeluarga.value.id, payload);
+      showEdit.value = false;
+      toast.success(`Data kartu keluarga berhasil diperbarui`);
+    } else {
+      // Add new keluarga
+      await addKeluarga(payload);
+      showCreate.value = false;
+      toast.success(`Data kartu keluarga berhasil ditambahkan`);
+    }
+  } catch (error) {
+    toast.error('Gagal menyimpan data kartu keluarga');
+    console.error('Error saving keluarga:', error);
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -588,11 +573,20 @@ const askDelete = (keluarga: KeluargaData) => {
   showDelete.value = true;
 };
 
-const confirmDelete = () => {
-  if (toDelete.value) {
-    deleteKeluarga(toDelete.value.id);
-    showDelete.value = false;
-    toast.success(`Data kartu keluarga berhasil dihapus`);
+const confirmDelete = async () => {
+  try {
+    loading.value = true;
+    
+    if (toDelete.value) {
+      await deleteKeluarga(toDelete.value.id);
+      showDelete.value = false;
+      toast.success(`Data kartu keluarga berhasil dihapus`);
+    }
+  } catch (error) {
+    toast.error('Gagal menghapus data kartu keluarga');
+    console.error('Error deleting keluarga:', error);
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -637,7 +631,13 @@ const handleImport = (event: Event) => {
       }).filter(k => k.noKk && k.kepalaKeluarga); // Filter valid data
       
       // Add imported data using composable
-      importedData.forEach(data => addKeluarga(data));
+      importedData.forEach(async data => {
+        try {
+          await addKeluarga(data);
+        } catch (error) {
+          console.error('Error adding imported keluarga:', error);
+        }
+      });
       toast.success(`Berhasil import ${importedData.length} data kartu keluarga`);
       
       // Reset file input
@@ -688,9 +688,9 @@ const exportCsv = () => {
   toast.success('Data berhasil diekspor ke CSV');
 };
 
-// Watch for filter changes to reset pagination
-watch([searchTerm, filterRt, filterStatus], () => {
-  currentPage.value = 1;
+// Watch for itemsPerPage changes to reload data with new page size
+watch(itemsPerPage, () => {
+  loadKeluarga(1);
 });
 </script>
 

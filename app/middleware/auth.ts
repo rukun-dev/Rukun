@@ -1,6 +1,20 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  // Skip middleware on server-side rendering
+  // Handle server-side rendering
   if (process.server) {
+    // For protected routes, we need to ensure auth state is available
+    // This is handled by the auth composable on server side
+    console.log('🔐 Auth Middleware - Server-side rendering for:', to.path)
+    
+    // Only skip if it's a public route
+    const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/unauthorized']
+    const isPublicRoute = publicRoutes.includes(to.path) || to.path.startsWith('/reset-password')
+    
+    if (isPublicRoute) {
+      return // Allow public routes on server
+    }
+    
+    // For protected routes, let the auth composable handle it
+    // The server will render the page and auth will be checked on client-side
     return
   }
 

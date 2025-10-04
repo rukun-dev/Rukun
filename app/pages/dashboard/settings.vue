@@ -380,6 +380,9 @@ import PasswordChangeForm from '../../components/dashboard/PasswordChangeForm.vu
 // Global loading
 const { showLoading, hideLoading } = useGlobalLoading()
 
+// Langsung tampilkan loading saat komponen dimuat
+showLoading('Memuat pengaturan...', 'Mohon tunggu sebentar')
+
 // Meta
 definePageMeta({
   layout: 'dashboard',
@@ -420,7 +423,6 @@ const lastPasswordChange = computed(() => {
 
 // Lifecycle
 onMounted(async () => {
-  showLoading('Memuat pengaturan...', 'Mohon tunggu sebentar')
   try {
     // TODO: Fetch user settings from API
     await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call

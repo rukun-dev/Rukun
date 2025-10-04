@@ -27,9 +27,6 @@
       <!-- Header -->
       <DashboardHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
       
-      <!-- Breadcrumb -->
-      <DashboardBreadcrumb />
-      
       <!-- Page content -->
       <main class="py-6">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -44,7 +41,6 @@
 import { ref } from 'vue'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar.vue'
 import DashboardHeader from '@/components/dashboard/DashboardHeader.vue'
-import DashboardBreadcrumb from '@/components/dashboard/DashboardBreadcrumb.vue'
 
 // Mobile sidebar state
 const sidebarOpen = ref(false)

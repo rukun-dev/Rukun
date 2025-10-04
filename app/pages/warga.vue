@@ -528,6 +528,12 @@ import "vue-sonner/style.css";
 import { Toaster, toast } from "vue-sonner";
 import ConfirmDelete from "@/components/form/warga/ConfirmDelete.vue";
 
+// Global loading
+const { showLoading, hideLoading } = useGlobalLoading();
+
+// Langsung tampilkan loading saat komponen dimuat
+showLoading('Memuat data warga...', 'Mohon tunggu sebentar');
+
 // Page meta with authentication
 definePageMeta({
   layout: 'dashboard',
@@ -658,6 +664,8 @@ const getStatusClass = (status) =>
 const loadWargaData = async () => {
   try {
     loading.value = true;
+    // Global loading
+    const { showLoading, hideLoading } = useGlobalLoading();
     
     // Check if user is authenticated and has proper role
     if (!isAuthenticated.value) {
@@ -700,6 +708,7 @@ const loadWargaData = async () => {
     wargaList.value = [];
   } finally {
     loading.value = false;
+    hideLoading();
   }
 };
 
@@ -714,6 +723,7 @@ const openEdit = (warga) => {
 };
 const updateResident = async (payload) => {
   try {
+    showLoading('Memperbarui data warga...', 'Mohon tunggu sebentar');
     const response = await $fetch(`/api/warga/${payload.id}`, {
       method: 'PUT',
       body: payload
@@ -729,10 +739,13 @@ const updateResident = async (payload) => {
   } catch (error) {
     console.error('Error updating warga:', error);
     toast.error('Terjadi kesalahan saat memperbarui data');
+  } finally {
+    hideLoading();
   }
 };
 const saveResident = async (payload) => {
   try {
+    showLoading('Menambahkan data warga...', 'Mohon tunggu sebentar');
     const response = await $fetch('/api/warga/create', {
       method: 'POST',
       body: payload
@@ -747,6 +760,8 @@ const saveResident = async (payload) => {
   } catch (error) {
     console.error('Error saving warga:', error);
     toast.error('Terjadi kesalahan saat menyimpan data');
+  } finally {
+    hideLoading();
   }
 };
 const showDelete = ref(false);
@@ -759,6 +774,7 @@ const askDelete = (warga) => {
 
 const confirmDelete = async () => {
   try {
+    showLoading('Menghapus data warga...', 'Mohon tunggu sebentar');
     const response = await $fetch(`/api/warga/${toDelete.value.id}`, {
       method: 'DELETE'
     });
@@ -772,6 +788,8 @@ const confirmDelete = async () => {
   } catch (error) {
     console.error('Error deleting warga:', error);
     toast.error('Terjadi kesalahan saat menghapus data');
+  } finally {
+    hideLoading();
   }
   toDelete.value = null;
   showDelete.value = false;

@@ -455,6 +455,9 @@ import { Toaster, toast } from "vue-sonner";
 import { useKeluarga, type KeluargaData } from "@/composables/useKeluarga";
 import ConfirmDelete from "@/components/form/warga/ConfirmDelete.vue";
 
+// Global loading
+const { showLoading, hideLoading } = useGlobalLoading();
+
 // Components
 import StatsKeluarga from "@/components/ui-keluarga/StatsKeluarga.vue";
 import SearchFilterKeluarga from "@/components/ui-keluarga/SearchFilterKeluarga.vue";
@@ -572,14 +575,18 @@ const openEdit = (keluarga: KeluargaData) => {
 const saveKeluarga = (payload: Omit<KeluargaData, 'id' | 'createdAt' | 'updatedAt'>) => {
   if (editingKeluarga.value) {
     // Update existing keluarga
+    showLoading('Memperbarui data kartu keluarga...', 'Mohon tunggu sebentar');
     updateKeluarga(editingKeluarga.value.id, payload);
     showEdit.value = false;
     toast.success(`Data kartu keluarga berhasil diperbarui`);
+    hideLoading();
   } else {
     // Add new keluarga
+    showLoading('Menambahkan data kartu keluarga...', 'Mohon tunggu sebentar');
     addKeluarga(payload);
     showCreate.value = false;
     toast.success(`Data kartu keluarga berhasil ditambahkan`);
+    hideLoading();
   }
 };
 
@@ -590,9 +597,11 @@ const askDelete = (keluarga: KeluargaData) => {
 
 const confirmDelete = () => {
   if (toDelete.value) {
+    showLoading('Menghapus data kartu keluarga...', 'Mohon tunggu sebentar');
     deleteKeluarga(toDelete.value.id);
     showDelete.value = false;
     toast.success(`Data kartu keluarga berhasil dihapus`);
+    hideLoading();
   }
 };
 

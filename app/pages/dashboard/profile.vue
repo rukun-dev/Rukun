@@ -39,18 +39,7 @@
       <!-- Profile Overview Card -->
       <div class="bg-white shadow rounded-lg">
         <div class="px-6 py-4 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <h2 class="text-lg font-medium text-gray-900">Informasi Profil</h2>
-            <div class="flex items-center space-x-2">
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                  :style="{ width: `${completionPercentage}%` }"
-                ></div>
-              </div>
-              <span class="text-sm text-gray-600">{{ completionPercentage }}%</span>
-            </div>
-          </div>
+          <h2 class="text-lg font-medium text-gray-900">Informasi Profil</h2>
         </div>
         <div class="p-6">
           <div class="flex items-center space-x-6">
@@ -251,6 +240,12 @@ import { ref, onMounted } from 'vue'
 import AvatarUpload from '../../components/dashboard/AvatarUpload.vue'
 import PasswordChangeForm from '../../components/dashboard/PasswordChangeForm.vue'
 
+// Global loading
+const { showLoading, hideLoading } = useGlobalLoading()
+
+// Langsung tampilkan loading saat komponen dimuat
+showLoading('Memuat data profil...', 'Mohon tunggu sebentar')
+
 // Layout
 definePageMeta({
   layout: 'dashboard',
@@ -284,6 +279,7 @@ const showPasswordForm = ref(false)
 
 // Methods
 const handleAvatarUpload = async (avatarUrl: string) => {
+  showLoading('Memperbarui avatar...', 'Mohon tunggu sebentar')
   try {
     // Avatar URL is already uploaded by AvatarUpload component
     // Just close the modal and refresh profile data
@@ -297,6 +293,8 @@ const handleAvatarUpload = async (avatarUrl: string) => {
     console.log('Avatar uploaded successfully:', avatarUrl)
   } catch (err) {
     console.error('Failed to refresh profile after avatar upload:', err)
+  } finally {
+    hideLoading()
   }
 }
 
@@ -309,14 +307,31 @@ const handlePasswordChange = () => {
   console.log('Password changed successfully')
 }
 
+// Fetch profile data - handle both client and server side
+const fetchProfileData = async () => {
+  if (currentUser.value?.id) {
+    await fetchProfile(currentUser.value.id)
+  }
+}
+
 onMounted(async () => {
   try {
-    if (currentUser.value?.id) {
-      await fetchProfile(currentUser.value.id)
-      console.log('Profile data loaded:', profile.value)
-    }
+    await fetchProfileData()
   } catch (err) {
     console.error('Failed to load profile:', err)
+  } finally {
+    hideLoading()
+  }
+})
+
+// Watch for user changes (handle auth state updates)
+watch(currentUser, async (newUser) => {
+  if (newUser?.id && !profile.value) {
+    try {
+      await fetchProfileData()
+    } catch (err) {
+      console.error('Failed to load profile on user change:', err)
+    }
   }
 })
 </script>

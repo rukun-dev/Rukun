@@ -1,14 +1,24 @@
 <template>
   <div class="space-y-8">
-    <!-- Page Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Pengaturan</h1>
-        <p class="text-gray-600">Kelola pengaturan akun dan preferensi Anda</p>
+    <!-- Loading State -->
+    <div v-if="loading" class="flex justify-center items-center py-12">
+      <div class="flex items-center space-x-2">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        <span class="text-gray-600">Memuat pengaturan...</span>
       </div>
     </div>
 
-    <!-- Account Settings -->
+    <!-- Content -->
+    <div v-else>
+      <!-- Page Header -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Pengaturan</h1>
+          <p class="text-gray-600">Kelola pengaturan akun dan preferensi Anda</p>
+        </div>
+      </div>
+
+      <!-- Account Settings -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200">
       <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold text-gray-900">Akun</h2>
@@ -68,32 +78,6 @@
       </div>
       
       <div class="p-6 space-y-6">
-        <!-- Two Factor Authentication -->
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-sm font-medium text-gray-900">Autentikasi Dua Faktor</h3>
-            <p class="text-sm text-gray-500">Tambahkan lapisan keamanan ekstra untuk akun Anda</p>
-          </div>
-          <div class="flex items-center">
-            <span class="text-sm text-gray-500 mr-3">
-              {{ userSettings.twoFactorEnabled ? 'Aktif' : 'Nonaktif' }}
-            </span>
-            <button
-              @click="toggleTwoFactor"
-              :class="[
-                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-                userSettings.twoFactorEnabled ? 'bg-blue-600' : 'bg-gray-200'
-              ]"
-            >
-              <span
-                :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                  userSettings.twoFactorEnabled ? 'translate-x-5' : 'translate-x-0'
-                ]"
-              />
-            </button>
-          </div>
-        </div>
 
         <!-- Profile Visibility -->
         <div class="flex items-center justify-between">
@@ -298,62 +282,12 @@
       </div>
     </div>
 
-    <!-- Password Change Modal -->
-    <div v-if="showPasswordChange" class="fixed inset-0 z-50 overflow-y-auto">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-black/50 transition-opacity" @click="showPasswordChange = false"></div>
-        
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-10">
-          <div class="bg-white px-6 py-5">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Ubah Password</h3>
-            <form @submit.prevent="updatePassword" class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Password Saat Ini</label>
-                <input
-                  v-model="currentPassword"
-                  type="password"
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Password Baru</label>
-                <input
-                  v-model="newPassword"
-                  type="password"
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Konfirmasi Password Baru</label>
-                <input
-                  v-model="confirmPassword"
-                  type="password"
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div class="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  @click="showPasswordChange = false"
-                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  Ubah Password
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Password Change Form -->
+    <PasswordChangeForm 
+      v-if="showPasswordChange"
+      @close="closePasswordForm"
+      @save="handlePasswordChange"
+    />
 
     <!-- Confirmation Modals -->
     <div v-if="showDeactivateConfirm" class="fixed inset-0 z-50 overflow-y-auto">
@@ -436,17 +370,28 @@
       </div>
     </div>
   </div>
+</div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import PasswordChangeForm from '../../components/dashboard/PasswordChangeForm.vue'
 
-// Page meta
+// Global loading
+const { showLoading, hideLoading } = useGlobalLoading()
+
+// Langsung tampilkan loading saat komponen dimuat
+showLoading('Memuat pengaturan...', 'Mohon tunggu sebentar')
+
+// Meta
 definePageMeta({
-  title: 'Pengaturan',
-  description: 'Kelola pengaturan akun dan preferensi Anda',
   layout: 'dashboard',
   middleware: 'auth'
+})
+
+useSeoMeta({
+  title: 'Pengaturan - RT Management System',
+  description: 'Pengaturan akun dan preferensi sistem'
 })
 
 // Reactive state
@@ -454,18 +399,15 @@ const showEmailChange = ref(false)
 const showPasswordChange = ref(false)
 const showDeactivateConfirm = ref(false)
 const showDeleteConfirm = ref(false)
+const loading = ref(true)
 
 // Form data
 const newEmail = ref('')
 const passwordConfirm = ref('')
-const currentPassword = ref('')
-const newPassword = ref('')
-const confirmPassword = ref('')
 
 // User settings (mock data)
 const userSettings = ref({
   email: 'user@example.com',
-  twoFactorEnabled: false,
   profileVisibility: 'public',
   showActivityStatus: true,
   emailNotifications: true,
@@ -479,8 +421,28 @@ const lastPasswordChange = computed(() => {
   return '3 bulan yang lalu'
 })
 
+// Lifecycle
+onMounted(async () => {
+  try {
+    // TODO: Fetch user settings from API
+    await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
+    loading.value = false
+  } catch (error) {
+    console.error('Failed to load settings:', error)
+    loading.value = false
+  } finally {
+    hideLoading()
+  }
+})
+
+// Handle SSR - make sure loading is false on server render
+if (process.server) {
+  loading.value = false
+}
+
 // Methods
 const updateEmail = async () => {
+  showLoading('Memperbarui email...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     console.log('Updating email to:', newEmail.value)
@@ -490,87 +452,96 @@ const updateEmail = async () => {
     passwordConfirm.value = ''
   } catch (error) {
     console.error('Failed to update email:', error)
+  } finally {
+    hideLoading()
   }
 }
 
-const updatePassword = async () => {
-  if (newPassword.value !== confirmPassword.value) {
-    alert('Password baru dan konfirmasi tidak cocok')
-    return
-  }
+const closePasswordForm = () => {
+  showPasswordChange.value = false
+}
 
+const handlePasswordChange = async (passwordData: { currentPassword: string; newPassword: string }) => {
+  showLoading('Memperbarui password...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
-    console.log('Updating password')
+    console.log('Updating password:', passwordData)
     showPasswordChange.value = false
-    currentPassword.value = ''
-    newPassword.value = ''
-    confirmPassword.value = ''
   } catch (error) {
     console.error('Failed to update password:', error)
+  } finally {
+    hideLoading()
   }
 }
 
-const toggleTwoFactor = async () => {
-  try {
-    // TODO: Implement API call
-    userSettings.value.twoFactorEnabled = !userSettings.value.twoFactorEnabled
-    console.log('Two factor authentication:', userSettings.value.twoFactorEnabled ? 'enabled' : 'disabled')
-  } catch (error) {
-    console.error('Failed to toggle two factor:', error)
-  }
-}
+
 
 const updateProfileVisibility = async () => {
+  showLoading('Memperbarui visibilitas profil...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     console.log('Profile visibility updated to:', userSettings.value.profileVisibility)
   } catch (error) {
     console.error('Failed to update profile visibility:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const toggleActivityStatus = async () => {
+  showLoading('Memperbarui status aktivitas...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     userSettings.value.showActivityStatus = !userSettings.value.showActivityStatus
     console.log('Activity status:', userSettings.value.showActivityStatus ? 'enabled' : 'disabled')
   } catch (error) {
     console.error('Failed to toggle activity status:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const toggleEmailNotifications = async () => {
+  showLoading('Memperbarui notifikasi email...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     userSettings.value.emailNotifications = !userSettings.value.emailNotifications
     console.log('Email notifications:', userSettings.value.emailNotifications ? 'enabled' : 'disabled')
   } catch (error) {
     console.error('Failed to toggle email notifications:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const togglePushNotifications = async () => {
+  showLoading('Memperbarui notifikasi push...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     userSettings.value.pushNotifications = !userSettings.value.pushNotifications
     console.log('Push notifications:', userSettings.value.pushNotifications ? 'enabled' : 'disabled')
   } catch (error) {
     console.error('Failed to toggle push notifications:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const toggleMarketingEmails = async () => {
+  showLoading('Memperbarui email marketing...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     userSettings.value.marketingEmails = !userSettings.value.marketingEmails
     console.log('Marketing emails:', userSettings.value.marketingEmails ? 'enabled' : 'disabled')
   } catch (error) {
     console.error('Failed to toggle marketing emails:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const deactivateAccount = async () => {
+  showLoading('Menonaktifkan akun...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     console.log('Deactivating account')
@@ -578,10 +549,13 @@ const deactivateAccount = async () => {
     // Redirect to login or home page
   } catch (error) {
     console.error('Failed to deactivate account:', error)
+  } finally {
+    hideLoading()
   }
 }
 
 const deleteAccount = async () => {
+  showLoading('Menghapus akun...', 'Mohon tunggu sebentar')
   try {
     // TODO: Implement API call
     console.log('Deleting account')
@@ -589,6 +563,8 @@ const deleteAccount = async () => {
     // Redirect to home page
   } catch (error) {
     console.error('Failed to delete account:', error)
+  } finally {
+    hideLoading()
   }
 }
 </script>

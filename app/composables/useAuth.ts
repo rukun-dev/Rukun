@@ -67,9 +67,11 @@ export const useAuth = () => {
 
   // Methods
   const fetchUser = async (): Promise<void> => {
+    console.log('🔑 useAuth - fetchUser called')
     try {
       authState.value.isLoading = true
       authState.value.error = null
+      console.log('🔑 useAuth - Starting API call to /api/auth/me')
 
       const response = await $fetch<{
         success: boolean
@@ -80,25 +82,47 @@ export const useAuth = () => {
         credentials: 'include'
       })
 
+      console.log('🔑 useAuth - API response received:', { 
+        success: response.success, 
+        hasUser: !!response.data?.user,
+        message: response.message 
+      })
+
       if (response.success && response.data?.user) {
         authState.value.user = response.data.user
         authState.value.isAuthenticated = true
+        console.log('🔑 useAuth - User authenticated successfully:', response.data.user.email)
       } else {
+        console.log('🔑 useAuth - Authentication failed:', response.message)
         throw new Error(response.message || 'Failed to fetch user data')
       }
     } catch (err: any) {
-      console.error('Failed to fetch user:', err)
+      console.error('🔑 useAuth - Failed to fetch user:', err)
+      console.log('🔑 useAuth - Error details:', {
+        status: err.status,
+        statusCode: err.statusCode,
+        message: err.message,
+        data: err.data
+      })
       authState.value.user = null
       authState.value.isAuthenticated = false
       
       // Handle different error types
       if (err.status === 401) {
         authState.value.error = 'Session expired. Please login again.'
+        console.log('🔑 useAuth - 401 Unauthorized - Session expired')
       } else {
         authState.value.error = err.data?.message || err.message || 'Failed to fetch user data'
+        console.log('🔑 useAuth - Other error:', authState.value.error)
       }
     } finally {
       authState.value.isLoading = false
+      console.log('🔑 useAuth - fetchUser completed, final state:', {
+        isAuthenticated: authState.value.isAuthenticated,
+        isLoading: authState.value.isLoading,
+        hasUser: !!authState.value.user,
+        error: authState.value.error
+      })
     }
   }
 
@@ -196,8 +220,4 @@ export const useAuth = () => {
   }
 }
 
-// Auto-initialize auth on app start
-if (process.client) {
-  const { initAuth } = useAuth()
-  initAuth()
-}
+// Note: Auth initialization is now handled by middleware to prevent race conditions

@@ -531,6 +531,9 @@ import ConfirmDelete from "@/components/form/warga/ConfirmDelete.vue";
 // Global loading
 const { showLoading, hideLoading } = useGlobalLoading();
 
+// Langsung tampilkan loading saat komponen dimuat
+showLoading('Memuat data warga...', 'Mohon tunggu sebentar');
+
 // Page meta with authentication
 definePageMeta({
   layout: 'dashboard',
@@ -661,7 +664,8 @@ const getStatusClass = (status) =>
 const loadWargaData = async () => {
   try {
     loading.value = true;
-    showLoading('Memuat data warga...', 'Mohon tunggu sebentar');
+    // Global loading
+    const { showLoading, hideLoading } = useGlobalLoading();
     
     // Check if user is authenticated and has proper role
     if (!isAuthenticated.value) {

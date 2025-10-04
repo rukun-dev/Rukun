@@ -39,18 +39,7 @@
       <!-- Profile Overview Card -->
       <div class="bg-white shadow rounded-lg">
         <div class="px-6 py-4 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <h2 class="text-lg font-medium text-gray-900">Informasi Profil</h2>
-            <div class="flex items-center space-x-2">
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                  :style="{ width: `${completionPercentage}%` }"
-                ></div>
-              </div>
-              <span class="text-sm text-gray-600">{{ completionPercentage }}%</span>
-            </div>
-          </div>
+          <h2 class="text-lg font-medium text-gray-900">Informasi Profil</h2>
         </div>
         <div class="p-6">
           <div class="flex items-center space-x-6">
@@ -315,17 +304,35 @@ const handlePasswordChange = () => {
   console.log('Password changed successfully')
 }
 
+// Fetch profile data - handle both client and server side
+const fetchProfileData = async () => {
+  if (currentUser.value?.id) {
+    await fetchProfile(currentUser.value.id)
+  }
+}
+
 onMounted(async () => {
   showLoading('Memuat data profil...', 'Mohon tunggu sebentar')
   try {
-    if (currentUser.value?.id) {
-      await fetchProfile(currentUser.value.id)
-      console.log('Profile data loaded:', profile.value)
-    }
+    await fetchProfileData()
   } catch (err) {
     console.error('Failed to load profile:', err)
   } finally {
     hideLoading()
+  }
+})
+
+// Watch for user changes (handle auth state updates)
+watch(currentUser, async (newUser) => {
+  if (newUser?.id && !profile.value) {
+    showLoading('Memuat data profil...', 'Mohon tunggu sebentar')
+    try {
+      await fetchProfileData()
+    } catch (err) {
+      console.error('Failed to load profile on user change:', err)
+    } finally {
+      hideLoading()
+    }
   }
 })
 </script>

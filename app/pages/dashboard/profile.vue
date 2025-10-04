@@ -243,6 +243,9 @@ import PasswordChangeForm from '../../components/dashboard/PasswordChangeForm.vu
 // Global loading
 const { showLoading, hideLoading } = useGlobalLoading()
 
+// Langsung tampilkan loading saat komponen dimuat
+showLoading('Memuat data profil...', 'Mohon tunggu sebentar')
+
 // Layout
 definePageMeta({
   layout: 'dashboard',
@@ -312,7 +315,6 @@ const fetchProfileData = async () => {
 }
 
 onMounted(async () => {
-  showLoading('Memuat data profil...', 'Mohon tunggu sebentar')
   try {
     await fetchProfileData()
   } catch (err) {
@@ -325,13 +327,10 @@ onMounted(async () => {
 // Watch for user changes (handle auth state updates)
 watch(currentUser, async (newUser) => {
   if (newUser?.id && !profile.value) {
-    showLoading('Memuat data profil...', 'Mohon tunggu sebentar')
     try {
       await fetchProfileData()
     } catch (err) {
       console.error('Failed to load profile on user change:', err)
-    } finally {
-      hideLoading()
     }
   }
 })

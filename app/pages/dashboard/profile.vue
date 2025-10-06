@@ -46,7 +46,7 @@
             <!-- Avatar -->
             <div class="relative">
               <img 
-                :src="user.avatar || '/default-avatar.png'" 
+                :src="user.avatar || '/default-avatar.svg'" 
                 :alt="user.name"
                 class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
               >
@@ -253,7 +253,7 @@ definePageMeta({
 })
 
 // Composables
-const { user: currentUser } = useAuth()
+const { user: currentUser, refreshUser } = useAuth()
 const { 
   profile, 
   loading, 
@@ -281,18 +281,28 @@ const showPasswordForm = ref(false)
 const handleAvatarUpload = async (avatarUrl: string) => {
   showLoading('Memperbarui avatar...', 'Mohon tunggu sebentar')
   try {
-    // Avatar URL is already uploaded by AvatarUpload component
+    // Avatar URL is already uploaded/deleted by AvatarUpload component
     // Just close the modal and refresh profile data
     showAvatarUpload.value = false
     
-    // Refresh profile data to show new avatar
+    // Refresh both profile data and auth user data to sync header
     if (currentUser.value?.id) {
-      await fetchProfile()
+      // For delete operations (when avatarUrl is default), immediately update auth state
+      if (avatarUrl === '/default-avatar.svg' && currentUser.value) {
+        // Temporarily update the user avatar in auth state for immediate UI feedback
+        const { updateUserAvatar } = useAuth()
+        updateUserAvatar('/default-avatar.svg')
+      }
+      
+      // Then refresh auth user data to ensure consistency
+      await refreshUser()
+      // Finally fetch profile with specific user ID
+      await fetchProfile(currentUser.value.id)
     }
     
-    console.log('Avatar uploaded successfully:', avatarUrl)
+    console.log('Avatar updated successfully:', avatarUrl)
   } catch (err) {
-    console.error('Failed to refresh profile after avatar upload:', err)
+    console.error('Failed to refresh profile after avatar update:', err)
   } finally {
     hideLoading()
   }

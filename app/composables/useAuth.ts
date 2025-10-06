@@ -186,6 +186,16 @@ export const useAuth = () => {
     }
   }
 
+  // Update user avatar for immediate UI feedback
+  const updateUserAvatar = (avatarUrl: string): void => {
+    if (authState.value.user) {
+      authState.value.user = {
+        ...authState.value.user,
+        avatar: avatarUrl
+      }
+    }
+  }
+
   // Initialize auth state on first use
   const initAuth = async (): Promise<void> => {
     if (!authState.value.isAuthenticated && !authState.value.isLoading) {
@@ -216,6 +226,7 @@ export const useAuth = () => {
     logout,
     clearError,
     refreshUser,
+    updateUserAvatar,
     initAuth
   }
 }

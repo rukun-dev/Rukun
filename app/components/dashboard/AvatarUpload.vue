@@ -109,6 +109,18 @@
 
             <!-- Actions -->
             <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <!-- Delete Avatar Button (only show if user has avatar) -->
+              <button
+                v-if="currentAvatar && !uploading"
+                type="button"
+                @click="deleteAvatar"
+                :disabled="deleting"
+                class="px-4 py-2 border border-red-300 rounded-lg shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span v-if="deleting">Menghapus...</span>
+                <span v-else>Hapus Foto</span>
+              </button>
+              
               <button
                 type="button"
                 @click="closeModal"
@@ -161,6 +173,7 @@ const { user } = useAuth()
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref<string>('')
 const uploading = ref(false)
+const deleting = ref(false)
 const error = ref<string>('')
 const isDragging = ref(false)
 
@@ -299,6 +312,42 @@ const uploadAvatar = async () => {
     error.value = err.message || 'Upload gagal. Silakan coba lagi.'
   } finally {
     uploading.value = false
+  }
+}
+
+const deleteAvatar = async () => {
+  if (!user.value?.id) {
+    error.value = 'User tidak ditemukan. Silakan refresh halaman.'
+    return
+  }
+  
+  deleting.value = true
+  error.value = ''
+  
+  try {
+    const response = await fetch(`/api/users/avatar/${user.value.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Hapus foto gagal' }))
+      throw new Error(errorData.message || `HTTP ${response.status}: Hapus foto gagal`)
+    }
+    
+    const result = await response.json()
+    console.log('Avatar deleted successfully:', result)
+    
+    // Emit default avatar path to indicate avatar was deleted
+    emit('upload', '/default-avatar.svg')
+    
+  } catch (err: any) {
+    console.error('Delete avatar error:', err)
+    error.value = err.message || 'Hapus foto gagal. Silakan coba lagi.'
+  } finally {
+    deleting.value = false
   }
 }
 

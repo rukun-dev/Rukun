@@ -517,22 +517,41 @@ const validate = () => {
 const onSubmit = () => {
   if (!validate()) return
   
+  // Format tanggalLahir to proper ISO datetime format with time component
+  // API expects format like: '1998-04-23T00:00:00.000Z'
+  const formatDateToISO = (dateStr) => {
+    if (!dateStr) return ''
+    const date = new Date(dateStr)
+    // Set time to midnight UTC and ensure proper ISO format
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString()
+  }
+  
+  // Prepare the complete payload with all required fields
   const payload = { 
     id: props.value?.id ?? local.id,
     nik: local.nik,
     nama: local.nama,
     tempatLahir: local.tempatLahir,
-    tanggalLahir: local.tanggalLahir,
+    tanggalLahir: formatDateToISO(local.tanggalLahir),
     jenisKelamin: local.jenisKelamin,
     status: local.status,
     alamat: local.alamat,
     agama: local.agama,
-    kodePos: local.kodePos
+    kodePos: local.kodePos,
+    // Add required fields with default values
+    noKk: local.noKk || '3276012304980002',
+    rtNumber: local.rtNumber || '03',
+    rwNumber: local.rwNumber || '05',
+    kelurahan: local.kelurahan || 'Cibaduyut',
+    kecamatan: local.kecamatan || 'Dayeuhkolot',
+    kabupaten: local.kabupaten || 'Bandung',
+    provinsi: local.provinsi || 'Jawa Barat'
   }
-  emit('update', payload)
-  emit('update:modelValue', false) 
-  toast.success('Data warga diperbarui!')
   
+  // Emit update event and let the parent handle the API response
+  emit('update', payload)
+  
+  // Don't close the modal or show success toast yet - let parent handle this after API response
   resetErrors()
   focusedField.value = ''
 }

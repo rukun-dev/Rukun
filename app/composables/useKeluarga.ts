@@ -1,7 +1,7 @@
 import { ref, computed, watch } from 'vue';
 
 export interface KeluargaData {
-  id: number;
+  id: string;
   noKk: string;
   kepalaKeluarga: string;
   nikKepala: string;
@@ -36,67 +36,17 @@ export const useKeluarga = () => {
   const filterStatus = ref('');
   const currentPage = ref(1);
   const itemsPerPage = ref(10);
-
-  // Sample data for development
-  const sampleKeluarga: KeluargaData[] = [
-    {
-      id: 1,
-      noKk: '1234567890123456',
-      kepalaKeluarga: 'Budi Santoso',
-      nikKepala: '1234567890123456',
-      jumlahAnggota: 4,
-      alamat: 'Jl. Merdeka No. 123',
-      rt: '01',
-      rw: '05',
-      provinsi: 'Jawa Barat',
-      kabupaten: 'Bandung',
-      kecamatan: 'Coblong',
-      kelurahan: 'Dago',
-      namaKeluarga: 'Santoso',
-      kodePos: '12345',
-      status: 'Aktif',
-      createdAt: '2024-01-15T08:00:00Z',
-      updatedAt: '2024-01-15T08:00:00Z'
-    },
-    {
-      id: 2,
-      noKk: '2345678901234567',
-      kepalaKeluarga: 'Siti Rahayu',
-      nikKepala: '2345678901234567',
-      jumlahAnggota: 3,
-      alamat: 'Jl. Pahlawan No. 45',
-      rt: '02',
-      rw: '05',
-      provinsi: 'Jawa Barat',
-      kabupaten: 'Bandung',
-      kecamatan: 'Coblong',
-      kelurahan: 'Dago',
-      namaKeluarga: 'Rahayu',
-      kodePos: '12345',
-      status: 'Aktif',
-      createdAt: '2024-01-16T09:30:00Z',
-      updatedAt: '2024-01-16T09:30:00Z'
-    },
-    {
-      id: 3,
-      noKk: '3456789012345678',
-      kepalaKeluarga: 'Ahmad Rizki',
-      nikKepala: '3456789012345678',
-      jumlahAnggota: 5,
-      alamat: 'Jl. Sejahtera No. 78',
-      rt: '03',
-      rw: '05',
-      provinsi: 'Jawa Barat',
-      kabupaten: 'Bandung',
-      kecamatan: 'Coblong',
-      kelurahan: 'Dago',
-      namaKeluarga: 'Rizki',
-      kodePos: '12345',
-      status: 'Tidak Aktif',
-      createdAt: '2024-01-17T10:15:00Z',
-      updatedAt: '2024-01-17T10:15:00Z'
-    }
-  ];
+  
+  // Pagination state from API
+  const apiPagination = ref({
+    total_pages: 0,
+    total_count: 0,
+    per_page: 10,
+    has_next: false,
+    has_previous: false,
+    next_page: null,
+    previous_page: null
+  });
 
   // Computed properties
   const filteredKeluarga = computed(() => {
@@ -114,14 +64,14 @@ export const useKeluarga = () => {
     });
   });
 
+  // For server-side pagination, we just return the current page's data
   const paginatedKeluarga = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage.value;
-    const end = start + itemsPerPage.value;
-    return filteredKeluarga.value.slice(start, end);
+    return keluargaList.value;
   });
 
+  // Use API's total_pages for pagination control with null safety
   const totalPages = computed(() => {
-    return Math.ceil(filteredKeluarga.value.length / itemsPerPage.value);
+    return apiPagination.value?.total_pages || 1;
   });
 
   const stats = computed(() => {
@@ -139,16 +89,51 @@ export const useKeluarga = () => {
   });
 
   // Methods
-  const loadKeluarga = async () => {
+  const loadKeluarga = async (page: number = currentPage.value) => {
     loading.value = true;
     error.value = null;
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Call API with page parameter
+      const response = await fetch(`/api/families?page=${page}&limit=${itemsPerPage.value}`);
+      if (!response.ok) {
+        throw new Error('Gagal memuat data dari server');
+      }
+      const result = await response.json();
       
-      // For development, use sample data
-      keluargaList.value = sampleKeluarga;
+      // Map API response format to our expected KeluargaData interface
+      // Handle both single family and array of families response
+      if (result.data?.families && Array.isArray(result.data.families)) {
+        keluargaList.value = result.data.families.map((family: any) => ({
+          id: family.id,
+          noKk: family.no_kk,
+          kepalaKeluarga: family.head_name,
+          nikKepala: '', // Not available in API response
+          jumlahAnggota: 0, // Not available in API response
+          alamat: family.address,
+          rt: family.rt_number,
+          rw: family.rw_number,
+          provinsi: family.provinsi,
+          kabupaten: family.kabupaten,
+          kecamatan: family.kecamatan,
+          kelurahan: family.kelurahan,
+          namaKeluarga: family.name,
+          kodePos: family.postal_code,
+          status: 'Aktif', // Default status since not available in API
+          createdAt: family.created_at,
+          updatedAt: family.updated_at
+        }));
+      } else {
+        keluargaList.value = [];
+      }
+      
+      // Save pagination information from API
+      if (result.pagination) {
+        apiPagination.value = result.pagination;
+      }
+      
+      // Update current page
+      currentPage.value = page;
     } catch (err) {
       error.value = 'Gagal memuat data kartu keluarga';
       console.error('Error loading keluarga data:', err);
@@ -156,45 +141,194 @@ export const useKeluarga = () => {
       loading.value = false;
     }
   };
-
-  const addKeluarga = (data: Omit<KeluargaData, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newKeluarga: KeluargaData = {
-      ...data,
-      id: Math.max(0, ...keluargaList.value.map(k => k.id)) + 1,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    keluargaList.value = [newKeluarga, ...keluargaList.value];
-    return newKeluarga;
+  
+  // Pagination control methods
+  const nextPage = () => {
+    if (apiPagination.value.has_next && apiPagination.value.next_page !== null) {
+      loadKeluarga(apiPagination.value.next_page);
+    }
   };
-
-  const updateKeluarga = (id: number, data: Partial<KeluargaData>) => {
-    const index = keluargaList.value.findIndex(k => k.id === id)
-    if (index !== -1) {
-      const updatedData = {
-        ...keluargaList.value[index],
-        ...data,
-        updatedAt: new Date().toISOString()
-      } as KeluargaData
-      keluargaList.value[index] = updatedData
+  
+  const previousPage = () => {
+    if (apiPagination.value.has_previous && apiPagination.value.previous_page !== null) {
+      loadKeluarga(apiPagination.value.previous_page);
+    }
+  };
+  
+  const goToPage = (page: number) => {
+    const totalPages = apiPagination.value?.total_pages || 1;
+    if (page >= 1 && page <= totalPages) {
+      loadKeluarga(page);
     }
   };
 
-  const deleteKeluarga = (id: number) => {
-    const index = keluargaList.value.findIndex(k => k.id === id);
-    if (index !== -1) {
-      keluargaList.value.splice(index, 1);
-      return true;
+  const addKeluarga = async (data: Omit<KeluargaData, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      // Validate and convert data to ensure all required fields are strings
+      const validateString = (value: any, defaultValue: string = ''): string => {
+        if (value === null || value === undefined) return defaultValue;
+        return String(value);
+      };
+
+      // Convert our data format to API expected format with proper validation
+      // Using camelCase field names as expected by the API (based on error message)
+      const apiData = {
+        noKk: validateString(data.noKk),
+        name: validateString(data.namaKeluarga),
+        headName: validateString(data.kepalaKeluarga),
+        address: validateString(data.alamat),
+        rtNumber: validateString(data.rt, '00'),
+        rwNumber: validateString(data.rw, '00'),
+        kelurahan: validateString(data.kelurahan),
+        kecamatan: validateString(data.kecamatan),
+        kabupaten: validateString(data.kabupaten),
+        provinsi: validateString(data.provinsi),
+        postalCode: validateString(data.kodePos)
+      };
+
+      const response = await fetch('/api/families', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(apiData)
+      });
+      
+      if (!response.ok) {
+        // Parse the error response to provide more detailed information
+        const errorResponse = await response.json();
+        throw new Error(errorResponse.message || errorResponse.error?.message || 'Gagal menambahkan data');
+      }
+      
+      const result = await response.json();
+      
+      // Handle API response based on the provided success structure
+      if (result.success && result.data?.family) {
+        const newFamily: KeluargaData = {
+          id: validateString(result.data.family.id),
+          noKk: validateString(result.data.family.no_kk),
+          kepalaKeluarga: validateString(result.data.family.head_name),
+          nikKepala: '', // Not available in API response
+          jumlahAnggota: 0, // Not available in API response
+          alamat: validateString(result.data.family.address),
+          rt: validateString(result.data.family.rt_number),
+          rw: validateString(result.data.family.rw_number),
+          provinsi: validateString(result.data.family.provinsi),
+          kabupaten: validateString(result.data.family.kabupaten),
+          kecamatan: validateString(result.data.family.kecamatan),
+          kelurahan: validateString(result.data.family.kelurahan),
+          namaKeluarga: validateString(result.data.family.name),
+          kodePos: validateString(result.data.family.postal_code),
+          status: 'Aktif', // Default status since not available in API
+          createdAt: result.data.family.created_at || new Date().toISOString(),
+          updatedAt: result.data.family.updated_at || new Date().toISOString()
+        };
+        
+        keluargaList.value = [newFamily, ...keluargaList.value];
+        return newFamily;
+      } else {
+        throw new Error('Invalid response structure from API');
+      }
+    } catch (err) {
+      console.error('Error adding keluarga:', err);
+      throw err;
     }
-    return false;
+  };
+
+  const updateKeluarga = async (id: string, data: Partial<KeluargaData>) => {
+    try {
+      // Convert our data format to API expected format
+      const apiData: any = {};
+      if (data.noKk !== undefined) apiData.noKk = data.noKk;
+      if (data.namaKeluarga !== undefined) apiData.name = data.namaKeluarga;
+      if (data.kepalaKeluarga !== undefined) apiData.headName = data.kepalaKeluarga;
+      if (data.alamat !== undefined) apiData.address = data.alamat;
+      if (data.rt !== undefined) apiData.rtNumber = data.rt;
+      if (data.rw !== undefined) apiData.rwNumber = data.rw;
+      if (data.kelurahan !== undefined) apiData.kelurahan = data.kelurahan;
+      if (data.kecamatan !== undefined) apiData.kecamatan = data.kecamatan;
+      if (data.kabupaten !== undefined) apiData.kabupaten = data.kabupaten;
+      if (data.provinsi !== undefined) apiData.provinsi = data.provinsi;
+      if (data.kodePos !== undefined) apiData.postalCode = data.kodePos;
+
+      const response = await fetch(`/api/families/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(apiData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Gagal memperbarui data');
+      }
+      
+      const result = await response.json();
+      
+      // Convert API response back to our format
+      // Server returns data in result.family, not result.data
+      const familyData = result.family;
+      if (!familyData) {
+        throw new Error('Invalid response structure from API');
+      }
+      
+      const updatedFamily: KeluargaData = {
+        id: familyData.id,
+        noKk: familyData.no_kk,
+        kepalaKeluarga: familyData.head_name,
+        nikKepala: '',
+        jumlahAnggota: 0,
+        alamat: familyData.address,
+        rt: familyData.rt_number,
+        rw: familyData.rw_number,
+        provinsi: familyData.provinsi,
+        kabupaten: familyData.kabupaten,
+        kecamatan: familyData.kecamatan,
+        kelurahan: familyData.kelurahan,
+        namaKeluarga: familyData.name,
+        kodePos: familyData.postal_code,
+        status: 'Aktif',
+        createdAt: familyData.created_at,
+        updatedAt: familyData.updated_at
+      };
+      
+      const index = keluargaList.value.findIndex(k => k.id === id);
+      if (index !== -1) {
+        keluargaList.value[index] = updatedFamily;
+      }
+    } catch (err) {
+      console.error('Error updating keluarga:', err);
+      throw err;
+    }
+  };
+
+  const deleteKeluarga = async (id: string) => {
+    try {
+      const response = await fetch(`/api/families/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Gagal menghapus data');
+      }
+      
+      const index = keluargaList.value.findIndex(k => k.id === id);
+      if (index !== -1) {
+        keluargaList.value.splice(index, 1);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error deleting keluarga:', err);
+      throw err;
+    }
   };
 
   const resetFilters = () => {
     searchTerm.value = '';
     filterRt.value = '';
     filterStatus.value = '';
-    currentPage.value = 1;
+    loadKeluarga(1); // Reset to first page
   };
 
   // Watch for filter changes and reset to first page
@@ -212,6 +346,7 @@ export const useKeluarga = () => {
     filterStatus,
     currentPage,
     itemsPerPage,
+    apiPagination,
     
     // Computed
     filteredKeluarga,
@@ -224,6 +359,9 @@ export const useKeluarga = () => {
     addKeluarga,
     updateKeluarga,
     deleteKeluarga,
-    resetFilters
+    resetFilters,
+    nextPage,
+    previousPage,
+    goToPage
   };
 }

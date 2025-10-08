@@ -113,22 +113,22 @@
         </div>
         
         <NuxtLink
-          to="/dashboard/transactions"
+          to="/transactions"
           class="group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
-          :class="isActiveRoute('/dashboard/transactions') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+          :class="isActiveRoute('/transactions') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
         >
-          <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/dashboard/transactions') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/transactions') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
           Transaksi
         </NuxtLink>
         
         <NuxtLink
-          to="/dashboard/payments"
+          to="/payments"
           class="group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
-          :class="isActiveRoute('/dashboard/payments') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+          :class="isActiveRoute('/payments') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
         >
-          <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/dashboard/payments') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/payments') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
           </svg>
           Pembayaran
@@ -142,22 +142,22 @@
         </div>
         
         <NuxtLink
-          to="/dashboard/announcements"
+          to="/announcements"
           class="group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
-          :class="isActiveRoute('/dashboard/announcements') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+          :class="isActiveRoute('/announcements') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
         >
-          <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/dashboard/announcements') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/announcements') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
           </svg>
           Pengumuman
         </NuxtLink>
         
         <NuxtLink
-          to="/dashboard/document-templates"
+          to="/documents-template"
           class="group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
-          :class="isActiveRoute('/dashboard/document-templates') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+          :class="isActiveRoute('/documents-template') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
         >
-          <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/dashboard/document-templates') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/documents-template') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 2a1 1 0 000 2h6a1 1 0 100-2H9z"></path>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"></path>
@@ -166,9 +166,9 @@
         </NuxtLink>
         
         <NuxtLink
-          to="/dashboard/documents"
+          to="/documents"
           class="group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
-          :class="isActiveRoute('/dashboard/documents') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+          :class="isActiveRoute('/documents') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
         >
           <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/dashboard/documents') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -184,11 +184,11 @@
         </div>
         
         <NuxtLink
-          to="/dashboard/reports"
+          to="/reports"
           class="group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
-          :class="isActiveRoute('/dashboard/reports') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+          :class="isActiveRoute('/reports') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
         >
-          <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/dashboard/reports') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/reports') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
           </svg>
           Laporan

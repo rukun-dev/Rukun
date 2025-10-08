@@ -63,7 +63,7 @@
                 </div>
               </div>
               <div class="px-4 py-3 border-t border-gray-200">
-                <NuxtLink to="/dashboard/notifications" class="text-sm text-blue-600 hover:text-blue-500">
+                <NuxtLink to="/notifications" class="text-sm text-blue-600 hover:text-blue-500">
                   Lihat semua notifikasi
                 </NuxtLink>
               </div>
@@ -172,16 +172,16 @@ const pageTitle = computed(() => {
   const path = route.path
   
   if (path === '/dashboard') return 'Dashboard'
-  if (path.startsWith('/dashboard/users')) return 'Manajemen Pengguna'
-  if (path.startsWith('/dashboard/warga')) return 'Data Warga'
-  if (path.startsWith('/dashboard/families')) return 'Data Keluarga'
-  if (path.startsWith('/dashboard/transactions')) return 'Transaksi'
-  if (path.startsWith('/dashboard/payments')) return 'Pembayaran'
-  if (path.startsWith('/dashboard/announcements')) return 'Pengumuman'
-  if (path.startsWith('/dashboard/documents')) return 'Dokumen'
-  if (path.startsWith('/dashboard/reports')) return 'Laporan'
-  if (path.startsWith('/dashboard/profile')) return 'Profil'
-  if (path.startsWith('/dashboard/settings')) return 'Pengaturan'
+  if (path.startsWith('/users')) return 'Manajemen Pengguna'
+  if (path.startsWith('/warga')) return 'Data Warga'
+  if (path.startsWith('/families')) return 'Data Keluarga'
+  if (path.startsWith('/transactions')) return 'Transaksi'
+      if (path.startsWith('/payments')) return 'Pembayaran'
+      if (path.startsWith('/announcements')) return 'Pengumuman'
+      if (path.startsWith('/reports')) return 'Laporan'
+      if (path.startsWith('/documents')) return 'Dokumen'
+      if (path.startsWith('/dashboard/profile')) return 'Profil'
+      if (path.startsWith('/dashboard/settings')) return 'Pengaturan'
   if (path.startsWith('/register')) return 'Registrasi Pengguna'
   
   return 'Dashboard'

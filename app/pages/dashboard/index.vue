@@ -97,7 +97,7 @@
         <CardHeader>
           <CardTitle class="flex items-center justify-between text-base">
             <span>Pembayaran Terbaru</span>
-            <NuxtLink to="/dashboard/payments" class="text-sm text-blue-600 hover:text-blue-500">
+            <NuxtLink to="/payments" class="text-sm text-blue-600 hover:text-blue-500">
               Lihat Semua
             </NuxtLink>
           </CardTitle>
@@ -137,7 +137,7 @@
         <CardHeader>
           <CardTitle class="flex items-center justify-between text-base">
             <span>Pengumuman Terbaru</span>
-            <NuxtLink to="/dashboard/announcements" class="text-sm text-blue-600 hover:text-blue-500">
+            <NuxtLink to="/announcements" class="text-sm text-blue-600 hover:text-blue-500">
               Lihat Semua
             </NuxtLink>
           </CardTitle>

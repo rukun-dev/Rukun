@@ -8,9 +8,6 @@
           <h3 class="text-3xl font-bold text-gray-900 mb-2">
             {{ formatNumber(stats.total || 0) }}
           </h3>
-          <p class="text-xs text-gray-500">
-            <span class="text-green-600 font-medium">+12%</span> dari bulan lalu
-          </p>
         </div>
         <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
           <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,9 +25,6 @@
           <h3 class="text-3xl font-bold text-gray-900 mb-2">
             {{ formatNumber(stats.members || 0) }}
           </h3>
-          <p class="text-xs text-gray-500">
-            <span class="text-green-600 font-medium">+8%</span> dari bulan lalu
-          </p>
         </div>
         <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
           <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,9 +42,6 @@
           <h3 class="text-3xl font-bold text-gray-900 mb-2">
             {{ formatNumber(stats.active || 0) }}
           </h3>
-          <p class="text-xs text-gray-500">
-            <span class="text-green-600 font-medium">95%</span> dari total keluarga
-          </p>
         </div>
         <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
           <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,9 +59,6 @@
           <h3 class="text-3xl font-bold text-gray-900 mb-2">
             {{ formatNumber(stats.expired || 0) }}
           </h3>
-          <p class="text-xs text-gray-500">
-            <span class="text-red-600 font-medium">5%</span> dari total keluarga
-          </p>
         </div>
         <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
           <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

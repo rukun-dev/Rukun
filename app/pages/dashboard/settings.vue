@@ -10,16 +10,10 @@
 
     <!-- Content -->
     <div v-else>
-      <!-- Page Header -->
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Pengaturan</h1>
-          <p class="text-gray-600">Kelola pengaturan akun dan preferensi Anda</p>
-        </div>
-      </div>
+
 
       <!-- Account Settings -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-4">
       <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold text-gray-900">Akun</h2>
         <p class="text-sm text-gray-600">Kelola informasi akun dan preferensi Anda</p>
@@ -71,7 +65,7 @@
     </div>
 
     <!-- Privacy & Security -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-4">
       <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold text-gray-900">Privasi & Keamanan</h2>
         <p class="text-sm text-gray-600">Kontrol siapa yang dapat melihat informasi Anda</p>
@@ -121,7 +115,7 @@
     </div>
 
     <!-- Notifications -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-4">
       <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold text-gray-900">Notifikasi</h2>
         <p class="text-sm text-gray-600">Pilih notifikasi yang ingin Anda terima</p>
@@ -197,7 +191,7 @@
     </div>
 
     <!-- Account Management -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-4">
       <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold text-gray-900">Manajemen Akun</h2>
         <p class="text-sm text-gray-600">Opsi untuk mengelola atau menghapus akun Anda</p>

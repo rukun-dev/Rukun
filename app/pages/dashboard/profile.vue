@@ -1,13 +1,5 @@
 <template>
   <div>
-    <!-- Page Header -->
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold text-gray-900">Profil Pengguna</h1>
-      <p class="mt-2 text-sm text-gray-600">
-        Kelola informasi profil dan pengaturan akun Anda
-      </p>
-    </div>
-
     <!-- Loading State -->
     <div v-if="loading" class="space-y-6">
       <div class="bg-white shadow rounded-lg p-6">

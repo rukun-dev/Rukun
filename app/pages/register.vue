@@ -228,10 +228,6 @@ useSeoMeta({
   description: 'Registrasi pengguna baru untuk sistem manajemen RT'
 })
 
-// Get runtime config for base URL
-const config = useRuntimeConfig()
-const baseUrl = config.public.baseUrl || 'http://localhost:3000'
-
 // Reactive data
 const form = reactive({
   name: '',

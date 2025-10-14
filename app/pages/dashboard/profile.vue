@@ -254,11 +254,7 @@ const {
   profileData, 
   statistics, 
   recentActivities, 
-  profileSuggestions,
-  completionPercentage,
   fetchProfile, 
-  updateProfile, 
-  uploadAvatar, 
   formatDate, 
   formatDateTime 
 } = useProfile()

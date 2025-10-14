@@ -47,7 +47,8 @@
               <div 
                 @drop="handleDrop"
                 @dragover.prevent
-                @dragenter.prevent
+                @dragenter.prevent=&quot;handleDragEnter&quot;
+                @dragleave.prevent=&quot;handleDragLeave&quot;
                 class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors"
                 :class="{ 'border-blue-400 bg-blue-50': isDragging }"
               >

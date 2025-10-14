@@ -124,7 +124,6 @@ const emit = defineEmits(['error', 'retry', 'reset'])
 // State
 const error = ref<Error | null>(null)
 const detailsExpanded = ref(false)
-const slots = useSlots()
 const instance = getCurrentInstance()
 
 // Computed properties

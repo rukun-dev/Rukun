@@ -233,10 +233,6 @@ useSeoMeta({
   description: 'Masuk ke sistem manajemen RT digital'
 })
 
-// Get runtime config for base URL
-const config = useRuntimeConfig()
-const baseUrl = config.public.baseUrl || 'http://localhost:3000'
-
 // Reactive data
 const form = reactive({
   email: '',
@@ -320,13 +316,4 @@ const handleLogin = async () => {
     loading.value = false
   }
 }
-
-// Auto-fill demo credentials (for development)
-onMounted(() => {
-  // Remove this in production
-  if (process.dev) {
-    form.email = 'rvnkrwn@gmail.com'
-    form.password = 'Katasandi123'
-  }
-})
 </script>

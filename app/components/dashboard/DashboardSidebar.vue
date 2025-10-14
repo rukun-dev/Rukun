@@ -48,8 +48,8 @@
           Dashboard
         </NuxtLink>
 
-      <!-- Data Warga -->
-      <div>
+      <!-- Data Warga (Admin/Ketua RT/Bendahara only) -->
+      <div v-if="canAccessUserManagement || canAccessFinance">
         <div class="mt-6 mb-2">
           <h3 class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Data Warga</h3>
         </div>
@@ -219,8 +219,6 @@ const route = useRoute()
 
 // Use authentication composable
 const { 
-  user, 
-  userRole, 
   isAuthenticated, 
   isLoading,
   canAccessUserManagement,

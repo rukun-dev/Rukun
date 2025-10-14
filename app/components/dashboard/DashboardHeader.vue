@@ -147,7 +147,7 @@ defineEmits<{
 const route = useRoute()
 
 // Use authentication composable to get current user data
-const { user, userRole, isAuthenticated, logout } = useAuth()
+const { user, isAuthenticated, logout } = useAuth()
 
 // TODO: Replace with actual notifications from API
 const notifications = ref([

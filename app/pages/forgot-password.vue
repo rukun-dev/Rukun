@@ -253,6 +253,14 @@ const goBack = () => {
   navigateTo('/login')
 }
 
+// Focus on email input when mounted
+onMounted(() => {
+  const emailInput = document.getElementById('email');
+  if (emailInput) {
+    emailInput.focus();
+  }
+});
+
 // Cleanup on unmount
 onUnmounted(() => {
   if (cooldownInterval) {

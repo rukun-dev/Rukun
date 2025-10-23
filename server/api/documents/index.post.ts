@@ -4,7 +4,7 @@ import { requireAuth, getClientIP } from "~~/server/utils/auth";
 import { hasPermission } from "~~/server/helpers/permissions";
 import { startRequest, responses } from "~~/server/utils/response";
 
-// Validator untuk input body
+// Validator input body (tanpa number manual)
 const createDocumentSchema = z.object({
   title: z.string().min(1, "Title is required"),
   type: z.enum([
@@ -25,7 +25,6 @@ const createDocumentSchema = z.object({
   approverId: z.string().optional(),
   wargaId: z.string().optional(),
   templateId: z.string().optional(),
-  number: z.string().optional(),
 });
 
 export default defineEventHandler(async (event) => {
@@ -34,48 +33,69 @@ export default defineEventHandler(async (event) => {
   let body: any;
 
   try {
-    // Authentication & authorization
     const currentUser = await requireAuth(event);
 
     if (!hasPermission(currentUser.role as any, "manage:documents")) {
-      return responses.forbidden(
-        "Permission denied. Required permission: manage:documents",
-        {
-          requestId,
-          event,
-          code: "FORBIDDEN",
-        },
-      );
+      return responses.forbidden("Permission denied", {
+        requestId,
+        event,
+      });
     }
 
-    // Parse & validate body
+    // Validasi body
     body = await readBody(event);
     const validatedData = createDocumentSchema.parse(body);
-
-    // Cek nomor dokumen unik
-    if (validatedData.number) {
-      const existingDoc = await prisma.document.findUnique({
-        where: { number: validatedData.number },
-        select: { id: true },
-      });
-
-      if (existingDoc) {
-        return responses.conflict("Document number already exists", {
-          requestId,
-          event,
-        });
-      }
-    }
 
     const clientIP = getClientIP(event);
     const userAgent = getHeader(event, "user-agent");
 
-    // Create Document dalam transaction
+    // =========================
+    // 🔢 Buat nomor otomatis
+    // =========================
+    const lastDoc = await prisma.document.findFirst({
+      orderBy: { createdAt: "desc" },
+      select: { number: true },
+    });
+
+    // Dapatkan urutan terakhir
+    let nextNumber = 1;
+    if (lastDoc?.number) {
+      const match = lastDoc.number.match(/\/(\d{4})\//); // ambil angka di tengah format
+      if (match) nextNumber = parseInt(match[1]) + 1;
+    }
+
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, "0");
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const year = now.getFullYear();
+
+    // Tentukan prefix berdasarkan jenis surat
+    const prefixMap: Record<string, string> = {
+      SURAT_PENGANTAR: "SKP",
+      SURAT_KETERANGAN: "SK",
+      SURAT_DOMISILI: "SKD",
+      SURAT_TIDAK_MAMPU: "STM",
+      SURAT_KELAHIRAN: "SKL",
+      SURAT_KEMATIAN: "SKM",
+      SURAT_PINDAH: "SPN",
+      OTHER: "OTR",
+    };
+
+    const prefix = prefixMap[validatedData.type] || "DOC";
+
+    // Format nomor akhir
+    const formattedNumber = `${prefix}/${nextNumber
+      .toString()
+      .padStart(4, "0")}/${day}/${month}/${year}`;
+
+    // =========================
+    // 🧾 Buat dokumen
+    // =========================
     const newDocument = await prisma.$transaction(async (tx) => {
       const doc = await tx.document.create({
         data: {
           title: validatedData.title,
-          type: validatedData.type, // enum DocumentType sudah valid
+          type: validatedData.type,
           ...(validatedData.content && { content: validatedData.content }),
           ...(validatedData.filePath && { filePath: validatedData.filePath }),
           ...(validatedData.fileSize && { fileSize: validatedData.fileSize }),
@@ -88,7 +108,7 @@ export default defineEventHandler(async (event) => {
           ...(validatedData.templateId && {
             templateId: validatedData.templateId,
           }),
-          ...(validatedData.number && { number: validatedData.number }),
+          number: formattedNumber, // ✅ nomor otomatis
         },
         include: {
           requester: { select: { id: true, name: true, email: true } },
@@ -97,14 +117,11 @@ export default defineEventHandler(async (event) => {
         },
       });
 
-      // Log ke activityLog
       await tx.activityLog.create({
         data: {
           userId: currentUser.id,
           action: "CREATE_DOCUMENT",
-          description: `Created document ${doc.title} (Number: ${
-            doc.number ?? "-"
-          })`,
+          description: `Created document ${doc.title} (Number: ${doc.number})`,
           ipAddress: clientIP,
           userAgent,
         },
@@ -121,11 +138,11 @@ export default defineEventHandler(async (event) => {
           id: newDocument.id,
           title: newDocument.title,
           type: newDocument.type,
+          number: newDocument.number,
           content: newDocument.content,
           file_path: newDocument.filePath,
           file_size: newDocument.fileSize,
           mime_type: newDocument.mimeType,
-          number: newDocument.number,
           status: newDocument.status,
           is_archived: newDocument.isArchived,
           created_at: newDocument.createdAt.toISOString(),
@@ -133,7 +150,7 @@ export default defineEventHandler(async (event) => {
           requester: newDocument.requester,
           warga: newDocument.warga,
           template: newDocument.template,
-          approver_id: newDocument.approverId, // tampilkan ID saja
+          approver_id: newDocument.approverId,
         },
       },
       "Document created successfully",
@@ -148,21 +165,17 @@ export default defineEventHandler(async (event) => {
       },
     );
   } catch (error: unknown) {
-    // Validation error
     if (error instanceof z.ZodError) {
       const firstError = error.issues[0];
       return responses.validation(
         firstError?.message || "Validation failed",
         firstError?.path[0]?.toString(),
         {
-          field_errors: error.issues.reduce(
-            (acc, issue) => {
-              const field = issue.path[0]?.toString();
-              if (field) acc[field] = issue.message;
-              return acc;
-            },
-            {} as Record<string, string>,
-          ),
+          field_errors: error.issues.reduce((acc, issue) => {
+            const field = issue.path[0]?.toString();
+            if (field) acc[field] = issue.message;
+            return acc;
+          }, {} as Record<string, string>),
           error_count: error.issues.length,
           provided_data: body ? Object.keys(body) : [],
         },
@@ -170,18 +183,6 @@ export default defineEventHandler(async (event) => {
       );
     }
 
-    // Prisma constraint error (unique number)
-    if (error && typeof error === "object" && "code" in error) {
-      const prismaError = error as any;
-      if (prismaError.code === "P2002") {
-        return responses.conflict("Document number already exists", {
-          requestId,
-          event,
-        });
-      }
-    }
-
-    // Generic server error
     const executionTime = `${Date.now() - startedAt}ms`;
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";

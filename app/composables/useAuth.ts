@@ -65,6 +65,12 @@ export const useAuth = () => {
   })
   const isWarga = computed(() => userRole.value === 'WARGA')
 
+  // Generic role-based access check function "TEST DARI MICHAEL = Function buat Announcement"
+  const canAccess = (allowedRoles: string[]): boolean => {
+    if (!userRole.value) return false
+    return allowedRoles.includes(userRole.value)
+  }
+
   // Methods
   const fetchUser = async (): Promise<void> => {
     console.log('🔑 useAuth - fetchUser called')
@@ -219,6 +225,7 @@ export const useAuth = () => {
     isKetuaRT: readonly(isKetuaRT),
     isStaff: readonly(isStaff),
     isWarga: readonly(isWarga),
+    canAccess,
     
     // Methods
     fetchUser,

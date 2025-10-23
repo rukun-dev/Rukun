@@ -4,10 +4,9 @@ import type { DocumentType } from '@prisma/client';
 
 export interface DocumentTemplate {
   id: string;
+  name: string;
   type: DocumentType;
-  content: string;
   variables?: string;
-  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,11 +33,11 @@ export const useDocumentTemplates = () => {
   const filteredTemplates = computed(() => {
     let filtered = templates.value;
 
-    // Apply search filter
+    // Apply search filter - search by name (title)
     if (searchQuery.value) {
       const query = searchQuery.value.toLowerCase();
       filtered = filtered.filter(template => 
-        template.type.toLowerCase().includes(query)
+        template.name.toLowerCase().includes(query)
       );
     }
 
@@ -74,10 +73,28 @@ export const useDocumentTemplates = () => {
     apiError.value = null;
 
     try {
-      const response = await $fetch<DocumentTemplate[]>('/api/documents-templates', {
+      const response = await $fetch<any>('/api/documents-templates', {
         method: 'GET'
       });
-      templates.value = response;
+      
+      // Handle different response structures
+      let templatesData: DocumentTemplate[] = [];
+      
+      if (Array.isArray(response)) {
+        // Direct array response
+        templatesData = response;
+      } else if (response?.data?.data && Array.isArray(response.data.data)) {
+        // Nested structure: { data: { data: [...], meta: {...} } }
+        templatesData = response.data.data;
+      } else if (response?.data && Array.isArray(response.data)) {
+        // Structure: { data: [...] }
+        templatesData = response.data;
+      } else {
+        console.warn('Unexpected response structure:', response);
+        templatesData = [];
+      }
+      
+      templates.value = templatesData;
     } catch (error: any) {
       apiError.value = error.message || 'Gagal memuat data template dokumen';
       console.error('Error fetching templates:', error);
@@ -86,14 +103,14 @@ export const useDocumentTemplates = () => {
     }
   };
 
-  const createTemplate = async (data: Partial<DocumentTemplate>) => {
+  const createTemplate = async (formData: FormData) => {
     isLoading.value = true;
     apiError.value = null;
 
     try {
       const response = await $fetch<DocumentTemplate>('/api/documents-templates', {
         method: 'POST',
-        body: data
+        body: formData
       });
       templates.value.push(response);
       toast?.success?.('Template dokumen berhasil dibuat!');

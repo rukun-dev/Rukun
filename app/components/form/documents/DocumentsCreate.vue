@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { toast } from "vue-sonner";
+import { useAuth } from '~/composables/useAuth';
 
 // Props
 const props = defineProps<{
@@ -14,22 +15,29 @@ const emit = defineEmits<{
   submit: [data: any];
 }>();
 
-// Local state to control modal visibility
+// Local state
 const isVisible = ref(false);
+const { user } = useAuth();
 
-// Form data - using ref instead of reactive for better compatibility
+// Form data
 const formData = ref({
   title: '',
-  type: '',
+  type: 'SURAT_TIDAK_MAMPU',
   number: '',
   content: '',
   wargaId: '',
+  filePath: '',
+  fileSize: 0,
+  mimeType: '',
+  templateId: '',
 });
 
+// Error state
+const error = ref('');
 const isSubmitting = ref(false);
 const progress = ref(0);
 
-// Search functionality for warga
+// Search functionality
 const searchQuery = ref('');
 const searchResults = ref<any[]>([]);
 const isSearching = ref(false);
@@ -63,7 +71,7 @@ const searchWarga = async (query: string) => {
   }
 };
 
-// Select warga from search results
+// Select warga
 const selectWarga = (warga: any) => {
   formData.value.wargaId = warga.id;
   searchQuery.value = `${warga.nik} - ${warga.name}`;
@@ -80,23 +88,82 @@ const clearSelectedWarga = () => {
   showResults.value = false;
 };
 
+// File upload handler
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  
+  if (file) {
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Ukuran file tidak boleh melebihi 10MB');
+      target.value = '';
+      return;
+    }
+    
+    // Validate file type
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png',
+      'text/plain'
+    ];
+    
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Format file tidak didukung');
+      target.value = '';
+      return;
+    }
+    
+    // Simpan metadata file (file fisik tidak di-upload karena belum ada endpoint)
+    formData.value.filePath = file.name;
+    formData.value.fileSize = file.size;
+    formData.value.mimeType = file.type;
+  }
+};
+
+// Clear file
+const clearFile = () => {
+  formData.value.filePath = '';
+  formData.value.fileSize = 0;
+  formData.value.mimeType = '';
+  const fileInput = document.getElementById('document-file') as HTMLInputElement;
+  if (fileInput) {
+    fileInput.value = '';
+  }
+};
+
 // Computed
 const isEdit = computed(() => !!props.editingDocument);
 
-// Reset form function
+// Reset form
 const resetForm = () => {
-  formData.value.title = '';
-  formData.value.type = 'SURAT_TIDAK_MAMPU';
-  formData.value.number = '';
-  formData.value.content = '';
-  formData.value.wargaId = '';
-  progress.value = 0;
+  formData.value = {
+    title: '',
+    type: 'SURAT_TIDAK_MAMPU',
+    number: '',
+    content: '',
+    wargaId: '',
+    filePath: '',
+    fileSize: 0,
+    mimeType: '',
+    templateId: '',
+  };
   
-  // Reset search state
+  progress.value = 0;
+  error.value = '';
+  
   searchQuery.value = '';
   searchResults.value = [];
   showResults.value = false;
   selectedWarga.value = null;
+  
+  const fileInput = document.getElementById('document-file') as HTMLInputElement;
+  if (fileInput) {
+    fileInput.value = '';
+  }
 };
 
 // Close modal
@@ -106,10 +173,20 @@ const closeModal = () => {
   }
 };
 
-// Submit form with API integration
+// Submit form
 const submitForm = async () => {
+  // Prevent double submit
+  if (isSubmitting.value) {
+    console.warn('⚠️ Submit already in progress, ignoring duplicate request');
+    return;
+  }
+
+  error.value = '';
+  
+  console.log('📝 Current form data:', JSON.stringify(formData.value, null, 2));
+  
   // Validate form
-  if (!formData.value.title) {
+  if (!formData.value.title?.trim()) {
     toast.error('Judul dokumen harus diisi!');
     return;
   }
@@ -119,8 +196,26 @@ const submitForm = async () => {
     return;
   }
   
-  if (!formData.value.number) {
+  if (!formData.value.number?.trim()) {
     toast.error('Nomor dokumen harus diisi!');
+    return;
+  }
+
+  // Validate type enum
+  const validTypes = ['SURAT_PENGANTAR', 'SURAT_KETERANGAN', 'SURAT_DOMISILI', 'SURAT_TIDAK_MAMPU', 'SURAT_KELAHIRAN', 'SURAT_KEMATIAN', 'SURAT_PINDAH', 'OTHER'];
+  if (!validTypes.includes(formData.value.type)) {
+    toast.error('Tipe dokumen tidak valid!');
+    return;
+  }
+
+  if (!user.value?.id) {
+    toast.error('Anda harus login terlebih dahulu!');
+    return;
+  }
+
+  // Validate file size
+  if (formData.value.fileSize > 10 * 1024 * 1024) {
+    toast.error('Ukuran file tidak boleh melebihi 10MB');
     return;
   }
 
@@ -130,19 +225,40 @@ const submitForm = async () => {
 
     progress.value = 50;
     
-    // Prepare data for API according to required schema and backend expectations
-    const apiData = {
-      title: formData.value.title,
+    // Prepare data sesuai dengan backend schema
+    const apiData: any = {
+      title: formData.value.title.trim(),
       type: formData.value.type,
-      content: formData.value.content || '', // Ensure empty string instead of undefined
-      number: formData.value.number,
-      wargaId: formData.value.wargaId || undefined
+      number: formData.value.number.trim(),
+      requesterId: user.value.id,
+      approverId: user.value.id,
     };
 
-    // Send request to API endpoint
+    // Optional fields - hanya kirim jika ada nilai
+    if (formData.value.content?.trim()) {
+      apiData.content = formData.value.content.trim();
+    }
+    
+    if (formData.value.wargaId) {
+      apiData.wargaId = formData.value.wargaId;
+    }
+    
+    if (formData.value.templateId?.trim()) {
+      apiData.templateId = formData.value.templateId.trim();
+    }
+    
+    // File metadata (jika ada file dipilih)
+    if (formData.value.filePath) {
+      apiData.filePath = formData.value.filePath;
+      apiData.fileSize = formData.value.fileSize;
+      apiData.mimeType = formData.value.mimeType;
+    }
+
+    console.log('📤 Sending document data:', JSON.stringify(apiData, null, 2));
+    
     progress.value = 70;
     
-    // Determine method and URL based on edit mode
+    // Determine method and URL
     const method = isEdit.value ? 'PUT' : 'POST';
     const url = isEdit.value && props.editingDocument 
       ? `/api/documents/${props.editingDocument.id}` 
@@ -159,46 +275,57 @@ const submitForm = async () => {
 
     progress.value = 90;
     
-    // Parse the response only once
     const result = await response.json();
     
     if (!response.ok) {
       throw new Error(result.message || 'Gagal menyimpan dokumen');
     }
+    
     progress.value = 100;
     
-    // Show success message
-    toast.success('Dokumen berhasil disimpan! Status: Menunggu');
+    toast.success(isEdit.value ? 'Dokumen berhasil diperbarui!' : 'Dokumen berhasil dibuat!');
     
-    // Emit submit event with the document data from the response
-    // Backend returns data in result.document structure
+    // Emit dengan struktur response dari backend (snake_case ke camelCase)
     const documentData = {
       id: result.document?.id,
       title: result.document?.title,
       type: result.document?.type,
       content: result.document?.content,
       number: result.document?.number,
-      status: result.document?.status || 'MENUNGGU', // Default to MENUNGGU if not provided
-      wargaId: result.document?.wargaId,
+      status: result.document?.status,
+      filePath: result.document?.file_path,
+      fileSize: result.document?.file_size,
+      mimeType: result.document?.mime_type,
+      wargaId: result.document?.warga?.id,
+      isArchived: result.document?.is_archived,
       createdAt: result.document?.created_at,
-      updatedAt: result.document?.updated_at
+      updatedAt: result.document?.updated_at,
     };
     
     emit('submit', documentData);
     
-    // Close modal after successful submission
+    // Wait untuk toast selesai, lalu close dan reset
     setTimeout(() => {
-      closeModal();
-    }, 1000);
+      isVisible.value = false;
+      emit('close');
+      
+      // Reset form setelah modal tertutup
+      setTimeout(() => {
+        resetForm();
+      }, 300); // Tunggu animasi modal selesai
+    }, 800);
     
   } catch (error: any) {
-    // Handle specific errors
-    if (error.message?.includes('Document number already exists')) {
+    console.error('Submit error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan saat menyimpan dokumen';
+    error.value = errorMessage;
+    
+    if (error.message?.includes('already exists')) {
       toast.error('Nomor dokumen sudah ada! Silakan gunakan nomor lain.');
     } else if (error.message?.includes('Permission denied')) {
       toast.error('Anda tidak memiliki izin untuk membuat dokumen!');
     } else {
-      toast.error(error.message || 'Terjadi kesalahan saat menyimpan dokumen');
+      toast.error(errorMessage);
     }
   } finally {
     isSubmitting.value = false;
@@ -206,42 +333,38 @@ const submitForm = async () => {
   }
 };
 
-// Update local visibility state when prop changes
+// Watch visibility
 watch(() => props.visible, (newVal) => {
   isVisible.value = newVal;
   
   if (newVal) {
-    // Reset form when opening
     if (isEdit.value && props.editingDocument) {
-      // Populate form with editing document data
       formData.value.title = props.editingDocument.title || '';
       formData.value.type = props.editingDocument.type || 'SURAT_TIDAK_MAMPU';
       formData.value.number = props.editingDocument.number || '';
       formData.value.content = props.editingDocument.content || '';
       formData.value.wargaId = props.editingDocument.wargaId || '';
+      formData.value.templateId = props.editingDocument.templateId || '';
       
-      // If wargaId exists, we might want to fetch and display the warga info
-      // For simplicity, we'll just set the searchQuery with placeholder
-      if (formData.value.wargaId) {
-        searchQuery.value = 'Memuat data warga...';
-        selectedWarga.value = null;
-        // In a real app, you might want to fetch the full warga details here
+      // ✅ PERBAIKAN: Jangan set searchQuery yang trigger search
+      // Hanya set jika memang ada warga yang terpilih
+      if (formData.value.wargaId && props.editingDocument.warga) {
+        searchQuery.value = `${props.editingDocument.warga.nik || ''} - ${props.editingDocument.warga.name || ''}`;
+        selectedWarga.value = props.editingDocument.warga;
+        showResults.value = false; // Jangan tampilkan dropdown
       }
     } else {
-      // Reset form for new document
       resetForm();
     }
   }
 }, { immediate: true });
 
-// Ensure modal shows correctly when mounted
 onMounted(() => {
   isVisible.value = props.visible;
 });
 </script>
 
 <template>
-  <!-- Always render the component and control visibility with local state -->
   <Transition name="modal">
     <div v-if="isVisible" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -281,11 +404,13 @@ onMounted(() => {
                 class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 required
               >
-                <option value="SURAT_TIDAK_MAMPU">Surat Keterangan Tidak Mampu</option>
+                <option value="SURAT_PENGANTAR">Surat Pengantar</option>
                 <option value="SURAT_KETERANGAN">Surat Keterangan</option>
                 <option value="SURAT_DOMISILI">Surat Keterangan Domisili</option>
-                <option value="SURAT_PENGANTAR">Surat Pengantar</option>
-                <option value="LAPORAN_KEUANGAN">Laporan Keuangan</option>
+                <option value="SURAT_TIDAK_MAMPU">Surat Keterangan Tidak Mampu</option>
+                <option value="SURAT_KELAHIRAN">Surat Keterangan Kelahiran</option>
+                <option value="SURAT_KEMATIAN">Surat Keterangan Kematian</option>
+                <option value="SURAT_PINDAH">Surat Keterangan Pindah</option>
                 <option value="OTHER">Dokumen Lainnya</option>
               </select>
             </div>
@@ -304,6 +429,20 @@ onMounted(() => {
                 required
               />
             </div>
+
+            <!-- Template ID -->
+            <div class="mb-4">
+              <label for="template-id" class="block text-sm font-medium text-gray-700 mb-1">
+                ID Template (Opsional)
+              </label>
+              <input
+                id="template-id"
+                v-model="formData.templateId"
+                type="text"
+                class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                placeholder="Masukkan ID template jika menggunakan template"
+              />
+            </div>
             
             <!-- Document Content -->
             <div class="mb-4">
@@ -318,10 +457,39 @@ onMounted(() => {
                 placeholder="Masukkan deskripsi atau konten dokumen"
               ></textarea>
             </div>
-            
 
+            <!-- File Upload -->
+            <div class="mb-4">
+              <label for="document-file" class="block text-sm font-medium text-gray-700 mb-1">
+                File Dokumen (Opsional)
+              </label>
+              <div class="relative">
+                <input
+                  id="document-file"
+                  type="file"
+                  @change="handleFileUpload"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                />
+                <button
+                  v-if="formData.filePath"
+                  type="button"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  @click="clearFile"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p v-if="formData.filePath" class="text-xs text-gray-500 mt-1">
+                File terpilih: {{ formData.filePath }} ({{ Math.round(formData.fileSize / 1024) }} KB)
+              </p>
+              <p class="text-xs text-gray-500 mt-1">*Format yang didukung: PDF, DOC, DOCX, JPG, PNG, TXT (Max 10MB)</p>
+              <p v-if="formData.filePath" class="text-xs text-amber-600 mt-1">⚠️ Catatan: File belum terupload ke server (fitur dalam pengembangan)</p>
+            </div>
             
-            <!-- Warga Search (Optional) -->
+            <!-- Warga Search -->
             <div class="mb-4">
               <label for="warga-search" class="block text-sm font-medium text-gray-700 mb-1">
                 Pilih Warga (Opsional)
@@ -353,7 +521,7 @@ onMounted(() => {
                   </svg>
                 </div>
                 
-                <!-- Search Results Dropdown -->
+                <!-- Search Results -->
                 <div v-if="showResults && searchResults.length > 0" class="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded-xl shadow-lg z-10 max-h-60 overflow-y-auto">
                   <div
                     v-for="warga in searchResults"
@@ -374,8 +542,11 @@ onMounted(() => {
               <p class="text-xs text-gray-500 mt-1">*Diperlukan untuk dokumen terkait warga</p>
             </div>
             
+            <!-- Error Display -->
+            <div v-if="error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <p class="text-sm text-red-600">{{ error }}</p>
+            </div>
 
-            
             <!-- Progress Bar -->
             <div v-if="progress > 0" class="mb-4">
               <div class="w-full bg-gray-200 rounded-full h-2">
@@ -401,7 +572,7 @@ onMounted(() => {
               <button
                 id="document-submit-btn"
                 type="submit"
-                class="px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all"
+                class="px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="isSubmitting"
               >
                 <span v-if="isSubmitting" class="flex items-center">

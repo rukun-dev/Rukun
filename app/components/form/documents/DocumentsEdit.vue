@@ -2,7 +2,7 @@
 import { ref, reactive, watch } from 'vue';
 import { toast } from "vue-sonner";
 
-// Props interface
+// Props interface - matching backend response structure
 interface Document {
   id?: string;
   title: string;
@@ -12,6 +12,26 @@ interface Document {
   number: string;
   _approvalStatus?: string;
   createdAt?: string;
+  status?: string; // Backend enum: PENDING, IN_PROGRESS, APPROVED, REJECTED, COMPLETED
+  file_path?: string | null;
+  file_size?: number | null;
+  mime_type?: string | null;
+  updated_at?: string;
+  warga?: {
+    id: string;
+    name: string;
+    nik: string;
+  };
+  requester?: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+  template?: {
+    id: string;
+    name: string;
+  };
 }
 
 // Props
@@ -27,6 +47,47 @@ const emit = defineEmits<{
   approve: [document: Document];
   reject: [document: Document];
 }>();
+
+// State
+const isLoading = ref(false);
+const documentData = ref<Document | null>(null);
+
+// Map backend status to display status
+const mapBackendStatus = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    'PENDING': 'Menunggu Persetujuan',
+    'IN_PROGRESS': 'Dalam Proses',
+    'APPROVED': 'Disetujui',
+    'REJECTED': 'Ditolak',
+    'COMPLETED': 'Selesai'
+  };
+  return statusMap[status] || 'Menunggu Persetujuan';
+};
+
+// Fetch document data from backend
+const fetchDocumentData = async (documentId: string) => {
+  if (!documentId) return;
+  
+  isLoading.value = true;
+  try {
+    const response = await $fetch(`/api/documents/${documentId}`);
+    if (response.document) {
+      documentData.value = response.document;
+      // Populate form with fetched data
+      formData.title = response.document.title || '';
+      formData.type = response.document.type || 'SURAT_TIDAK_MAMPU';
+      formData.content = response.document.content || '';
+      formData.wargaId = response.document.warga?.id || '';
+      formData.number = response.document.number || '';
+      formData._approvalStatus = mapBackendStatus(response.document.status || 'PENDING');
+    }
+  } catch (error: any) {
+    console.error('Error fetching document:', error);
+    toast.error('Gagal memuat data dokumen: ' + (error.data?.message || error.message));
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 // Form data - only fields that can be edited as specified
 const formData = reactive<{
@@ -87,6 +148,7 @@ const submitForm = () => {
     wargaId: formData.wargaId,
     number: formData.number,
     _approvalStatus: formData._approvalStatus,
+    status: documentData.value?.status || 'PENDING', // Use backend status from fetched data
     createdAt: props.editingDocument?.createdAt
   };
   
@@ -105,6 +167,7 @@ const approveDocument = () => {
     wargaId: formData.wargaId,
     number: formData.number,
     _approvalStatus: 'Disetujui',
+    status: 'APPROVED', // Backend status
     createdAt: props.editingDocument?.createdAt
   };
   emit('approve', documentData);
@@ -122,6 +185,7 @@ const rejectDocument = () => {
     wargaId: formData.wargaId,
     number: formData.number,
     _approvalStatus: 'Ditolak',
+    status: 'REJECTED', // Backend status
     createdAt: props.editingDocument?.createdAt
   };
   emit('reject', documentData);
@@ -140,29 +204,20 @@ const resetForm = () => {
 
 // Watch for visible changes to populate form
 watch(() => props.visible, (newVal) => {
-  if (newVal && props.editingDocument) {
-    // Populate form with editing document data
-    formData.title = props.editingDocument.title || '';
-    formData.type = props.editingDocument.type || 'SURAT_TIDAK_MAMPU';
-    formData.content = props.editingDocument.content || '';
-    formData.wargaId = props.editingDocument.wargaId || '';
-    formData.number = props.editingDocument.number || '';
-    formData._approvalStatus = props.editingDocument._approvalStatus;
+  if (newVal && props.editingDocument?.id) {
+    // Fetch fresh data from backend when modal opens
+    fetchDocumentData(props.editingDocument.id);
   } else if (!newVal) {
     // Reset form when modal is closed
     resetForm();
+    documentData.value = null;
   }
 });
 
 // Watch for changes in editing document
 watch(() => props.editingDocument, (newDocument) => {
-  if (props.visible && newDocument) {
-    formData.title = newDocument.title || '';
-    formData.type = newDocument.type || 'SURAT_TIDAK_MAMPU';
-    formData.content = newDocument.content || '';
-    formData.wargaId = newDocument.wargaId || '';
-    formData.number = newDocument.number || '';
-    formData._approvalStatus = newDocument._approvalStatus;
+  if (props.visible && newDocument?.id) {
+    fetchDocumentData(newDocument.id);
   }
 });
 </script>
@@ -183,7 +238,58 @@ watch(() => props.editingDocument, (newDocument) => {
         
         <!-- Modal Body -->
         <div class="px-6 py-5">
-          <form @submit.prevent="submitForm" id="document-edit-form">
+          <!-- Loading State -->
+          <div v-if="isLoading" class="text-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-gray-600">Memuat data dokumen...</p>
+          </div>
+
+          <!-- Content -->
+          <div v-else>
+            <!-- Document Info -->
+            <div v-if="documentData" class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+              <h4 class="text-md font-medium text-blue-900 mb-3">Informasi Dokumen</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span class="font-medium text-blue-700">Dibuat oleh:</span>
+                  <span class="ml-2 text-blue-800">{{ documentData.requester?.name || '-' }}</span>
+                </div>
+                <div>
+                  <span class="font-medium text-blue-700">Email:</span>
+                  <span class="ml-2 text-blue-800">{{ documentData.requester?.email || '-' }}</span>
+                </div>
+                <div>
+                  <span class="font-medium text-blue-700">Warga:</span>
+                  <span class="ml-2 text-blue-800">{{ documentData.warga?.name || '-' }}</span>
+                </div>
+                <div>
+                  <span class="font-medium text-blue-700">NIK:</span>
+                  <span class="ml-2 text-blue-800">{{ documentData.warga?.nik || '-' }}</span>
+                </div>
+                <div v-if="documentData.template">
+                  <span class="font-medium text-blue-700">Template:</span>
+                  <span class="ml-2 text-blue-800">{{ documentData.template.name }}</span>
+                </div>
+                <div>
+                  <span class="font-medium text-blue-700">Dibuat:</span>
+                  <span class="ml-2 text-blue-800">{{ new Date(documentData.created_at).toLocaleDateString('id-ID') }}</span>
+                </div>
+                <div v-if="documentData.updated_at">
+                  <span class="font-medium text-blue-700">Diperbarui:</span>
+                  <span class="ml-2 text-blue-800">{{ new Date(documentData.updated_at).toLocaleDateString('id-ID') }}</span>
+                </div>
+                <div v-if="documentData.file_size">
+                  <span class="font-medium text-blue-700">Ukuran File:</span>
+                  <span class="ml-2 text-blue-800">{{ (documentData.file_size / 1024).toFixed(2) }} KB</span>
+                </div>
+                <div v-if="documentData.mime_type">
+                  <span class="font-medium text-blue-700">Tipe File:</span>
+                  <span class="ml-2 text-blue-800">{{ documentData.mime_type }}</span>
+                </div>
+              </div>
+            </div>
+
+            <form @submit.prevent="submitForm" id="document-edit-form">
             <!-- Document Title -->
             <div class="mb-4">
               <label for="document-edit-title" class="block text-sm font-medium text-gray-700 mb-1">
@@ -270,10 +376,12 @@ watch(() => props.editingDocument, (newDocument) => {
                 <div class="flex-1">
                   <label class="block text-sm font-medium text-gray-700 mb-1">Status Saat Ini:</label>
                   <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                    :class="formData._approvalStatus === 'Disetujui' ? 'bg-green-100 text-green-800' : 
-                           formData._approvalStatus === 'Ditolak' ? 'bg-red-100 text-red-800' : 
+                    :class="documentData?.status === 'APPROVED' ? 'bg-green-100 text-green-800' : 
+                           documentData?.status === 'REJECTED' ? 'bg-red-100 text-red-800' : 
+                           documentData?.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
+                           documentData?.status === 'IN_PROGRESS' ? 'bg-purple-100 text-purple-800' :
                            'bg-yellow-100 text-yellow-800'">
-                    {{ formData._approvalStatus || 'Menunggu Persetujuan' }}
+                    {{ mapBackendStatus(documentData?.status || 'PENDING') }}
                   </div>
                 </div>
               </div>
@@ -316,6 +424,7 @@ watch(() => props.editingDocument, (newDocument) => {
               </button>
             </div>
           </form>
+          </div>
         </div>
       </div>
     </div>

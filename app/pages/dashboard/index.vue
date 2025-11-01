@@ -189,7 +189,7 @@
           </Button>
           
           <Button v-if="canAccessUserManagement" as-child variant="outline" class="h-16 flex-col space-y-1">
-            <NuxtLink to="/register">
+            <NuxtLink to="/dashboard/users">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
               </svg>
@@ -269,20 +269,22 @@ const stats = ref({
 const fetchDashboardData = async () => {
   try {
     // Expected response wrapped with ApiResponse structure { success, data, ... }
-    const apiResp = await $fetch('/api/dashboard') as {
-      success: boolean,
-      data: {
-        totalWarga: number,
-        totalFamilies: number,
-        monthlyPayments: number,
-        activeAnnouncements: number
-      }
-    }
-    if (apiResp && apiResp.success && apiResp.data) {
-      stats.value = apiResp.data
-    } else {
-      console.error('Unexpected dashboard API response format', apiResp)
-    }
+interface DashboardApiResp {
+  success: boolean
+  data: {
+    totalWarga: number
+    totalFamilies: number
+    monthlyPayments: number
+    activeAnnouncements: number
+  }
+}
+const apiResp = await $fetch<DashboardApiResp>('/api/dashboard')
+
+if (apiResp?.success && apiResp.data) {
+  stats.value = apiResp.data
+} else {
+  console.error('Unexpected dashboard API response format', apiResp)
+}
   } catch (error) {
     console.error('Failed to fetch dashboard stats', error)
   }
@@ -335,9 +337,9 @@ const fetchRecentAnnouncements = async () => {
     }
 
     // Tambahkan properti excerpt (ringkasan) untuk kompatibilitas tampilan lama
-    recentAnnouncements.value = announcementsData.slice(0, 5).map((a) => ({
+    recentAnnouncements.value = announcementsData.map((a) => ({
       ...a,
-      // Gunakan maksimal 80 karakter dari konten sebagai excerpt
+      // Gunakan maksimal 80 karakter dari konten sebag80 excerpt
       excerpt: (a as any).excerpt || (a.content ? a.content.slice(0, 80) + (a.content.length > 80 ? '…' : '') : '')
     }))
   } catch (error) {

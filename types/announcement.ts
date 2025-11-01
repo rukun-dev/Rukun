@@ -17,6 +17,8 @@ export interface Announcement {
     recipientType: 'ALL' | 'ROLE' | 'SPECIFIC';
     recipientId?: string;
   }>;
+  // Optional short excerpt of the announcement content for list previews
+  excerpt?: string;
 }
 
 export interface AnnouncementMeta {

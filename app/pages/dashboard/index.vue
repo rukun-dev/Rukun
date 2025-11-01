@@ -158,8 +158,8 @@
                     <h4 class="text-sm font-medium text-gray-900 break-words">{{ announcement.title }}</h4>
                     <p class="text-xs text-gray-500 mt-1 break-words">{{ announcement.excerpt }}</p>
                     <div class="flex items-center mt-2 space-x-2 flex-wrap">
-                      <Badge :variant="announcement.priority === 'HIGH' ? 'destructive' : announcement.priority === 'MEDIUM' ? 'default' : 'secondary'" class="text-xs">
-                        {{ getPriorityLabel(announcement.priority) }}
+                      <Badge :variant="announcement.priority === 'HIGH' ? 'destructive' : announcement.priority === 'NORMAL' ? 'default' : 'secondary'" class="text-xs">
+                        {{ getPriorityLabel(announcement.priority as any) }}
                       </Badge>
                       <span class="text-xs text-gray-400">{{ formatDate(announcement.createdAt) }}</span>
                     </div>
@@ -230,11 +230,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import type { Announcement } from '~/types/announcement'
 
 // Global loading
 const { showLoading, hideLoading } = useGlobalLoading()
@@ -266,29 +267,28 @@ const stats = ref({
 
 // Fungsi untuk memuat data dashboard
 const fetchDashboardData = async () => {
-  // TODO: Replace with actual API call
-  // Simulasi API call
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  
-  stats.value = {
-    totalWarga: 156,
-    totalFamilies: 45,
-    monthlyPayments: 7800000,
-    activeAnnouncements: 3
+  try {
+    // Expected response wrapped with ApiResponse structure { success, data, ... }
+    const apiResp = await $fetch('/api/dashboard') as {
+      success: boolean,
+      data: {
+        totalWarga: number,
+        totalFamilies: number,
+        monthlyPayments: number,
+        activeAnnouncements: number
+      }
+    }
+    if (apiResp && apiResp.success && apiResp.data) {
+      stats.value = apiResp.data
+    } else {
+      console.error('Unexpected dashboard API response format', apiResp)
+    }
+  } catch (error) {
+    console.error('Failed to fetch dashboard stats', error)
   }
 }
 
-// Mengambil data user saat komponen dimount
-onMounted(async () => {
-  try {
-    if (!isAuthenticated.value) {
-      await fetchUser()
-    }
-    await fetchDashboardData()
-  } finally {
-    hideLoading()
-  }
-})
+
 
 const recentPayments = ref([
   {
@@ -314,27 +314,52 @@ const recentPayments = ref([
   }
 ])
 
-const recentAnnouncements = ref([
-  {
-    id: '1',
-    title: 'Gotong Royong Minggu Depan',
-    excerpt: 'Kegiatan gotong royong akan dilaksanakan pada hari Minggu...',
-    priority: 'HIGH',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4)
-  },
-  {
-    id: '2',
-    title: 'Pembayaran Iuran Bulan Ini',
-    excerpt: 'Reminder untuk pembayaran iuran bulan ini...',
-    priority: 'MEDIUM',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24)
-  }
-])
+const recentAnnouncements = ref<Announcement[]>([])
 
-// Role-based access control dari useAuth
+// Fungsi untuk memuat pengumuman terbaru (maks 5)
+const fetchRecentAnnouncements = async () => {
+  try {
+    const apiResp = await $fetch(`/api/announcements?page=1&limit=5&isPublished=true`) as any
+
+    let announcementsData: Announcement[] = []
+
+    // Struktur respons bisa bervariasi, lakukan pengecekan defensif
+    if (apiResp && apiResp.data && apiResp.data.announcements && Array.isArray(apiResp.data.announcements)) {
+      announcementsData = apiResp.data.announcements as Announcement[]
+    } else if (apiResp && apiResp.announcements && Array.isArray(apiResp.announcements)) {
+      announcementsData = apiResp.announcements as Announcement[]
+    } else if (apiResp && Array.isArray(apiResp.data)) {
+      announcementsData = apiResp.data as Announcement[]
+    } else if (Array.isArray(apiResp)) {
+      announcementsData = apiResp as Announcement[]
+    }
+
+    // Tambahkan properti excerpt (ringkasan) untuk kompatibilitas tampilan lama
+    recentAnnouncements.value = announcementsData.slice(0, 5).map((a) => ({
+      ...a,
+      // Gunakan maksimal 80 karakter dari konten sebagai excerpt
+      excerpt: (a as any).excerpt || (a.content ? a.content.slice(0, 80) + (a.content.length > 80 ? '…' : '') : '')
+    }))
+  } catch (error) {
+    console.error('Failed to fetch recent announcements', error)
+  }
+}
+
+// Panggil juga saat mounted
+onMounted(async () => {
+  try {
+    if (!isAuthenticated.value) {
+      await fetchUser()
+    }
+    await fetchDashboardData()
+    await fetchRecentAnnouncements()
+  } finally {
+    hideLoading()
+  }
+})
+
 const { canAccessUserManagement, canAccessReports } = useAuth()
 
-// Helper functions
 const getRoleLabel = (role: string) => {
   const roleLabels: Record<string, string> = {
     'SUPER_ADMIN': 'Super Administrator',
@@ -360,18 +385,19 @@ const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('id-ID').format(amount)
 }
 
-const formatDate = (date: Date) => {
+const formatDate = (date: Date | string) => {
+  const d = typeof date === 'string' ? new Date(date) : date
   return new Intl.DateTimeFormat('id-ID', {
     day: 'numeric',
     month: 'short',
     year: 'numeric'
-  }).format(date)
+  }).format(d)
 }
 
 const getPriorityLabel = (priority: string) => {
   const labels: Record<string, string> = {
     'HIGH': 'Penting',
-    'MEDIUM': 'Sedang',
+    'NORMAL': 'Sedang',
     'LOW': 'Rendah'
   }
   return labels[priority] || priority

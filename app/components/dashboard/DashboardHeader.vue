@@ -169,21 +169,29 @@ const notificationCount = computed(() => notifications.value.length)
 
 // Get page title based on current route
 const pageTitle = computed(() => {
-  const path = route.path
-  
-  if (path === '/dashboard') return 'Dashboard'
+  const rawPath = route.path
+
+  // Special-case dashboard root
+  if (rawPath === '/dashboard') return 'Dashboard'
+
+  // Remove optional "/dashboard" prefix so nested dashboard routes reuse same mapping
+  const path = rawPath.startsWith('/dashboard')
+    ? rawPath.substring('/dashboard'.length) || '/'
+    : rawPath
+
   if (path.startsWith('/users')) return 'Manajemen Pengguna'
   if (path.startsWith('/warga')) return 'Data Warga'
-  if (path.startsWith('/families')) return 'Data Keluarga'
+  if (path.startsWith('/families') || path.startsWith('/kartu-keluarga')) return 'Data Keluarga'
   if (path.startsWith('/transactions')) return 'Transaksi'
-      if (path.startsWith('/payments')) return 'Pembayaran'
-      if (path.startsWith('/announcements')) return 'Pengumuman'
-      if (path.startsWith('/reports')) return 'Laporan'
-      if (path.startsWith('/documents')) return 'Dokumen'
-      if (path.startsWith('/dashboard/profile')) return 'Profil'
-      if (path.startsWith('/dashboard/settings')) return 'Pengaturan'
+  if (path.startsWith('/payments')) return 'Pembayaran'
+  if (path.startsWith('/announcements')) return 'Pengumuman'
+  if (path.startsWith('/reports')) return 'Laporan'
+  if (path.startsWith('/documents-template')) return 'Template Dokumen'
+  if (path.startsWith('/documents')) return 'Dokumen'
+  if (path.startsWith('/profile')) return 'Profil'
+  if (path.startsWith('/settings')) return 'Pengaturan'
   if (path.startsWith('/register')) return 'Registrasi Pengguna'
-  
+
   return 'Dashboard'
 })
 

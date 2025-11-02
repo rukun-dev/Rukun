@@ -1,5 +1,6 @@
 <template>
-  <div class="space-y-6">
+  <div class="min-h-screen bg-white">
+    <div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
     <!-- Welcome Section -->
     <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 md:p-6 text-white">
       <div class="flex items-center justify-between">
@@ -226,6 +227,7 @@
         </div>
       </CardContent>
     </Card>
+    </div>
   </div>
 </template>
 

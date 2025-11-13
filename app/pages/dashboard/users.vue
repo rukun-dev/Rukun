@@ -157,7 +157,7 @@
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Peran</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+            <th scope="col" class="relative px-6 py-3"><span class="sr-only">Aksi</span></th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -175,45 +175,9 @@
                 {{ user.isActive ? 'Aktif' : 'Nonaktif' }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <div class="flex space-x-2">
-                <button
-                  @click="editUser(user)"
-                  class="text-blue-600 hover:text-blue-800 transition-colors"
-                  title="Edit"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                </button>
-                <button
-                  @click="askDelete(user)"
-                  class="text-red-600 hover:text-red-800 transition-colors"
-                  title="Hapus"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862A2 2 0 015.995 19.142L5 7m5 4v6m4-6v6m1-10V5a1 1 0 00-1-1h-4a1 1 0 00-1 1v2M4 7h16"
-                    />
-                  </svg>
-                  <ConfirmDelete
-                    v-model="showDelete"
-                    title="Hapus Pengguna?"
-                    message="Apakah Anda yakin ingin menghapus pengguna ini?"
-                    :details="toDelete ? `${toDelete.name} • ${toDelete.email}` : ''"
-                    @confirm="confirmDelete"
-                    @cancel="showDelete = false"
-                  />
-                </button>
-              </div>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+              <button class="text-blue-600 hover:text-blue-900" @click="editUser(user)">Edit</button>
+              <button class="text-red-600 hover:text-red-900" @click="deleteUser(user)">Hapus</button>
             </td>
           </tr>
         </tbody>
@@ -230,7 +194,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useUsers, type User } from '@/composables/useUsers'
 import UserCreate from '@/components/form/user/UserCreate.vue'
 import UserEdit from '@/components/form/user/UserEdit.vue'
-import ConfirmDelete from '@/components/form/warga/ConfirmDelete.vue'
 
 // State & composable
 const {
@@ -309,21 +272,11 @@ const updateUser = async (updated: Partial<User>) => {
   }
 }
 
-// Delete with confirmation
-const showDelete = ref(false)
-const toDelete = ref<User | null>(null)
-
-const askDelete = (user: User) => {
-  toDelete.value = user
-  showDelete.value = true
-}
-
-const confirmDelete = async () => {
-  if (!toDelete.value) return
+const deleteUser = async (user: User) => {
+  const confirmed = confirm(`Yakin ingin menghapus ${user.name}?`)
+  if (!confirmed) return
   try {
-    await deleteUserApi(toDelete.value.id)
-    showDelete.value = false
-    toDelete.value = null
+    await deleteUserApi(user.id)
   } catch (error) {
     console.error(error)
   }

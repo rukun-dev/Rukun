@@ -6,6 +6,18 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ["@/assets/css/main.css"],
 
+  // Enable auto-import of components without path prefix, so
+  // components like components/form/payment/AddPayment.vue
+  // can be used as <AddPayment /> in templates.
+  components: {
+    dirs: [
+      {
+        path: "@/components",
+        pathPrefix: false,
+      },
+    ],
+  },
+
   runtimeConfig: {
     exnestApiKey: process.env.API_KEY},
 

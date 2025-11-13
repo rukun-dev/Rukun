@@ -198,7 +198,7 @@
             </NuxtLink>
           </Button>
           
-          <Button as-child variant="outline" class="h-16 flex-col space-y-1">
+          <Button v-if="!isWarga" as-child variant="outline" class="h-16 flex-col space-y-1">
             <NuxtLink to="/warga">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
@@ -318,7 +318,8 @@ const recentPayments = ref([
   }
 ])
 
-const recentAnnouncements = ref<Announcement[]>([])
+type AnnouncementItem = Announcement & { excerpt?: string }
+const recentAnnouncements = ref<AnnouncementItem[]>([])
 
 // Fungsi untuk memuat pengumuman terbaru (maks 5)
 const fetchRecentAnnouncements = async () => {
@@ -362,7 +363,7 @@ onMounted(async () => {
   }
 })
 
-const { canAccessUserManagement, canAccessReports } = useAuth()
+const { canAccessUserManagement, canAccessReports, isWarga } = useAuth()
 
 const getRoleLabel = (role: string) => {
   const roleLabels: Record<string, string> = {

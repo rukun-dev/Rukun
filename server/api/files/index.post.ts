@@ -2,6 +2,8 @@ import { prisma } from "~~/server/utils/database";
 import { requireAuth, getClientIP } from "~~/server/utils/auth";
 import { startRequest, responses } from "~~/server/utils/response";
 import { CloudinaryService } from "~~/server/utils/cloudinary";
+import { type UserRole } from "~~/server/helpers/permissions";
+import { getHeader } from "h3";
 
 /**
  * Endpoint to upload a new file.
@@ -47,6 +49,25 @@ export default defineEventHandler(async (event) => {
     // 4. Process Upload to Cloudinary using CloudinaryService
     const folder = folderField?.data.toString().trim();
     const tags = tagsField?.data.toString().trim().split(',').map(t => t.trim()).filter(Boolean);
+
+    // 3a. Restrict QRIS uploads to specific roles
+    const ALLOWED_QRIS_ROLES: UserRole[] = [
+      "SUPER_ADMIN",
+      "BENDAHARA",
+      "KETUA_RT",
+      "SEKRETARIS",
+    ];
+    const isQrisFolder = folder ? folder.toLowerCase().includes("qris") : false;
+    const hasQrisTag = tags ? tags.some(t => t.toLowerCase() === "qris") : false;
+    if (isQrisFolder || hasQrisTag) {
+      const userRole = (currentUser.role as UserRole);
+      if (!ALLOWED_QRIS_ROLES.includes(userRole)) {
+        return responses.forbidden(
+          "Anda tidak berhak mengunggah QRIS.",
+          { requestId, event }
+        );
+      }
+    }
 
     console.log(`[File Upload] Uploading file "${fileField.filename}" to Cloudinary...`);
     // Using a static method from CloudinaryService

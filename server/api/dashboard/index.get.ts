@@ -1,93 +1,99 @@
-// server/api/dashboard/index.get.ts
-import { z } from 'zod'
-import { prisma } from '~~/server/utils/database'
-import { requireAuth } from '~~/server/utils/auth'
-import { startRequest, responses } from '~~/server/utils/response'
+import { prisma } from "~~/server/utils/database";
+import { requireAuth } from "~~/server/utils/auth";
+import { startRequest, responses } from "~~/server/utils/response";
 
 export default defineEventHandler(async (event) => {
-  const requestId = startRequest(event)
-  const startedAt = Date.now()
+  const requestId = startRequest(event);
 
   try {
-    // Auth (all authenticated users can see dashboard)
-    await requireAuth(event)
+    // Pastikan user terautentikasi
+    const user = await requireAuth(event);
 
-    // --- Calculate stats --- //
-    // Total warga (citizens)
-    const totalWargaPromise = prisma.warga.count()
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
 
-    // Total families
-    const totalFamiliesPromise = prisma.family.count()
+    // Jalankan query paralel untuk performa yang lebih baik
+    const [
+      totalWarga,
+      totalFamilies,
+      monthlyPaymentsAgg,
+      activeAnnouncements,
+    ] = await Promise.all([
+      // Total warga aktif
+      prisma.warga.count({ where: { isActive: true } }),
 
-    // Total payments for current month (only verified payments)
-    const now = new Date()
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const monthlyPaymentsPromise = prisma.payment.aggregate({
-      where: {
-        createdAt: {
-          gte: firstDayOfMonth,
-          lte: now
+      // Total keluarga
+      prisma.family.count(),
+
+      // Total pembayaran iuran bulanan yang berhasil dibayar di bulan ini
+      prisma.payment.aggregate({
+        where: {
+          status: "PAID",
+          type: "IURAN_BULANAN",
+          paidDate: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
         },
-        isVerified: true
-      },
-      _sum: {
-        amount: true
-      }
-    })
+        _sum: { amount: true },
+      }),
 
-    // Active announcements (published and not expired)
-    const activeAnnouncementsPromise = prisma.announcement.count({
-      where: {
-        isPublished: true,
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: now } }
-        ]
-      }
-    })
+      // Pengumuman aktif (dipublikasikan dan belum kedaluwarsa)
+      prisma.announcement.count({
+        where: {
+          isPublished: true,
+          OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
+        },
+      }),
+    ]);
 
-    const [totalWarga, totalFamilies, monthlyPaymentsAgg, activeAnnouncements] = await Promise.all([
-      totalWargaPromise,
-      totalFamiliesPromise,
-      monthlyPaymentsPromise,
-      activeAnnouncementsPromise
-    ])
-
-    const monthlyPayments = monthlyPaymentsAgg._sum.amount || 0
-
-    const executionTime = `${Date.now() - startedAt}ms`
+    const monthlyPayments = Number(monthlyPaymentsAgg._sum.amount ?? 0);
 
     return responses.ok(
       {
         totalWarga,
         totalFamilies,
         monthlyPayments,
-        activeAnnouncements
+        activeAnnouncements,
       },
-      'Dashboard statistics retrieved successfully',
-      { requestId, event, executionTime }
-    )
-  } catch (error: unknown) {
-    // Auth errors handled in utils/auth
-
-    // Prisma constraint error
-    if (error && typeof error === 'object' && 'code' in error) {
-      const prismaError = error as any
-      if (prismaError.code === 'P2002') {
-        return responses.serverError(
-          'Database constraint error',
-          process.env.NODE_ENV === 'development' ? prismaError.message : undefined,
-          { requestId, event, code: 'DATABASE_CONSTRAINT_ERROR' }
-        )
+      "Dashboard stats retrieved successfully",
+      {
+        requestId,
+        event,
+        links: {
+          self: "/api/dashboard",
+          related: {
+            users_statistics: "/api/users/statistics",
+            announcements: "/api/announcements",
+            families: "/api/families",
+            residents: "/api/warga",
+          },
+        },
+      },
+    );
+  } catch (error: any) {
+    // Tangani error autentikasi/otorisasi
+    if (error?.statusCode === 401 || error?.statusCode === 403) {
+      if (error.statusCode === 401) {
+        return responses.unauthorized(error.statusMessage, { requestId, event });
       }
+      return responses.forbidden(error.statusMessage, { requestId, event });
     }
 
-    const executionTime = `${Date.now() - startedAt}ms`
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    const errMessage = error instanceof Error ? error.message : "Unknown error";
     return responses.serverError(
-      'Failed to retrieve dashboard statistics',
-      process.env.NODE_ENV === 'development' ? errorMessage : undefined,
-      { requestId, event, executionTime, code: 'DASHBOARD_GET_ERROR' }
-    )
+      "Failed to retrieve dashboard stats",
+      errMessage,
+      { requestId, event },
+    );
   }
-})
+});

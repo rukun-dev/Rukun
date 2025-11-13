@@ -178,38 +178,9 @@
                 txn.type === 'EXPENSE' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
               ]">{{ txn.type === 'EXPENSE' ? 'Pengeluaran' : 'Pemasukan' }}</span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <div class="flex space-x-2">
-                <button
-                  @click="openEditModal(txn)"
-                  class="text-blue-600 hover:text-blue-800 transition-colors"
-                  title="Edit"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                </button>
-                <button
-                  @click="askDelete(txn)"
-                  class="text-red-600 hover:text-red-800 transition-colors"
-                  title="Hapus"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862A2 2 0 015.995 19.142L5 7m5 4v6m4-6v6m1-10V5a1 1 0 00-1-1h-4a1 1 0 00-1 1v2M4 7h16"
-                    />
-                  </svg>
-
-                </button>
-              </div>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 space-x-2">
+              <button @click="openEditModal(txn)" class="text-blue-600 hover:text-blue-900">Edit</button>
+              <button @click="handleDelete(txn.id)" class="text-red-600 hover:text-red-900">Hapus</button>
             </td>
           </tr>
         </tbody>
@@ -225,16 +196,6 @@
           </tr>
         </tbody>
       </table>
-
-      <!-- Delete Confirmation Modal -->
-      <ConfirmDelete
-        v-model="showDelete"
-        title="Hapus Transaksi?"
-        message="Apakah Anda yakin ingin menghapus transaksi ini?"
-        :details="toDelete ? `${toDelete.description} • ${formatCurrency(toDelete.amount)}` : ''"
-        @confirm="confirmDelete"
-        @cancel="showDelete = false"
-      />
 
       <!-- Pagination -->
       <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between" v-if="totalPages > 1">
@@ -288,7 +249,6 @@ import { useTransactions, type Transaction } from '../../app/composables/useTran
 import { toast } from 'vue-sonner'
 import AddTransaction from '@/components/form/transaction/AddTransaction.vue'
 import EditTransaction from '@/components/form/transaction/EditTransaction.vue'
-import ConfirmDelete from '@/components/form/warga/ConfirmDelete.vue'
 
 definePageMeta({
   layout: 'dashboard',
@@ -366,26 +326,10 @@ const handleSave = async (payload: Transaction) => {
   }
 }
 
-const showDelete = ref(false)
-const toDelete = ref<Transaction | null>(null)
-
-const askDelete = (txn: Transaction) => {
-  toDelete.value = txn
-  showDelete.value = true
-}
-
-const confirmDelete = async () => {
-  if (toDelete.value) {
-    try {
-      await deleteTransaction(toDelete.value.id)
-      toast.success('Transaksi dihapus')
-    } catch (err) {
-      toast.error('Gagal menghapus transaksi')
-    } finally {
-      showDelete.value = false
-      toDelete.value = null
-    }
-  }
+const handleDelete = async (id: string) => {
+  if (!confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) return
+  await deleteTransaction(id)
+  toast.success('Transaksi dihapus')
 }
 
 // Helper

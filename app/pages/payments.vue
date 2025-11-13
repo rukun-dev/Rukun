@@ -1,12 +1,8 @@
 <template>
   <div class="min-h-screen bg-white">
     <div class="max-w-7xl mx-auto px-4 py-8">
-      <!-- Page Header -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-800">Daftar Pembayaran</h1>
-          <p class="text-gray-500 mt-1">Kelola dan pantau semua pembayaran warga</p>
-        </div>
+      <!-- Toolbar: Add Payment button (header text removed) -->
+      <div class="flex justify-end mb-6">
         <button
           v-if="canManagePayments"
           @click="openAddForm"

@@ -1,12 +1,8 @@
 <template>
   <div class="min-h-screen bg-white">
     <div class="max-w-7xl mx-auto px-4 py-8">
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-800">Kelola Pengguna</h1>
-        <p class="text-gray-500 mt-1">Tambah, edit, dan kelola akun pengguna sistem</p>
-      </div>
+    <!-- Page Header text removed per request, button remains -->
+    <div class="flex justify-end mb-6">
       <button
         @click="showCreate = true"
         class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"

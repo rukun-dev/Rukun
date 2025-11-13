@@ -86,14 +86,31 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     }
   }
   
-  // Final check: redirect to login if still not authenticated
+  // Final authentication check: redirect to login if still not authenticated
   if (!isAuthenticated.value) {
-    console.log('🔐 Auth Middleware - Final check failed, redirecting to login')
+    console.log('🔐 Auth Middleware - Final auth check failed, redirecting to login')
     hideLoading()
     return navigateTo('/login')
   }
+
+  /* ----------------------------------------------------
+     Role-based Authorization (meta.roles)
+     If the target route defines meta.roles as an array of allowed roles,
+     verify the current user's role. If unauthorized, redirect to /unauthorized.
+  -----------------------------------------------------*/
+  const requiredRoles = (to.meta as any)?.roles as string[] | undefined
+  if (requiredRoles && requiredRoles.length > 0) {
+    const { canAccess } = useAuth()
+    const isAllowed = canAccess(requiredRoles)
+    console.log('🔐 Auth Middleware - Role check', { requiredRoles, isAllowed })
+
+    if (!isAllowed) {
+      console.log('🔐 Auth Middleware - User role not authorized, redirecting to /unauthorized')
+      return navigateTo('/unauthorized')
+    }
+  }
   
-  // Hide loading when access is granted
+  // Hide loading when access is granted (auth + role)
   hideLoading()
   console.log('🔐 Auth Middleware - Access granted to protected route')
 })

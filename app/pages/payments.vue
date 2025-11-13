@@ -8,6 +8,7 @@
           <p class="text-gray-500 mt-1">Kelola dan pantau semua pembayaran warga</p>
         </div>
         <button
+          v-if="canManagePayments"
           @click="openAddForm"
           class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
         >
@@ -188,7 +189,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm" :class="statusColor(p.status)">{{ mapStatus(p.status) }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex space-x-2">
+                <div class="flex space-x-2" :class="{ 'opacity-50 pointer-events-none': !canManagePayments }">
                   <button
                     @click="openEdit(p)"
                     class="text-blue-600 hover:text-blue-800 transition-colors"
@@ -320,6 +321,12 @@ const canUploadQris = computed(() => {
   return !!userRole.value && allowed.includes(userRole.value as any)
 })
 
+// Batasi tambah/edit/hapus pembayaran untuk WARGA
+const canManagePayments = computed(() => {
+  if (!isAuthenticated.value) return false
+  return (userRole.value as any) !== 'WARGA'
+})
+
 const { payments, fetchPayments, addPayment, updatePayment, deletePayment, error, loading } = usePayments()
 
 /* Filters */
@@ -383,12 +390,20 @@ onMounted(() => {
 })
 
 const openAddForm = () => {
+  if (!canManagePayments.value) {
+    toast.error('Anda tidak berhak menambah pembayaran')
+    return
+  }
   isEditing.value = false
   form.value = null
   isFormOpen.value = true
 }
 
 const openEdit = (payment: Payment) => {
+  if (!canManagePayments.value) {
+    toast.error('Anda tidak berhak mengubah pembayaran')
+    return
+  }
   isEditing.value = true
   form.value = { ...payment }
   isFormOpen.value = true
@@ -416,6 +431,10 @@ const showDelete = ref(false)
 const toDelete = ref<Payment | null>(null)
 
 const askDelete = (p: Payment) => {
+  if (!canManagePayments.value) {
+    toast.error('Anda tidak berhak menghapus pembayaran')
+    return
+  }
   toDelete.value = p
   showDelete.value = true
 }

@@ -1,107 +1,57 @@
 <template>
-  <div
-    v-if="modelValue"
-    class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-    @click.self="close"
-  >
-    <div
-      class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
-      @click.stop
-    >
-      <!-- Header -->
-      <div class="p-6 border-b border-gray-200">
-        <h3 class="text-xl font-semibold text-gray-900">
-          Tambah Pembayaran
-        </h3>
-        <p class="text-gray-600 mt-1">
-          Masukkan data pembayaran baru
-        </p>
+  <div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+    <div class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Tambah Pembayaran</h3>
+        <button class="text-gray-500 hover:text-gray-700" @click="close">✕</button>
       </div>
 
-      <!-- Form -->
-      <form @submit.prevent="onSubmit" class="p-6 space-y-6">
-        <div class="grid grid-cols-1 gap-6">
-          <!-- Due Date -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Jatuh Tempo</label>
-            <input
-              v-model="local.dueDate"
-              type="date"
-              required
-              class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-200"
-            />
-          </div>
-
-          <!-- Type -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Pembayaran</label>
-            <select
-              v-model="local.type"
-              required
-              class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white border-gray-200 appearance-none"
-            >
-              <option value="IURAN_BULANAN">Iuran Bulanan</option>
-              <option value="IURAN_KEBERSIHAN">Iuran Kebersihan</option>
-              <option value="SUMBANGAN">Sumbangan</option>
-              <option value="DENDA">Denda</option>
-              <option value="OTHER">Lainnya</option>
-            </select>
-          </div>
-
-          <!-- Description -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
-            <textarea
-              v-model="local.description"
-              rows="2"
-              class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-200"
-              placeholder="Masukkan deskripsi pembayaran"
-            ></textarea>
-          </div>
-
-          <!-- Amount -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah (Rp)</label>
-            <input
-              v-model.number="local.amount"
-              type="number"
-              required
-              class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-200"
-              placeholder="Masukkan jumlah"
-            />
-          </div>
-
-          <!-- Status -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select
-              v-model="local.status"
-              required
-              class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white border-gray-200 appearance-none"
-            >
-              <option value="PENDING">Menunggu</option>
-              <option value="PAID">Lunas</option>
-              <option value="OVERDUE">Terlambat</option>
-              <option value="CANCELLED">Dibatalkan</option>
-            </select>
-          </div>
+      <form @submit.prevent="onSubmit" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Jenis</label>
+          <select v-model="form.type" class="w-full px-3 py-2 border rounded-lg">
+            <option value="IURAN_BULANAN">Iuran Bulanan</option>
+            <option value="IURAN_KEBERSIHAN">Iuran Kebersihan</option>
+            <option value="SUMBANGAN">Sumbangan</option>
+            <option value="DENDA">Denda</option>
+            <option value="OTHER">Lainnya</option>
+          </select>
         </div>
 
-        <!-- Actions -->
-        <div class="flex justify-end space-x-3 pt-2">
-          <button
-            type="button"
-            @click="close"
-            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            class="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium shadow-lg hover:shadow-xl transition-all"
-            :disabled="isSubmitting"
-          >
-            {{ isSubmitting ? 'Menambahkan...' : 'Simpan' }}
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+          <input v-model="form.description" type="text" class="w-full px-3 py-2 border rounded-lg" placeholder="Deskripsi pembayaran" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah (Rp)</label>
+          <input v-model.number="form.amount" type="number" min="0" class="w-full px-3 py-2 border rounded-lg" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Jatuh Tempo</label>
+          <input v-model="dueDateStr" type="date" class="w-full px-3 py-2 border rounded-lg" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Warga</label>
+          <input v-model="form.wargaName" type="text" class="w-full px-3 py-2 border rounded-lg" placeholder="Nama Warga" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <select v-model="form.status" class="w-full px-3 py-2 border rounded-lg">
+            <option value="PENDING">Pending</option>
+            <option value="PAID">Lunas</option>
+            <option value="OVERDUE">Terlambat</option>
+            <option value="CANCELLED">Dibatalkan</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-end space-x-3 pt-2">
+          <button type="button" class="px-4 py-2 rounded-lg border" @click="close">Batal</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white" :disabled="isSubmitting">
+            {{ isSubmitting ? 'Menyimpan...' : 'Simpan' }}
           </button>
         </div>
       </form>
@@ -110,36 +60,45 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { ref, watch } from 'vue'
 import type { Payment } from '@/composables/usePayments'
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false,
-  },
-  isSubmitting: {
-    type: Boolean,
-    default: false,
-  },
-})
+const props = defineProps<{
+  modelValue: boolean
+  isSubmitting: boolean
+}>()
 
-const emit = defineEmits(['update:modelValue', 'save'])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
+  (e: 'save', value: Payment): void
+}>()
 
-const local = reactive<Payment>({
+const today = new Date()
+const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`)
+const toDateStr = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+
+const form = ref<Payment>({
   id: '',
   type: 'IURAN_BULANAN',
   amount: 0,
   description: '',
-  dueDate: new Date(),
+  dueDate: today,
   paidDate: null,
   status: 'PENDING',
+  wargaName: ''
 })
 
-// close modal
+const dueDateStr = ref<string>(toDateStr(today))
+
+watch(dueDateStr, (val) => {
+  form.value.dueDate = new Date(val)
+})
+
 const close = () => emit('update:modelValue', false)
 
 const onSubmit = () => {
-  emit('save', { ...local })
+  // Basic validation
+  if (!form.value.description || form.value.amount <= 0) return
+  emit('save', { ...form.value })
 }
 </script>

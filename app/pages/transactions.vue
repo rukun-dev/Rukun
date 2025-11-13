@@ -1,23 +1,7 @@
 <template>
   <div class="min-h-screen bg-white">
     <div class="max-w-7xl mx-auto px-4 py-8">
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-800">Daftar Transaksi</h1>
-        <p class="text-gray-500 mt-1">Pantau pemasukan dan pengeluaran kas RT</p>
-      </div>
-      <button
-        v-if="canEditTransaction"
-        @click="openCreateModal"
-        class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Tambah Transaksi
-      </button>
-    </div>
+    <!-- Page Header removed per request -->
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -159,7 +143,6 @@
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
             <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah (Rp)</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200" v-if="!loading">
@@ -178,44 +161,11 @@
                 txn.type === 'EXPENSE' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
               ]">{{ txn.type === 'EXPENSE' ? 'Pengeluaran' : 'Pemasukan' }}</span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <div class="flex space-x-2">
-                <button
-                  @click="openEditModal(txn)"
-                  class="text-blue-600 hover:text-blue-800 transition-colors"
-                  title="Edit"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                </button>
-                <button
-                  @click="askDelete(txn)"
-                  class="text-red-600 hover:text-red-800 transition-colors"
-                  title="Hapus"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862A2 2 0 015.995 19.142L5 7m5 4v6m4-6v6m1-10V5a1 1 0 00-1-1h-4a1 1 0 00-1 1v2M4 7h16"
-                    />
-                  </svg>
-
-                </button>
-              </div>
-            </td>
           </tr>
         </tbody>
         <tbody v-else>
           <tr>
-            <td colspan="6" class="px-6 py-8 text-center">
+            <td colspan="5" class="px-6 py-8 text-center">
               <div class="flex justify-center space-x-2">
                 <div class="w-4 h-4 bg-gray-300 rounded-full animate-pulse"></div>
                 <div class="w-4 h-4 bg-gray-300 rounded-full animate-pulse"></div>
@@ -225,16 +175,6 @@
           </tr>
         </tbody>
       </table>
-
-      <!-- Delete Confirmation Modal -->
-      <ConfirmDelete
-        v-model="showDelete"
-        title="Hapus Transaksi?"
-        message="Apakah Anda yakin ingin menghapus transaksi ini?"
-        :details="toDelete ? `${toDelete.description} • ${formatCurrency(toDelete.amount)}` : ''"
-        @confirm="confirmDelete"
-        @cancel="showDelete = false"
-      />
 
       <!-- Pagination -->
       <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between" v-if="totalPages > 1">
@@ -266,127 +206,27 @@
       </div>
     </div>
 
-    <AddTransaction
-      v-if="!isEditing"
-      v-model="isFormOpen"
-      :isSubmitting="formSubmitting"
-      @save="handleSave"
-    />
-    <EditTransaction
-      v-else
-      v-model="isFormOpen"
-      :transaction="form"
-      :isSubmitting="formSubmitting"
-      @save="handleSave"
-    />
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { useTransactions, type Transaction } from '../../app/composables/useTransactions'
-import { toast } from 'vue-sonner'
-import AddTransaction from '@/components/form/transaction/AddTransaction.vue'
-import EditTransaction from '@/components/form/transaction/EditTransaction.vue'
-import ConfirmDelete from '@/components/form/warga/ConfirmDelete.vue'
+import { useTransactions } from '../../app/composables/useTransactions'
 
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth'
 })
 
-// ensure file is /dashboard/transactions.vue in routing
-
 const {
   transactions,
   loading,
   error,
   fetchTransactions,
-  addTransaction,
-  updateTransaction,
-  deleteTransaction
+  
 } = useTransactions()
 
-// Permission placeholder
-const canEditTransaction = computed(() => true)
-
-// Modal state
-const isFormOpen = ref(false)
-const isEditing = ref(false)
-const formSubmitting = ref(false)
-const form = ref<Transaction>({
-  id: '',
-  type: 'INCOME',
-  category: 'IURAN_BULANAN',
-  amount: 0,
-  description: '',
-  date: new Date()
-})
-
 onMounted(fetchTransactions)
-
-const openCreateModal = () => {
-  isEditing.value = false
-  form.value = {
-    id: '',
-    type: 'INCOME',
-    category: 'IURAN_BULANAN',
-    amount: 0,
-    description: '',
-    date: new Date()
-  }
-  isFormOpen.value = true
-}
-
-const openEditModal = (txn: Transaction) => {
-  isEditing.value = true
-  form.value = { ...txn }
-  isFormOpen.value = true
-}
-
-const closeModal = () => {
-  isFormOpen.value = false
-}
-
-const handleSave = async (payload: Transaction) => {
-  formSubmitting.value = true
-  try {
-    if (isEditing.value) {
-      await updateTransaction(payload.id, { ...payload })
-      toast.success('Transaksi berhasil diperbarui')
-    } else {
-      await addTransaction({ ...payload })
-      toast.success('Transaksi berhasil ditambahkan')
-    }
-    isFormOpen.value = false
-  } catch (err) {
-    toast.error('Terjadi kesalahan, coba lagi')
-  } finally {
-    formSubmitting.value = false
-  }
-}
-
-const showDelete = ref(false)
-const toDelete = ref<Transaction | null>(null)
-
-const askDelete = (txn: Transaction) => {
-  toDelete.value = txn
-  showDelete.value = true
-}
-
-const confirmDelete = async () => {
-  if (toDelete.value) {
-    try {
-      await deleteTransaction(toDelete.value.id)
-      toast.success('Transaksi dihapus')
-    } catch (err) {
-      toast.error('Gagal menghapus transaksi')
-    } finally {
-      showDelete.value = false
-      toDelete.value = null
-    }
-  }
-}
 
 // Helper
 const formatDate = (d: Date) => {

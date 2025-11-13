@@ -1,13 +1,10 @@
 <template>
   <div class="min-h-screen bg-white">
     <div class="max-w-7xl mx-auto px-4 py-8">
-      <!-- Page Header -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-800">Daftar Pembayaran</h1>
-          <p class="text-gray-500 mt-1">Kelola dan pantau semua pembayaran warga</p>
-        </div>
+      <!-- Toolbar: Add Payment button (header text removed) -->
+      <div class="flex justify-end mb-6">
         <button
+          v-if="canManagePayments"
           @click="openAddForm"
           class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
         >
@@ -17,6 +14,19 @@
           Tambah Pembayaran
         </button>
       </div>
+
+      <!-- Payment Options -->
+      <PaymentOptions
+        class="mt-2"
+        :qrisUrl="qrisUrl"
+        :canUpload="canUploadQris"
+        @qrisUploaded="onQrisUploaded"
+        bankName="Bank BRI"
+        accountNumber="1234567890"
+        accountHolder="Bendahara RT 01"
+        whatsapp="6281234567890"
+        note="Cantumkan keterangan: Nama, Blok/Rumah, bulan pembayaran."
+      />
 
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -175,7 +185,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm" :class="statusColor(p.status)">{{ mapStatus(p.status) }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex space-x-2">
+                <div class="flex space-x-2" :class="{ 'opacity-50 pointer-events-none': !canManagePayments }">
                   <button
                     @click="openEdit(p)"
                     class="text-blue-600 hover:text-blue-800 transition-colors"
@@ -283,15 +293,34 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { usePayments, type Payment } from '@/composables/usePayments'
+import { useAuth } from '@/composables/useAuth'
 import { currency } from '@/lib/utils'
-import AddPayment from '@/components/form/payment/AddPayment.vue'
-import EditPayment from '@/components/form/payment/EditPayment.vue'
-import ConfirmDelete from '@/components/form/warga/ConfirmDelete.vue'
 import { toast } from 'vue-sonner'
 
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth'
+})
+
+// QRIS state (diisi saat unggah)
+const qrisUrl = ref<string | undefined>(undefined)
+const onQrisUploaded = (file: { url: string; id?: string }) => {
+  qrisUrl.value = file.url
+  toast.success('QRIS berhasil diunggah')
+}
+
+// Batasi hak unggah berdasarkan peran
+const { userRole, isAuthenticated } = useAuth()
+const canUploadQris = computed(() => {
+  if (!isAuthenticated.value) return false
+  const allowed = ['SUPER_ADMIN', 'BENDAHARA', 'KETUA_RT', 'SEKRETARIS']
+  return !!userRole.value && allowed.includes(userRole.value as any)
+})
+
+// Batasi tambah/edit/hapus pembayaran untuk WARGA
+const canManagePayments = computed(() => {
+  if (!isAuthenticated.value) return false
+  return (userRole.value as any) !== 'WARGA'
 })
 
 const { payments, fetchPayments, addPayment, updatePayment, deletePayment, error, loading } = usePayments()
@@ -357,12 +386,20 @@ onMounted(() => {
 })
 
 const openAddForm = () => {
+  if (!canManagePayments.value) {
+    toast.error('Anda tidak berhak menambah pembayaran')
+    return
+  }
   isEditing.value = false
   form.value = null
   isFormOpen.value = true
 }
 
 const openEdit = (payment: Payment) => {
+  if (!canManagePayments.value) {
+    toast.error('Anda tidak berhak mengubah pembayaran')
+    return
+  }
   isEditing.value = true
   form.value = { ...payment }
   isFormOpen.value = true
@@ -390,6 +427,10 @@ const showDelete = ref(false)
 const toDelete = ref<Payment | null>(null)
 
 const askDelete = (p: Payment) => {
+  if (!canManagePayments.value) {
+    toast.error('Anda tidak berhak menghapus pembayaran')
+    return
+  }
   toDelete.value = p
   showDelete.value = true
 }

@@ -18,6 +18,19 @@
         </button>
       </div>
 
+      <!-- Payment Options -->
+      <PaymentOptions
+        class="mt-2"
+        :qrisUrl="qrisUrl"
+        :canUpload="canUploadQris"
+        @qrisUploaded="onQrisUploaded"
+        bankName="Bank BRI"
+        accountNumber="1234567890"
+        accountHolder="Bendahara RT 01"
+        whatsapp="6281234567890"
+        note="Cantumkan keterangan: Nama, Blok/Rumah, bulan pembayaran."
+      />
+
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Total Payments -->
@@ -283,15 +296,28 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { usePayments, type Payment } from '@/composables/usePayments'
+import { useAuth } from '@/composables/useAuth'
 import { currency } from '@/lib/utils'
-import AddPayment from '@/components/form/payment/AddPayment.vue'
-import EditPayment from '@/components/form/payment/EditPayment.vue'
-import ConfirmDelete from '@/components/form/warga/ConfirmDelete.vue'
 import { toast } from 'vue-sonner'
 
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth'
+})
+
+// QRIS state (diisi saat unggah)
+const qrisUrl = ref<string | undefined>(undefined)
+const onQrisUploaded = (file: { url: string; id?: string }) => {
+  qrisUrl.value = file.url
+  toast.success('QRIS berhasil diunggah')
+}
+
+// Batasi hak unggah berdasarkan peran
+const { userRole, isAuthenticated } = useAuth()
+const canUploadQris = computed(() => {
+  if (!isAuthenticated.value) return false
+  const allowed = ['SUPER_ADMIN', 'BENDAHARA', 'KETUA_RT', 'SEKRETARIS']
+  return !!userRole.value && allowed.includes(userRole.value as any)
 })
 
 const { payments, fetchPayments, addPayment, updatePayment, deletePayment, error, loading } = usePayments()

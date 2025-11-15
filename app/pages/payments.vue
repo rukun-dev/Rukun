@@ -399,6 +399,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { usePayments, type Payment } from '@/composables/usePayments'
 import { useAuth } from '@/composables/useAuth'
+import { useGlobalLoading } from '@/composables/useGlobalLoading'
 import { currency } from '@/lib/utils'
 import { toast } from 'vue-sonner'
 
@@ -429,6 +430,7 @@ const canManagePayments = computed(() => {
 })
 
 const { payments, fetchPayments, addPayment, updatePayment, deletePayment, error, loading } = usePayments()
+const { showLoading, hideLoading, setLoadingText } = useGlobalLoading()
 
 /* Filters */
 const search = ref('')
@@ -529,8 +531,13 @@ const manageList = computed(() => {
   return base
 })
 
-onMounted(() => {
-  fetchPayments()
+onMounted(async () => {
+  showLoading('Memuat pembayaran...', 'Mengambil data dari server')
+  try {
+    await fetchPayments()
+  } finally {
+    hideLoading()
+  }
 })
 
 const openAddForm = () => {
@@ -664,6 +671,7 @@ const askDeleteBulk = () => {
 const confirmDeleteBulk = async () => {
   bulkDeleteSubmitting.value = true
   try {
+    showLoading('Menghapus pembayaran massal...', 'Memproses data sesuai filter')
     const body: any = {}
     if (bulkDeleteMode.value === 'MONTH') {
       const [yearStr, monthStr] = bulkDeleteMonth.value.split('-')
@@ -673,6 +681,7 @@ const confirmDeleteBulk = async () => {
       body.date = bulkDeleteDate.value
     }
     await $fetch('/api/finances/manage/payments/bulk', { method: 'DELETE', body })
+    setLoadingText('Memuat ulang...', 'Memperbarui daftar pembayaran')
     await fetchPayments()
     toast.success('Pembayaran massal berhasil dihapus')
     showDeleteBulk.value = false
@@ -681,6 +690,7 @@ const confirmDeleteBulk = async () => {
     const msg = err?.data?.message || err?.message || 'Gagal menghapus pembayaran massal'
     toast.error(msg)
   } finally {
+    hideLoading()
     bulkDeleteSubmitting.value = false
   }
 }
@@ -728,6 +738,7 @@ const handleSaveBulk = async (payload: BulkPaymentInput) => {
       toast.error('Anda tidak berhak menambah pembayaran')
       return
     }
+    showLoading('Membuat pembayaran massal...', 'Menargetkan warga sesuai peran')
     await $fetch('/api/finances/manage/payments/bulk', {
       method: 'POST',
       body: {
@@ -740,6 +751,7 @@ const handleSaveBulk = async (payload: BulkPaymentInput) => {
         roles: (payload as any).roles || ['WARGA']
       }
     })
+    setLoadingText('Memuat ulang...', 'Memperbarui daftar pembayaran')
     await fetchPayments()
     toast.success('Pembayaran iuran untuk semua warga (kecuali super admin) berhasil dibuat')
     isFormOpen.value = false
@@ -747,6 +759,7 @@ const handleSaveBulk = async (payload: BulkPaymentInput) => {
     const msg = err?.data?.message || err?.message || 'Gagal membuat pembayaran massal'
     toast.error(msg)
   } finally {
+    hideLoading()
     formSubmitting.value = false
   }
 }
@@ -766,11 +779,13 @@ const askDelete = (p: Payment) => {
 const confirmDelete = async () => {
   if (toDelete.value) {
     try {
+      showLoading('Menghapus pembayaran...', 'Memproses penghapusan')
       await deletePayment(toDelete.value.id)
       toast.success('Pembayaran berhasil dihapus')
     } catch (err) {
       toast.error('Gagal menghapus pembayaran')
     } finally {
+      hideLoading()
       showDelete.value = false
       toDelete.value = null
       // Jika sedang mode bulk, buka kembali modal Kelola untuk item berikutnya

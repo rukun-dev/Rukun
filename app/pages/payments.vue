@@ -432,6 +432,9 @@ const canManagePayments = computed(() => {
 const { payments, fetchPayments, addPayment, updatePayment, deletePayment, error, loading } = usePayments()
 const { showLoading, hideLoading, setLoadingText } = useGlobalLoading()
 
+// Langsung tampilkan global loading saat komponen dimuat (seperti dashboard)
+showLoading('Memuat data pembayaran...', 'Mohon tunggu sebentar')
+
 /* Filters */
 const search = ref('')
 const statusFilter = ref('')
@@ -532,7 +535,6 @@ const manageList = computed(() => {
 })
 
 onMounted(async () => {
-  showLoading('Memuat pembayaran...', 'Mengambil data dari server')
   try {
     await fetchPayments()
   } finally {

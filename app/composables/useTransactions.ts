@@ -65,11 +65,21 @@ export function useTransactions() {
   const fetchTransactions = async () => {
     try {
       loading.value = true
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500))
-      transactions.value = [...dummyTransactions]
-    } catch (err) {
-      error.value = (err as Error).message
+      // Ambil data transaksi dari API (pagination di sisi klien)
+      const resp = await $fetch<any>('/api/finances/transactions?limit=1000&page=1')
+      const items = resp?.data?.transactions || resp?.transactions || []
+      transactions.value = items.map((t: any) => ({
+        id: t.id,
+        type: t.type,
+        category: t.category,
+        amount: Number(t.amount ?? 0),
+        description: t.description,
+        date: new Date(t.date),
+        wargaName: t.wargaName,
+      }))
+    } catch (err: any) {
+      console.error('Failed fetch transactions', err)
+      error.value = err?.data?.message || err?.message || 'Gagal memuat transaksi'
     } finally {
       loading.value = false
     }
@@ -79,10 +89,20 @@ export function useTransactions() {
     transactions.value.unshift({ ...data, id: `txn_${Date.now()}` })
   }
 
-  const updateTransaction = async (id: string, payload: Partial<Transaction>) => {
+  const updateTransaction = async (id: string, payload: Omit<Partial<Transaction>, 'id'>) => {
     const idx = transactions.value.findIndex(t => t.id === id)
     if (idx !== -1) {
-      transactions.value[idx] = { ...transactions.value[idx], ...payload }
+      const current = transactions.value[idx]!
+      const updated: Transaction = {
+        id: current.id,
+        type: payload.type !== undefined ? payload.type : current.type,
+        category: payload.category !== undefined ? payload.category : current.category,
+        amount: payload.amount !== undefined ? payload.amount : current.amount,
+        description: payload.description !== undefined ? payload.description : current.description,
+        date: payload.date !== undefined ? payload.date : current.date,
+        wargaName: payload.wargaName !== undefined ? payload.wargaName : current.wargaName
+      }
+      transactions.value[idx] = updated
     }
   }
 

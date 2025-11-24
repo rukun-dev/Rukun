@@ -1,7 +1,6 @@
 export interface Document {
   id: string;
   title: string;
-  number: string;
   type: string;
   content: string;
   status: string;
@@ -69,8 +68,7 @@ export const useDocuments = () => {
     // Search filter
     if (searchQuery.value) {
       filtered = filtered.filter((doc: Document) => 
-        doc.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        doc.number.toLowerCase().includes(searchQuery.value.toLowerCase())
+        doc.title.toLowerCase().includes(searchQuery.value.toLowerCase())
       );
     }
 
@@ -100,9 +98,15 @@ export const useDocuments = () => {
 
   // Helper functions
   const getApprovalStatus = (document: Document): string => {
-    if (document.approved_at) return 'DISETUJUI';
-    if (document.rejected_at) return 'DITOLAK';
-    return 'MENUNGGU';
+    const statusMap: Record<string, string> = {
+      'DRAFT': 'DRAFT',
+      'SUBMITTED': 'DIAJUKAN',
+      'IN_REVIEW': 'DITINJAU',
+      'APPROVED': 'DISETUJUI',
+      'REJECTED': 'DITOLAK',
+      'COMPLETED': 'SELESAI'
+    };
+    return statusMap[document.status] || document.status;
   };
 
   const formatDate = (dateString: string): string => {
@@ -115,9 +119,11 @@ export const useDocuments = () => {
 
   const updateStats = () => {
     stats.value.totalDocuments = documents.value.length;
-    stats.value.approvedDocuments = documents.value.filter((doc: Document) => doc.approved_at).length;
-    stats.value.rejectedDocuments = documents.value.filter((doc: Document) => doc.rejected_at).length;
-    stats.value.pendingDocuments = documents.value.filter((doc: Document) => !doc.approved_at && !doc.rejected_at).length;
+    stats.value.approvedDocuments = documents.value.filter((doc: Document) => doc.status === 'APPROVED').length;
+    stats.value.rejectedDocuments = documents.value.filter((doc: Document) => doc.status === 'REJECTED').length;
+    stats.value.pendingDocuments = documents.value.filter((doc: Document) => 
+      ['SUBMITTED', 'IN_REVIEW'].includes(doc.status)
+    ).length;
   };
 
   // Pagination functions

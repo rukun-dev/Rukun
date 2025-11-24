@@ -6,13 +6,21 @@
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Dokumen</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dibuat Pada</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pengirim</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-          </tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <input 
+                  type="checkbox" 
+                  @change="handleSelectAll"
+                  :checked="isAllSelected"
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Dokumen</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dibuat Pada</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pengirim</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+            </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <template v-if="props.loading">
@@ -42,8 +50,15 @@
           </template>
           <tr v-for="document in props.documents" :key="document.id" class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap">
+              <input 
+                type="checkbox" 
+                :checked="props.selectedDocuments?.includes(document.id)"
+                @change="$emit(props.selectedDocuments?.includes(document.id) ? 'deselect-document' : 'select-document', document.id)"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
               <div class="font-medium text-gray-900">{{ document.title }}</div>
-              <div class="text-sm text-gray-500">{{ document.number }}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -124,7 +139,6 @@
 interface Document {
   id: string;
   title: string;
-  number: string;
   type: string;
   content: string;
   status: string;
@@ -153,6 +167,7 @@ interface Props {
   startIndex?: number;
   endIndex?: number;
   viewMode?: string;
+  selectedDocuments?: string[];
 }
 
 const props = defineProps<Props>();
@@ -166,10 +181,23 @@ const emit = defineEmits<{
   'previous-page': [];
   'next-page': [];
   'go-to-page': [page: number];
+  'select-document': [documentId: string];
+  'deselect-document': [documentId: string];
+  'select-all-documents': [];
+  'deselect-all-documents': [];
 }>();
 
 // Computed properties for template
 const currentViewMode = computed(() => props.viewMode || 'table');
+
+const isAllSelected = computed(() => {
+  if (!props.documents?.length) return false;
+  return props.documents.every(doc => props.selectedDocuments?.includes(doc.id));
+});
+
+const isSelected = (documentId: string): boolean => {
+  return props.selectedDocuments?.includes(documentId) || false;
+};
 
 // Helper functions
 const getTypeDisplay = (type: string): string => {
@@ -184,19 +212,52 @@ const getTypeDisplay = (type: string): string => {
 };
 
 const getApprovalStatus = (document: Document): string => {
-  if (document.approved_at) return 'DISETUJUI';
-  if (document.rejected_at) return 'DITOLAK';
-  return 'MENUNGGU';
+  // Map backend status to display names
+  const statusMap: Record<string, string> = {
+    'DRAFT': 'DRAFT',
+    'SUBMITTED': 'DIAJUKAN',
+    'IN_REVIEW': 'DITINJAU',
+    'APPROVED': 'DISETUJUI',
+    'REJECTED': 'DITOLAK',
+    'COMPLETED': 'SELESAI'
+  };
+  return statusMap[document.status] || document.status;
+};
+
+const getStatusClass = (document: Document): string => {
+  // Map status to CSS classes based on backend DocumentStatus enum
+  switch (document.status) {
+    case 'DRAFT':
+      return 'bg-gray-100 text-gray-800';
+    case 'SUBMITTED':
+      return 'bg-blue-100 text-blue-800';
+    case 'IN_REVIEW':
+      return 'bg-purple-100 text-purple-800';
+    case 'APPROVED':
+      return 'bg-green-100 text-green-800';
+    case 'REJECTED':
+      return 'bg-red-100 text-red-800';
+    case 'COMPLETED':
+      return 'bg-emerald-100 text-emerald-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
 };
 
 const getApprovalClass = (status: string): string => {
   switch (status) {
+    case 'DRAFT':
+      return 'bg-gray-100 text-gray-800';
+    case 'DIAJUKAN':
+      return 'bg-blue-100 text-blue-800';
+    case 'DITINJAU':
+      return 'bg-purple-100 text-purple-800';
     case 'DISETUJUI':
       return 'bg-green-100 text-green-800';
     case 'DITOLAK':
       return 'bg-red-100 text-red-800';
-    case 'MENUNGGU':
-      return 'bg-yellow-100 text-yellow-800';
+    case 'SELESAI':
+      return 'bg-emerald-100 text-emerald-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
@@ -208,5 +269,22 @@ const formatDate = (dateString: string): string => {
     month: '2-digit',
     year: 'numeric'
   });
+};
+
+// Selection handlers
+const handleSelect = (documentId: string) => {
+  if (props.selectedDocuments?.includes(documentId)) {
+    emit('deselect-document', documentId);
+  } else {
+    emit('select-document', documentId);
+  }
+};
+
+const handleSelectAll = () => {
+  if (isAllSelected.value) {
+    emit('deselect-all-documents');
+  } else {
+    emit('select-all-documents');
+  }
 };
 </script>

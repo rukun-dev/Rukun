@@ -1,7 +1,6 @@
 export interface Document {
   id: string;
   title: string;
-  number: string;
   type: string;
   content: string;
   status: string;

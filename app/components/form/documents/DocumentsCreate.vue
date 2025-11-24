@@ -23,7 +23,6 @@ const { user } = useAuth();
 const formData = ref({
   title: '',
   type: 'SURAT_TIDAK_MAMPU',
-  number: '',
   content: '',
   wargaId: '',
   filePath: '',
@@ -143,7 +142,6 @@ const resetForm = () => {
   formData.value = {
     title: '',
     type: 'SURAT_TIDAK_MAMPU',
-    number: '',
     content: '',
     wargaId: '',
     filePath: '',
@@ -196,10 +194,7 @@ const submitForm = async () => {
     return;
   }
   
-  if (!formData.value.number?.trim()) {
-    toast.error('Nomor dokumen harus diisi!');
-    return;
-  }
+
 
   // Validate type enum
   const validTypes = ['SURAT_PENGANTAR', 'SURAT_KETERANGAN', 'SURAT_DOMISILI', 'SURAT_TIDAK_MAMPU', 'SURAT_KELAHIRAN', 'SURAT_KEMATIAN', 'SURAT_PINDAH', 'OTHER'];
@@ -229,7 +224,6 @@ const submitForm = async () => {
     const apiData: any = {
       title: formData.value.title.trim(),
       type: formData.value.type,
-      number: formData.value.number.trim(),
       requesterId: user.value.id,
       approverId: user.value.id,
     };
@@ -291,7 +285,6 @@ const submitForm = async () => {
       title: result.document?.title,
       type: result.document?.type,
       content: result.document?.content,
-      number: result.document?.number,
       status: result.document?.status,
       filePath: result.document?.file_path,
       fileSize: result.document?.file_size,
@@ -304,25 +297,17 @@ const submitForm = async () => {
     
     emit('submit', documentData);
     
-    // Wait untuk toast selesai, lalu close dan reset
+    // Reset form setelah submit berhasil - parent yang akan handle penutupan modal
     setTimeout(() => {
-      isVisible.value = false;
-      emit('close');
-      
-      // Reset form setelah modal tertutup
-      setTimeout(() => {
-        resetForm();
-      }, 300); // Tunggu animasi modal selesai
-    }, 800);
+      resetForm();
+    }, 1000); // Tunggu sebelum reset form
     
   } catch (error: any) {
     console.error('Submit error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan saat menyimpan dokumen';
     error.value = errorMessage;
     
-    if (error.message?.includes('already exists')) {
-      toast.error('Nomor dokumen sudah ada! Silakan gunakan nomor lain.');
-    } else if (error.message?.includes('Permission denied')) {
+    if (error.message?.includes('Permission denied')) {
       toast.error('Anda tidak memiliki izin untuk membuat dokumen!');
     } else {
       toast.error(errorMessage);
@@ -341,7 +326,7 @@ watch(() => props.visible, (newVal) => {
     if (isEdit.value && props.editingDocument) {
       formData.value.title = props.editingDocument.title || '';
       formData.value.type = props.editingDocument.type || 'SURAT_TIDAK_MAMPU';
-      formData.value.number = props.editingDocument.number || '';
+
       formData.value.content = props.editingDocument.content || '';
       formData.value.wargaId = props.editingDocument.wargaId || '';
       formData.value.templateId = props.editingDocument.templateId || '';
@@ -414,21 +399,7 @@ onMounted(() => {
                 <option value="OTHER">Dokumen Lainnya</option>
               </select>
             </div>
-            
-            <!-- Document Number -->
-            <div class="mb-4">
-              <label for="document-number" class="block text-sm font-medium text-gray-700 mb-1">
-                Nomor Dokumen <span class="text-red-500">*</span>
-              </label>
-              <input
-                id="document-number"
-                v-model="formData.number"
-                type="text"
-                class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                placeholder="Contoh: 001/SKTM/IX/2025"
-                required
-              />
-            </div>
+
 
             <!-- Template ID -->
             <div class="mb-4">

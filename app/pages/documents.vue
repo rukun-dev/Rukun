@@ -70,7 +70,36 @@
         <!-- Header -->
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">Data Dokumen</h3>
+            <div class="flex items-center space-x-4">
+              <h3 class="text-lg font-semibold text-gray-900">Data Dokumen</h3>
+              
+              <!-- Bulk Actions -->
+              <div v-if="selectedDocuments.length > 0" class="flex items-center space-x-2">
+                <span class="text-sm text-gray-600">{{ selectedDocuments.length }} dipilih</span>
+                <button
+                  @click="handleBulkApprove"
+                  :disabled="isSubmitting"
+                  class="px-3 py-1 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors"
+                >
+                  {{ isSubmitting ? 'Memproses...' : 'Setujui Semua' }}
+                </button>
+                <button
+                  @click="handleBulkReject"
+                  :disabled="isSubmitting"
+                  class="px-3 py-1 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors"
+                >
+                  {{ isSubmitting ? 'Memproses...' : 'Tolak Semua' }}
+                </button>
+                <button
+                  @click="handleDeselectAllDocuments"
+                  :disabled="isSubmitting"
+                  class="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors"
+                >
+                  Batal
+                </button>
+              </div>
+            </div>
+            
             <div class="flex items-center space-x-4">
               <span class="text-sm text-gray-600">
                 Menampilkan {{ startIndex }} - {{ endIndex }} dari {{ filteredDocuments.length }} dokumen
@@ -88,13 +117,19 @@
         </div>
 
         <!-- Body -->
-        <DocumentsTable
-          :documents="paginatedDocuments"
-          @edit="handleDocumentEdit"
-          @delete="handleDocumentDelete"
-          @approve="approveDocument"
-          @reject="handleDocumentRejection"
-        />
+      <DocumentsTable
+        :documents="paginatedDocuments"
+        :selected-documents="selectedDocuments"
+        @edit="handleDocumentEdit"
+        @delete="handleDocumentDelete"
+        @approve="approveDocument"
+        @reject="handleDocumentRejection"
+        @show-detail="(doc) => openDetailModal(doc.id)"
+        @select-document="handleSelectDocument"
+        @deselect-document="handleDeselectDocument"
+        @select-all-documents="handleSelectAllDocuments"
+        @deselect-all-documents="handleDeselectAllDocuments"
+      />
 
       <!-- Pagination -->
       <div v-if="totalPages > 1" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
@@ -179,6 +214,13 @@
       @submit="handleModalSubmit"
     />
     
+    <!-- Document Detail Modal -->
+    <DocumentDetailModal
+      :is-open="detailModalVisible"
+      :document-id="selectedDocumentId"
+      @close="closeDetailModal"
+    />
+    
     </main>
   </div>
 </template>
@@ -187,11 +229,13 @@
 import type { Document } from '~/types/document';
 import { ref, computed, onMounted } from 'vue';
 import { useDocuments } from '@/composables/useDocuments';
+import { useToast } from '@/composables/useToast';
 import DocumentsHeader from '@/components/ui-documents/DocumentsHeader.vue';
 import StatsDocuments from '@/components/ui-documents/StatsDocuments.vue';
 import DocumentFilters from '@/components/ui-documents/DocumentFilters.vue';
 import DocumentsTable from '@/components/ui-documents/DocumentsTable.vue';
 import DocumentsCreate from '@/components/form/documents/DocumentsCreate.vue';
+import DocumentDetailModal from '@/components/ui-documents/DocumentDetailModal.vue';
 
 definePageMeta({
   layout: 'dashboard',
@@ -199,6 +243,7 @@ definePageMeta({
 })
 
 // Composables
+const { toast } = useToast();
 const {
   // State
   documents,
@@ -237,6 +282,14 @@ const {
 const modalVisible = ref(false);
 const isEditMode = ref(false);
 const selectedDocument = ref<Document | null>(null);
+const isSubmitting = ref(false);
+
+// Bulk selection state
+const selectedDocuments = ref<string[]>([]);
+
+// Detail modal state
+const detailModalVisible = ref(false);
+const selectedDocumentId = ref<string | null>(null);
 
 // Computed
 const visiblePages = computed(() => {
@@ -264,6 +317,17 @@ const closeModal = () => {
   isEditMode.value = false;
 };
 
+// Detail modal functions
+const openDetailModal = (documentId: string) => {
+  selectedDocumentId.value = documentId;
+  detailModalVisible.value = true;
+};
+
+const closeDetailModal = () => {
+  detailModalVisible.value = false;
+  selectedDocumentId.value = null;
+};
+
 // Event handlers
 const handleDocumentCreate = () => {
   openModal(false);
@@ -285,6 +349,11 @@ const handleDocumentDelete = async (document: Document) => {
 };
 
 const handleModalSubmit = async (data: any) => {
+  // Prevent double execution
+  if (isSubmitting.value) return;
+  
+  isSubmitting.value = true;
+  
   try {
     if (isEditMode.value && selectedDocument.value) {
       await updateDocument(selectedDocument.value.id, data);
@@ -295,6 +364,8 @@ const handleModalSubmit = async (data: any) => {
     await fetchDocuments();
   } catch (error) {
     console.error('Error saving document:', error);
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
@@ -319,6 +390,125 @@ const handleDocumentRejection = async (data: { reason: string }) => {
     } catch (error) {
       console.error('Error rejecting document:', error);
     }
+  }
+};
+
+// Bulk selection handlers
+const handleSelectDocument = (documentId: string) => {
+  if (!selectedDocuments.value.includes(documentId)) {
+    selectedDocuments.value.push(documentId);
+  }
+};
+
+const handleDeselectDocument = (documentId: string) => {
+  selectedDocuments.value = selectedDocuments.value.filter(id => id !== documentId);
+};
+
+const handleSelectAllDocuments = () => {
+  selectedDocuments.value = paginatedDocuments.value.map(doc => doc.id);
+};
+
+const handleDeselectAllDocuments = () => {
+  selectedDocuments.value = [];
+};
+
+// Bulk action handlers
+const handleBulkApprove = async () => {
+  if (selectedDocuments.value.length === 0) return;
+  
+  if (!confirm(`Apakah Anda yakin ingin menyetujui ${selectedDocuments.value.length} dokumen?`)) {
+    return;
+  }
+
+  isSubmitting.value = true;
+  let successCount = 0;
+  let errorCount = 0;
+  
+  try {
+    // Process documents one by one using existing single endpoint
+    for (const documentId of selectedDocuments.value) {
+      try {
+        await $fetch(`/api/documents/${documentId}/approve`, {
+          method: 'PATCH'
+        });
+        successCount++;
+      } catch (error) {
+        errorCount++;
+        console.error(`Error approving document ${documentId}:`, error);
+      }
+    }
+    
+    // Refresh documents list
+    await fetchDocuments();
+    
+    // Clear selection
+    selectedDocuments.value = [];
+    
+    // Show success message
+    if (errorCount === 0) {
+      toast.success(`${successCount} dokumen berhasil disetujui`);
+    } else {
+      toast.warning(`${successCount} dokumen disetujui, ${errorCount} gagal`);
+    }
+    
+  } catch (error) {
+    console.error('Bulk approve error:', error);
+    toast.error('Gagal menyetujui dokumen secara bulk');
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const handleBulkReject = async () => {
+  if (selectedDocuments.value.length === 0) return;
+  
+  const rejectionReason = prompt('Masukkan alasan penolakan:');
+  if (!rejectionReason || rejectionReason.trim().length < 10) {
+    toast.error('Alasan penolakan minimal 10 karakter');
+    return;
+  }
+
+  if (!confirm(`Apakah Anda yakin ingin menolak ${selectedDocuments.value.length} dokumen?`)) {
+    return;
+  }
+
+  isSubmitting.value = true;
+  let successCount = 0;
+  let errorCount = 0;
+  
+  try {
+    // Process documents one by one using existing single endpoint
+    for (const documentId of selectedDocuments.value) {
+      try {
+        await $fetch(`/api/documents/${documentId}/reject`, {
+          method: 'PATCH',
+          body: { rejectionReason }
+        });
+        successCount++;
+      } catch (error) {
+        errorCount++;
+        console.error(`Error rejecting document ${documentId}:`, error);
+      }
+    }
+    
+    // Refresh documents list
+    await fetchDocuments();
+    
+    // Clear selection
+    selectedDocuments.value = [];
+    
+    // Show success message
+    if (errorCount === 0) {
+      toast.success(`${successCount} dokumen berhasil ditolak`);
+    } else {
+      toast.warning(`${successCount} dokumen ditolak, ${errorCount} gagal`);
+    }
+    
+  } catch (error) {
+    console.error('Bulk reject error:', error);
+    toast.error('Gagal menolak dokumen secara bulk');
+  } finally {
+    isSubmitting.value = false;
   }
 };
 

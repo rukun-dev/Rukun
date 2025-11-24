@@ -78,7 +78,7 @@ const fetchDocumentData = async (documentId: string) => {
       formData.type = response.document.type || 'SURAT_TIDAK_MAMPU';
       formData.content = response.document.content || '';
       formData.wargaId = response.document.warga?.id || '';
-      formData.number = response.document.number || '';
+
       formData._approvalStatus = mapBackendStatus(response.document.status || 'PENDING');
     }
   } catch (error: any) {
@@ -95,14 +95,12 @@ const formData = reactive<{
   type: string;
   content: string;
   wargaId: string;
-  number: string;
   _approvalStatus?: string;
 }>({
   title: '',
   type: 'SURAT_TIDAK_MAMPU',
   content: '',
   wargaId: '',
-  number: '',
   _approvalStatus: undefined
 });
 
@@ -133,12 +131,7 @@ const submitForm = () => {
     toast.error('ID Warga harus diisi!');
     return;
   }
-  
-  if (!formData.number) {
-    toast.error('Nomor dokumen harus diisi!');
-    return;
-  }
-  
+
   // Prepare document data with id
   const documentData: Document = {
     id: props.editingDocument?.id,
@@ -146,7 +139,6 @@ const submitForm = () => {
     type: formData.type,
     content: formData.content,
     wargaId: formData.wargaId,
-    number: formData.number,
     _approvalStatus: formData._approvalStatus,
     status: documentData.value?.status || 'PENDING', // Use backend status from fetched data
     createdAt: props.editingDocument?.createdAt
@@ -165,7 +157,6 @@ const approveDocument = () => {
     type: formData.type,
     content: formData.content,
     wargaId: formData.wargaId,
-    number: formData.number,
     _approvalStatus: 'Disetujui',
     status: 'APPROVED', // Backend status
     createdAt: props.editingDocument?.createdAt
@@ -183,7 +174,6 @@ const rejectDocument = () => {
     type: formData.type,
     content: formData.content,
     wargaId: formData.wargaId,
-    number: formData.number,
     _approvalStatus: 'Ditolak',
     status: 'REJECTED', // Backend status
     createdAt: props.editingDocument?.createdAt
@@ -198,7 +188,6 @@ const resetForm = () => {
   formData.type = 'SURAT_TIDAK_MAMPU';
   formData.content = '';
   formData.wargaId = '';
-  formData.number = '';
   formData._approvalStatus = undefined;
 };
 
@@ -323,21 +312,7 @@ watch(() => props.editingDocument, (newDocument) => {
                 <option value="DOKUMEN_LAINNYA">Dokumen Lainnya</option>
               </select>
             </div>
-            
-            <!-- Document Number -->
-            <div class="mb-4">
-              <label for="document-edit-number" class="block text-sm font-medium text-gray-700 mb-1">
-                Nomor Dokumen <span class="text-red-500">*</span>
-              </label>
-              <input
-                id="document-edit-number"
-                v-model="formData.number"
-                type="text"
-                class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                placeholder="Contoh: 001/SKTM/IX/2025"
-                required
-              />
-            </div>
+
             
             <!-- Document Content -->
             <div class="mb-4">

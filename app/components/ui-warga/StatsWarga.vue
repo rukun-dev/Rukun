@@ -41,6 +41,13 @@
       </div>
     </div>
   </div>
+  
+  <!-- Keterangan statistik -->
+  <div class="text-center mt-4">
+    <p class="text-xs text-gray-500">
+      * Statistik menampilkan total keseluruhan data warga
+    </p>
+  </div>
 </template>
 
 <script setup>

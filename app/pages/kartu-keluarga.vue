@@ -231,6 +231,61 @@
           </table>
         </div>
 
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <button
+                @click="currentPage = 1"
+                :disabled="!apiPagination?.has_previous"
+                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                First
+              </button>
+              <button
+                @click="currentPage = apiPagination?.previous_page || 1"
+                :disabled="!apiPagination?.has_previous"
+                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+            </div>
+
+            <div class="flex items-center space-x-1">
+              <button
+                v-for="page in visiblePages"
+                :key="page"
+                @click="currentPage = page"
+                :class="
+                  currentPage === page
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-500 hover:bg-gray-50'
+                "
+                class="px-3 py-2 text-sm font-medium border border-gray-300 rounded-lg transition-colors"
+              >
+                {{ page }}
+              </button>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <button
+                @click="currentPage = apiPagination?.next_page || totalPages"
+                :disabled="!apiPagination?.has_next"
+                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+              <button
+                @click="currentPage = totalPages"
+                :disabled="!apiPagination?.has_next"
+                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Last
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Empty State -->
         <div v-if="filteredKeluarga.length === 0" class="text-center py-12">
           <svg
@@ -245,61 +300,6 @@
           <p class="mt-1 text-sm text-gray-500">
             Data kartu keluarga tidak ditemukan dengan kriteria pencarian yang Anda masukkan.
           </p>
-        </div>
-
-        <!-- Pagination -->
-        <div v-if="totalPages > 1" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <button
-                @click="() => goToPage(1)"
-                :disabled="!(apiPagination?.has_previous)"
-                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                First
-              </button>
-              <button
-                @click="() => previousPage()"
-                :disabled="!(apiPagination?.has_previous)"
-                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Previous
-              </button>
-            </div>
-
-            <div class="flex items-center space-x-1">
-              <button
-                v-for="page in visiblePages"
-                :key="page"
-                @click="(e) => { e.preventDefault(); goToPage(page); }"
-                :class="
-                  currentPage === page
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-500 hover:bg-gray-50'
-                "
-                class="px-3 py-2 text-sm font-medium border border-gray-300 rounded-lg transition-colors"
-              >
-                {{ page }}
-              </button>
-            </div>
-
-            <div class="flex items-center space-x-2">
-              <button
-                @click="() => nextPage()"
-                :disabled="!(apiPagination?.has_next)"
-                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Next
-              </button>
-              <button
-                @click="(e) => { e.preventDefault(); goToPage(apiPagination?.total_pages || 1); }"
-                :disabled="!(apiPagination?.has_next)"
-                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Last
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -459,9 +459,7 @@ const addKeluarga = keluargaComposable.addKeluarga;
 const updateKeluarga = keluargaComposable.updateKeluarga;
 const deleteKeluarga = keluargaComposable.deleteKeluarga;
 const resetFilters = keluargaComposable.resetFilters;
-const nextPage = keluargaComposable.nextPage;
-const previousPage = keluargaComposable.previousPage;
-const goToPage = keluargaComposable.goToPage;
+
 
 // Load data on component mount
 onMounted(() => {
@@ -476,12 +474,12 @@ const showDetail = ref(false);
 const editingKeluarga = ref<KeluargaData | null>(null);
 const selectedKeluarga = ref<KeluargaData | null>(null);
 const toDelete = ref<KeluargaData | null>(null);
-
-// Ensure pagination variables are properly initialized
-const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value + 1);
+ 
+ // Ensure pagination variables are properly initialized
+ const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value + 1);
 const visiblePages = computed(() => {
   const pages: number[] = [];
-  const total = apiPagination?.total_pages || 1;
+  const total = totalPages.value;
   const cur = currentPage.value;
   let start = Math.max(1, cur - 2);
   let end = Math.min(total, cur + 2);
@@ -691,6 +689,11 @@ const exportCsv = () => {
 // Watch for itemsPerPage changes to reload data with new page size
 watch(itemsPerPage, () => {
   loadKeluarga(1);
+});
+
+// Watch for currentPage changes to reload data
+watch(currentPage, (newPage) => {
+  loadKeluarga(newPage);
 });
 </script>
 

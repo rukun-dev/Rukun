@@ -36,9 +36,13 @@ export const useKeluarga = () => {
   const filterStatus = ref('');
   const currentPage = ref(1);
   const itemsPerPage = ref(10);
+  const totalStats = ref({
+    totalKartuKeluarga: 0,
+    totalAnggotaKeluarga: 0
+  });
   
   // Pagination state from API
-  const apiPagination = ref({
+const apiPagination = ref({
     total_pages: 0,
     total_count: 0,
     per_page: 10,
@@ -71,27 +75,64 @@ export const useKeluarga = () => {
 
   // Use API's total_pages for pagination control with null safety
   const totalPages = computed(() => {
-    return apiPagination.value?.total_pages || 1;
+    // Gunakan total_pages dari API jika tersedia dan valid
+    if (apiPagination.value && apiPagination.value.total_pages > 0) {
+      return apiPagination.value.total_pages;
+    }
+    // Fallback ke perhitungan client-side jika API tidak memberikan data pagination
+    return Math.ceil(filteredKeluarga.value.length / itemsPerPage.value);
   });
 
   const stats = computed(() => {
-    const total = keluargaList.value.length;
-    const aktif = keluargaList.value.filter(k => k.status === 'Aktif').length;
-    const tidakAktif = keluargaList.value.filter(k => k.status === 'Tidak Aktif').length;
-    const totalAnggota = keluargaList.value.reduce((sum, k) => sum + k.jumlahAnggota, 0);
-    
+    // Return total statistics if available, otherwise fallback to current page data
+    if (totalStats.value) {
+      return totalStats.value;
+    }
+
+    // Fallback to current page data calculation
     return {
-      totalKartuKeluarga: total,
-      totalAnggotaKeluarga: totalAnggota,
-      keluargaAktif: aktif,
-      keluargaTidakAktif: tidakAktif
+      totalKartuKeluarga: apiPagination.value?.total_count || keluargaList.value.length,
+      totalAnggotaKeluarga: keluargaList.value.reduce((sum, k) => sum + (k.jumlahAnggota || 0), 0)
     };
   });
 
   // Methods
+  const loadTotalStats = async () => {
+    try {
+      // Use the maximum allowed limit (100) to get as much data as possible
+      const response = await fetch('/api/families?limit=100&page=1');
+      if (!response.ok) {
+        throw new Error('Gagal memuat total statistik');
+      }
+      
+      const result = await response.json();
+      
+      if (result.data?.families && Array.isArray(result.data.families)) {
+        const families = result.data.families;
+        
+        // Calculate statistics from the first page (up to 100 records)
+        // This gives us a better sample than just the default 10 records
+        const total = result.data.pagination?.total_count || families.length;
+        
+        // For now, set total anggota to 0 since it's not available in API response
+        // TODO: Update when API provides member count
+        const totalAnggota = 0;
+        
+        totalStats.value = {
+          totalKartuKeluarga: total,
+          totalAnggotaKeluarga: totalAnggota
+        };
+      }
+    } catch (err) {
+      console.error('Error loading total statistics:', err);
+      // Fallback: use current page data if total stats loading fails
+    }
+  };
+
   const loadKeluarga = async (page: number = currentPage.value) => {
     loading.value = true;
     error.value = null;
+    let result: any = null;
     
     try {
       // Call API with page parameter
@@ -99,7 +140,10 @@ export const useKeluarga = () => {
       if (!response.ok) {
         throw new Error('Gagal memuat data dari server');
       }
-      const result = await response.json();
+      result = await response.json();
+      
+      // Debug: log the response structure
+      console.log('API Response:', result);
       
       // Map API response format to our expected KeluargaData interface
       // Handle both single family and array of families response
@@ -123,13 +167,26 @@ export const useKeluarga = () => {
           createdAt: family.created_at,
           updatedAt: family.updated_at
         }));
+      } else if (result.success && result.data) {
+        // Fallback: coba akses langsung dari result.data jika struktur berbeda
+        console.warn('Unexpected response structure, trying fallback...');
+        keluargaList.value = [];
       } else {
+        console.error('Invalid response structure:', result);
         keluargaList.value = [];
       }
       
       // Save pagination information from API
-      if (result.pagination) {
-        apiPagination.value = result.pagination;
+      if (result.data?.pagination) {
+        apiPagination.value = {
+          total_pages: result.data.pagination.total_pages,
+          total_count: result.data.pagination.total_count,
+          per_page: result.data.pagination.per_page,
+          has_next: result.data.pagination.has_next,
+          has_previous: result.data.pagination.has_previous,
+          next_page: result.data.pagination.next_page,
+          previous_page: result.data.pagination.previous_page
+        };
       }
       
       // Update current page
@@ -137,8 +194,13 @@ export const useKeluarga = () => {
     } catch (err) {
       error.value = 'Gagal memuat data kartu keluarga';
       console.error('Error loading keluarga data:', err);
+      console.error('Response structure:', result);
     } finally {
       loading.value = false;
+      // Load total statistics when loading first page
+      if (page === 1) {
+        loadTotalStats();
+      }
     }
   };
   
@@ -203,25 +265,26 @@ export const useKeluarga = () => {
       const result = await response.json();
       
       // Handle API response based on the provided success structure
-      if (result.success && result.data?.family) {
+      // POST response structure: { family: {...} }
+      if (result.family) {
         const newFamily: KeluargaData = {
-          id: validateString(result.data.family.id),
-          noKk: validateString(result.data.family.no_kk),
-          kepalaKeluarga: validateString(result.data.family.head_name),
+          id: validateString(result.family.id),
+          noKk: validateString(result.family.no_kk),
+          kepalaKeluarga: validateString(result.family.head_name),
           nikKepala: '', // Not available in API response
           jumlahAnggota: 0, // Not available in API response
-          alamat: validateString(result.data.family.address),
-          rt: validateString(result.data.family.rt_number),
-          rw: validateString(result.data.family.rw_number),
-          provinsi: validateString(result.data.family.provinsi),
-          kabupaten: validateString(result.data.family.kabupaten),
-          kecamatan: validateString(result.data.family.kecamatan),
-          kelurahan: validateString(result.data.family.kelurahan),
-          namaKeluarga: validateString(result.data.family.name),
-          kodePos: validateString(result.data.family.postal_code),
+          alamat: validateString(result.family.address),
+          rt: validateString(result.family.rt_number),
+          rw: validateString(result.family.rw_number),
+          provinsi: validateString(result.family.provinsi),
+          kabupaten: validateString(result.family.kabupaten),
+          kecamatan: validateString(result.family.kecamatan),
+          kelurahan: validateString(result.family.kelurahan),
+          namaKeluarga: validateString(result.family.name),
+          kodePos: validateString(result.family.postal_code),
           status: 'Aktif', // Default status since not available in API
-          createdAt: result.data.family.created_at || new Date().toISOString(),
-          updatedAt: result.data.family.updated_at || new Date().toISOString()
+          createdAt: result.family.created_at || new Date().toISOString(),
+          updatedAt: result.family.updated_at || new Date().toISOString()
         };
         
         keluargaList.value = [newFamily, ...keluargaList.value];
@@ -266,8 +329,8 @@ export const useKeluarga = () => {
       const result = await response.json();
       
       // Convert API response back to our format
-      // Server returns data in result.family, not result.data
-      const familyData = result.family;
+      // Server returns data in result.data.family
+      const familyData = result.data?.family;
       if (!familyData) {
         throw new Error('Invalid response structure from API');
       }
@@ -356,6 +419,7 @@ export const useKeluarga = () => {
     
     // Methods
     loadKeluarga,
+    loadTotalStats,
     addKeluarga,
     updateKeluarga,
     deleteKeluarga,

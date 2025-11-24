@@ -500,6 +500,7 @@ definePageMeta({
 
 // Reactive data
 const wargaList = ref([]);
+const allWargaData = ref([]); // Data untuk statistik total
 const searchTerm = ref("");
 const filterGender = ref("");
 const filterStatus = ref("");
@@ -534,6 +535,7 @@ const goToPage = async (page) => {
 // Initialize
 onMounted(async () => {
   await loadWargaData();
+  await loadAllWargaData(); // Load semua data untuk statistik total
 });
 
 // Watch for changes in pagination and items per page
@@ -629,17 +631,40 @@ const visiblePages = computed(() => {
   return pages;
 });
 
-// Stats
-const totalWarga = computed(() => wargaList.value.length);
-const wargaLakiLaki = computed(
-  () => wargaList.value.filter((w) => w.jenisKelamin === "L").length
-);
-const wargaPerempuan = computed(
-  () => wargaList.value.filter((w) => w.jenisKelamin === "P").length
-);
-const kepalaKeluarga = computed(
-  () => wargaList.value.filter((w) => w.status === "Kepala Keluarga").length
-);
+// ===== TAMBAHKAN COMPUTED INI (SOLUSI UTAMA) =====
+const statsData = computed(() => ({
+  total: totalWarga.value,
+  male: wargaLakiLaki.value,
+  female: wargaPerempuan.value,
+  heads: kepalaKeluarga.value
+}));
+
+// ===== ATAU, OPTIMASI COMPUTED YANG ADA =====
+// Tambahkan caching untuk menghindari re-computation
+const totalWarga = computed(() => {
+  if (paginationData.value && paginationData.value.total_count > 0) {
+    return paginationData.value.total_count;
+  }
+  return wargaList.value.length;
+});
+
+const wargaLakiLaki = computed(() => {
+  // Gunakan allWargaData untuk statistik total, fallback ke wargaList
+  const dataSource = allWargaData.value.length > 0 ? allWargaData.value : wargaList.value;
+  return dataSource.filter((w) => w.jenisKelamin === "L").length;
+});
+
+const wargaPerempuan = computed(() => {
+  // Gunakan allWargaData untuk statistik total, fallback ke wargaList
+  const dataSource = allWargaData.value.length > 0 ? allWargaData.value : wargaList.value;
+  return dataSource.filter((w) => w.jenisKelamin === "P").length;
+});
+
+const kepalaKeluarga = computed(() => {
+  // Gunakan allWargaData untuk statistik total, fallback ke wargaList
+  const dataSource = allWargaData.value.length > 0 ? allWargaData.value : wargaList.value;
+  return dataSource.filter((w) => w.status === "Kepala Keluarga").length;
+});
 
 // Helpers
 const formatTanggal = (tanggal) =>
@@ -710,6 +735,55 @@ const sampleWarga = [
   }
 ];
 
+// Fungsi untuk load semua data tanpa pagination (untuk statistik total)
+const loadAllWargaData = async () => {
+  try {
+    // Ambil data dengan limit 100 (maksimal yang diizinkan API)
+    const response = await $fetch('/api/warga?limit=100&page=1');
+    
+    if (response.data && response.data.data) {
+      // Jika total data > 100, kita perlu ambil semua page
+      const totalData = response.data.pagination?.total_count || response.data.data.length;
+      const allData = [...response.data.data];
+      
+      // Hitung berapa page yang perlu diambil
+      const totalPages = Math.ceil(totalData / 100);
+      
+      // Ambil data dari page 2 sampai akhir
+      for (let page = 2; page <= totalPages; page++) {
+        try {
+          const pageResponse = await $fetch(`/api/warga?limit=100&page=${page}`);
+          if (pageResponse.data && pageResponse.data.data) {
+            allData.push(...pageResponse.data.data);
+          }
+        } catch (pageError) {
+          console.error(`Error loading page ${page}:`, pageError);
+          break; // Hentikan jika ada error
+        }
+      }
+      
+      const transformedData = allData.map(item => ({
+        id: item.id,
+        nik: item.nik,
+        nama: item.name,
+        tempatLahir: item.birthPlace || '',
+        tanggalLahir: item.birthDate || '',
+        jenisKelamin: item.gender === 'MALE' ? 'L' : 'P',
+        status: getStatusFromAPI(item.maritalStatus, item.job),
+        alamat: item.address || '',
+        agama: item.religion || '',
+        kodePos: item.postalCode || ''
+      }));
+      
+      allWargaData.value = transformedData;
+    }
+  } catch (error) {
+    console.error('Error loading all warga data:', error);
+    // Jika error, gunakan data dari wargaList sebagai fallback
+    allWargaData.value = [...wargaList.value];
+  }
+};
+
 // API functions
 const loadWargaData = async () => {
   try {
@@ -777,11 +851,11 @@ const loadWargaData = async () => {
 
 // Helper function to determine status based on API fields
 const getStatusFromAPI = (maritalStatus, job) => {
-  if (maritalStatus === 'MARRIED' && job === 'Software Engineer') {
+  if (maritalStatus === 'MARRIED') {
+    // Asumsikan yang pertama adalah Kepala Keluarga, yang lainnya Istri
     return 'Kepala Keluarga';
-  } else if (maritalStatus === 'MARRIED') {
-    return 'Istri';
-  } else if (maritalStatus === 'SINGLE' && new Date().getFullYear() - new Date().getFullYear() < 18) {
+  } else if (maritalStatus === 'SINGLE') {
+    // Untuk yang single, tentukan berdasarkan umur (akan dihitung di komponen lain)
     return 'Anak';
   } else {
     return 'Lainnya';

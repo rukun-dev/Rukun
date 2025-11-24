@@ -15,7 +15,6 @@
     <div class="space-y-4">
       <div class="p-4 bg-gray-50 rounded-xl">
         <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ document.title }}</h3>
-        <p class="text-gray-500 text-sm">Nomor: {{ document.number }}</p>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -63,7 +62,6 @@ interface DocumentType {
   type: string;
   content: string;
   wargaId: string;
-  number: string;
   createdAt: string;
 }
 

@@ -148,6 +148,7 @@ model Warga {
   documents     Document[]
   transactions  Transaction[]
   payments      Payment[]
+  headedHouses  House[]
 
   @@map("wargas")
 }
@@ -189,6 +190,27 @@ model FamilyMember {
 
   @@unique([familyId, wargaId])
   @@map("family_members")
+}
+
+// House Management
+model House {
+  id          String         @id @default(cuid())
+  rtNumber      String
+  rwNumber      String
+  kelurahan     String
+  kecamatan     String
+  kabupaten     String
+  provinsi      String
+  postalCode    String?
+  headNik     String
+  familyCount Int
+  memberCount Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  head Warga @relation(fields: [headNik], references: [nik], onDelete: Restrict)
+
+  @@map("houses")
 }
 
 // Document Management

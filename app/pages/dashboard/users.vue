@@ -146,6 +146,24 @@
     </div>
 
     <div v-else class="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+      <!-- Keterangan Aksi -->
+      <div class="px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-end text-xs text-gray-600">
+        <span class="mr-3">Keterangan Aksi:</span>
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-1">
+            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <span>Edit</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862A2 2 0 015.995 19.142L5 7m5 4v6m4-6v6m1-10V5a1 1 0 00-1-1h-4a1 1 0 00-1 1v2M4 7h16" />
+            </svg>
+            <span>Hapus</span>
+          </div>
+        </div>
+      </div>
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
@@ -171,9 +189,49 @@
                 {{ user.isActive ? 'Aktif' : 'Nonaktif' }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-              <button class="text-blue-600 hover:text-blue-900" @click="editUser(user)">Edit</button>
-              <button class="text-red-600 hover:text-red-900" @click="deleteUser(user)">Hapus</button>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <div class="flex items-center justify-end space-x-2">
+                <button
+                  @click="editUser(user)"
+                  class="text-blue-600 hover:text-blue-800 transition-colors"
+                  aria-label="Edit pengguna"
+                  title="Edit"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  @click="deleteUser(user)"
+                  class="text-red-600 hover:text-red-800 transition-colors"
+                  aria-label="Hapus pengguna"
+                  title="Hapus"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862A2 2 0 015.995 19.142L5 7m5 4v6m4-6v6m1-10V5a1 1 0 00-1-1h-4a1 1 0 00-1 1v2M4 7h16"
+                    />
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -200,7 +258,7 @@ const {
   deleteUser: deleteUserApi,
 } = useUsers()
 
-const { showLoading, hideLoading } = useGlobalLoading()
+const { showLoading, hideLoading, setLoadingText } = useGlobalLoading()
 
 // Tampilkan loading secepat mungkin sebelum komponen dirender sepenuhnya
 showLoading('Memuat data pengguna...', 'Mohon tunggu sebentar')
@@ -260,30 +318,45 @@ const editUser = (user: User) => {
 
 const updateUser = async (updated: Partial<User>) => {
   if (!selectedUser.value) return
+  showLoading('Menyimpan perubahan pengguna...', 'Mohon tunggu sebentar')
   try {
     await updateUserApi(selectedUser.value.id, updated)
+    setLoadingText('Perubahan tersimpan', 'Menutup...')
     showEdit.value = false
   } catch (error) {
     console.error(error)
+    setLoadingText('Gagal menyimpan perubahan', 'Silakan coba lagi')
+  } finally {
+    hideLoading()
   }
 }
 
 const deleteUser = async (user: User) => {
   const confirmed = confirm(`Yakin ingin menghapus ${user.name}?`)
   if (!confirmed) return
+  showLoading('Menghapus pengguna...', 'Mohon tunggu sebentar')
   try {
     await deleteUserApi(user.id)
+    setLoadingText('Pengguna dihapus', 'Menutup...')
   } catch (error) {
     console.error(error)
+    setLoadingText('Gagal menghapus pengguna', 'Silakan coba lagi')
+  } finally {
+    hideLoading()
   }
 }
 
 const addUser = async (newUser: Partial<User> & { password: string }) => {
+  showLoading('Menyimpan pengguna baru...', 'Mohon tunggu sebentar')
   try {
     await createUser(newUser)
+    setLoadingText('Pengguna ditambahkan', 'Menutup...')
     showCreate.value = false
   } catch (error) {
     console.error(error)
+    setLoadingText('Gagal menambahkan pengguna', 'Silakan coba lagi')
+  } finally {
+    hideLoading()
   }
 }
 

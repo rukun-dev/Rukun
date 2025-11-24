@@ -1,0 +1,410 @@
+<template>
+  <div class="min-h-screen bg-white">
+    <div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <!-- Welcome Section -->
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 md:p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div class="flex-1 min-w-0">
+          <h1 class="text-xl md:text-2xl font-bold">Selamat Datang, {{ user?.name || 'User' }}!</h1>
+          <p class="text-blue-100 mt-1 text-sm md:text-base">{{ user?.role ? getRoleLabel(user.role) : 'User' }} - RT Management System</p>
+        </div>
+        <div class="hidden md:block flex-shrink-0 ml-4">
+          <svg class="h-12 w-12 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card>
+        <CardContent class="p-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-3 min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500">Total Warga</p>
+              <p class="text-xl font-semibold text-gray-900">{{ stats.totalWarga }}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent class="p-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-3 min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500">Total Keluarga</p>
+              <p class="text-xl font-semibold text-gray-900">{{ stats.totalFamilies }}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent class="p-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="w-6 h-6 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-3 min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500">Iuran Bulan Ini</p>
+              <p class="text-lg font-semibold text-gray-900">Rp {{ formatCurrency(stats.monthlyPayments) }}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent class="p-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-3 min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-500">Pengumuman Aktif</p>
+              <p class="text-xl font-semibold text-gray-900">{{ stats.activeAnnouncements }}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Recent Payments -->
+      <Card>
+        <CardHeader>
+          <CardTitle class="flex items-center justify-between text-base">
+            <span>Pembayaran Terbaru</span>
+            <NuxtLink to="/payments" class="text-sm text-blue-600 hover:text-blue-500">
+              Lihat Semua
+            </NuxtLink>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div class="space-y-3">
+            <div v-if="recentPayments.length === 0" class="text-center py-6 text-gray-500">
+              Belum ada pembayaran terbaru
+            </div>
+            <div v-else>
+              <div 
+                v-for="payment in recentPayments" 
+                :key="payment.id"
+                class="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0"
+              >
+                <div class="flex items-center space-x-3 min-w-0 flex-1">
+                  <Avatar class="h-8 w-8 flex-shrink-0">
+                    <AvatarFallback>{{ getInitials(payment.wargaName) }}</AvatarFallback>
+                  </Avatar>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-medium text-gray-900 break-words">{{ payment.wargaName }}</p>
+                    <p class="text-xs text-gray-500 break-words">{{ payment.type }}</p>
+                  </div>
+                </div>
+                <div class="text-right flex-shrink-0 ml-3">
+                  <p class="text-sm font-medium text-gray-900">Rp {{ formatCurrency(payment.amount) }}</p>
+                  <p class="text-xs text-gray-500">{{ formatDate(payment.date) }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Recent Announcements -->
+      <Card>
+        <CardHeader>
+          <CardTitle class="flex items-center justify-between text-base">
+            <span>Pengumuman Terbaru</span>
+            <NuxtLink to="/announcements" class="text-sm text-blue-600 hover:text-blue-500">
+              Lihat Semua
+            </NuxtLink>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div class="space-y-3">
+            <div v-if="recentAnnouncements.length === 0" class="text-center py-6 text-gray-500">
+              Belum ada pengumuman terbaru
+            </div>
+            <div v-else>
+              <div 
+                v-for="announcement in recentAnnouncements" 
+                :key="announcement.id"
+                class="py-2 border-b border-gray-100 last:border-b-0"
+              >
+                <div class="flex items-start justify-between">
+                  <div class="flex-1 min-w-0">
+                    <h4 class="text-sm font-medium text-gray-900 break-words">{{ announcement.title }}</h4>
+                    <p class="text-xs text-gray-500 mt-1 break-words">{{ announcement.excerpt }}</p>
+                    <div class="flex items-center mt-2 space-x-2 flex-wrap">
+                      <Badge :variant="announcement.priority === 'HIGH' ? 'destructive' : announcement.priority === 'NORMAL' ? 'default' : 'secondary'" class="text-xs">
+                        {{ getPriorityLabel(announcement.priority as any) }}
+                      </Badge>
+                      <span class="text-xs text-gray-400">{{ formatDate(announcement.createdAt) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Quick Actions -->
+    <Card>
+      <CardHeader>
+        <CardTitle>Aksi Cepat</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <Button as-child variant="outline" class="h-16 flex-col space-y-1">
+            <NuxtLink to="/dashboard/profile">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+              <span class="text-xs leading-tight">Profil Saya</span>
+            </NuxtLink>
+          </Button>
+          
+          <Button v-if="canAccessUserManagement" as-child variant="outline" class="h-16 flex-col space-y-1">
+            <NuxtLink to="/dashboard/users">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+              </svg>
+              <span class="text-xs leading-tight">Tambah Pengguna</span>
+            </NuxtLink>
+          </Button>
+          
+          <Button v-if="!isWarga" as-child variant="outline" class="h-16 flex-col space-y-1">
+            <NuxtLink to="/warga">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+              <span class="text-xs leading-tight">Tambah Warga</span>
+            </NuxtLink>
+          </Button>
+          
+          <Button as-child variant="outline" class="h-16 flex-col space-y-1">
+            <NuxtLink to="/dashboard/announcements/create">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+              </svg>
+              <span class="text-xs leading-tight">Buat Pengumuman</span>
+            </NuxtLink>
+          </Button>
+          
+          <Button v-if="canAccessReports" as-child variant="outline" class="h-16 flex-col space-y-1">
+            <NuxtLink to="/dashboard/reports">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              <span class="text-xs leading-tight">Lihat Laporan</span>
+            </NuxtLink>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import type { Announcement } from '~/types/announcement'
+
+// Global loading
+const { showLoading, hideLoading } = useGlobalLoading()
+
+// Langsung tampilkan loading saat komponen dimuat
+showLoading('Memuat data dashboard...', 'Mohon tunggu sebentar')
+
+// Meta
+definePageMeta({
+  layout: 'dashboard',
+  middleware: 'auth'
+})
+
+useSeoMeta({
+  title: 'Dashboard - RT Management System',
+  description: 'Dashboard sistem manajemen RT digital'
+})
+
+// Menggunakan composable useAuth untuk mendapatkan data user yang sedang login
+const { user, isAuthenticated, fetchUser } = useAuth()
+
+// Data dashboard
+const stats = ref({
+  totalWarga: 0,
+  totalFamilies: 0,
+  monthlyPayments: 0,
+  activeAnnouncements: 0
+})
+
+// Fungsi untuk memuat data dashboard
+const fetchDashboardData = async () => {
+  try {
+    // Expected response wrapped with ApiResponse structure { success, data, ... }
+interface DashboardApiResp {
+  success: boolean
+  data: {
+    totalWarga: number
+    totalFamilies: number
+    monthlyPayments: number
+    activeAnnouncements: number
+  }
+}
+const apiResp = await $fetch<DashboardApiResp>('/api/dashboard')
+
+if (apiResp?.success && apiResp.data) {
+  stats.value = apiResp.data
+} else {
+  console.error('Unexpected dashboard API response format', apiResp)
+}
+  } catch (error) {
+    console.error('Failed to fetch dashboard stats', error)
+  }
+}
+
+
+
+const recentPayments = ref([
+  {
+    id: '1',
+    wargaName: 'Budi Santoso',
+    type: 'Iuran Bulanan',
+    amount: 50000,
+    date: new Date(Date.now() - 1000 * 60 * 60 * 2)
+  },
+  {
+    id: '2',
+    wargaName: 'Siti Aminah',
+    type: 'Iuran Keamanan',
+    amount: 25000,
+    date: new Date(Date.now() - 1000 * 60 * 60 * 6)
+  },
+  {
+    id: '3',
+    wargaName: 'Ahmad Wijaya',
+    type: 'Iuran Kebersihan',
+    amount: 30000,
+    date: new Date(Date.now() - 1000 * 60 * 60 * 12)
+  }
+])
+
+type AnnouncementItem = Announcement & { excerpt?: string }
+const recentAnnouncements = ref<AnnouncementItem[]>([])
+
+// Fungsi untuk memuat pengumuman terbaru (maks 5)
+const fetchRecentAnnouncements = async () => {
+  try {
+    const apiResp = await $fetch(`/api/announcements?page=1&limit=5&isPublished=true`) as any
+
+    let announcementsData: Announcement[] = []
+
+    // Struktur respons bisa bervariasi, lakukan pengecekan defensif
+    if (apiResp && apiResp.data && apiResp.data.announcements && Array.isArray(apiResp.data.announcements)) {
+      announcementsData = apiResp.data.announcements as Announcement[]
+    } else if (apiResp && apiResp.announcements && Array.isArray(apiResp.announcements)) {
+      announcementsData = apiResp.announcements as Announcement[]
+    } else if (apiResp && Array.isArray(apiResp.data)) {
+      announcementsData = apiResp.data as Announcement[]
+    } else if (Array.isArray(apiResp)) {
+      announcementsData = apiResp as Announcement[]
+    }
+
+    // Tambahkan properti excerpt (ringkasan) untuk kompatibilitas tampilan lama
+    recentAnnouncements.value = announcementsData.map((a) => ({
+      ...a,
+      // Gunakan maksimal 80 karakter dari konten sebag80 excerpt
+      excerpt: (a as any).excerpt || (a.content ? a.content.slice(0, 80) + (a.content.length > 80 ? '…' : '') : '')
+    }))
+  } catch (error) {
+    console.error('Failed to fetch recent announcements', error)
+  }
+}
+
+// Panggil juga saat mounted
+onMounted(async () => {
+  try {
+    if (!isAuthenticated.value) {
+      await fetchUser()
+    }
+    await fetchDashboardData()
+    await fetchRecentAnnouncements()
+  } finally {
+    hideLoading()
+  }
+})
+
+const { canAccessUserManagement, canAccessReports, isWarga } = useAuth()
+
+const getRoleLabel = (role: string) => {
+  const roleLabels: Record<string, string> = {
+    'SUPER_ADMIN': 'Super Administrator',
+    'KETUA_RT': 'Ketua RT',
+    'SEKRETARIS': 'Sekretaris',
+    'BENDAHARA': 'Bendahara',
+    'STAFF': 'Staff',
+    'WARGA': 'Warga'
+  }
+  return roleLabels[role] || role
+}
+
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('id-ID').format(amount)
+}
+
+const formatDate = (date: Date | string) => {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  }).format(d)
+}
+
+const getPriorityLabel = (priority: string) => {
+  const labels: Record<string, string> = {
+    'HIGH': 'Penting',
+    'NORMAL': 'Sedang',
+    'LOW': 'Rendah'
+  }
+  return labels[priority] || priority
+}
+</script>

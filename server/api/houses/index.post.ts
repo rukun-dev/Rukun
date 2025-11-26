@@ -6,6 +6,10 @@ import { startRequest, responses } from '~~/server/utils/response'
 
 const createHouseSchema = z
   .object({
+    houseNumber: z
+      .string()
+      .regex(/^[\dA-Za-z\-\/]{1,10}$/i, 'Nomor rumah hanya angka/huruf, max 10, boleh -/')
+      .optional(),
     // Lokasi rumah
     rtNumber: z.string().min(1).max(10).optional(),
     rwNumber: z.string().min(1).max(10).optional(),
@@ -42,6 +46,7 @@ export default defineEventHandler(async (event) => {
 
     const body = await readBody(event)
     const {
+      houseNumber,
       rtNumber,
       rwNumber,
       kelurahan,
@@ -124,14 +129,55 @@ export default defineEventHandler(async (event) => {
       effectivePostalCode = effectivePostalCode || family.postalCode || undefined
     }
 
-    // Validasi lokasi rumah wajib
-    if (!effectiveRt || !effectiveRw || !effectiveKelurahan || !effectiveKecamatan || !effectiveKabupaten || !effectiveProvinsi) {
-      return responses.validation(
-        'Field lokasi rumah (RT/RW/kelurahan/kecamatan/kabupaten/provinsi) wajib diisi',
-        (!effectiveRt && 'rtNumber') || (!effectiveRw && 'rwNumber') || (!effectiveKelurahan && 'kelurahan') || (!effectiveKecamatan && 'kecamatan') || (!effectiveKabupaten && 'kabupaten') || (!effectiveProvinsi && 'provinsi') || 'rtNumber',
-        {
-          suggestion: 'Lengkapi lokasi atau pilih keluarga dengan lokasi lengkap',
+    // Fallback lokasi dari RT Profile jika masih ada yang kosong
+    if (
+      !effectiveKelurahan ||
+      !effectiveKecamatan ||
+      !effectiveKabupaten ||
+      !effectiveProvinsi ||
+      !effectiveRt ||
+      !effectiveRw ||
+      !effectivePostalCode
+    ) {
+      const rt = await prisma.rtProfile.findFirst({
+        select: {
+          rtNumber: true,
+          rwNumber: true,
+          kelurahan: true,
+          kecamatan: true,
+          kabupaten: true,
+          provinsi: true,
+          postalCode: true,
         },
+      })
+
+      if (rt) {
+        effectiveRt = effectiveRt || rt.rtNumber
+        effectiveRw = effectiveRw || rt.rwNumber
+        effectiveKelurahan = effectiveKelurahan || rt.kelurahan
+        effectiveKecamatan = effectiveKecamatan || rt.kecamatan
+        effectiveKabupaten = effectiveKabupaten || rt.kabupaten
+        effectiveProvinsi = effectiveProvinsi || rt.provinsi
+        effectivePostalCode = effectivePostalCode || rt.postalCode || undefined
+      }
+    }
+
+    // Validasi minimal RT/RW wajib, lokasi lainnya akan diisi dari RT Profile
+    if (!effectiveRt || !effectiveRw) {
+      return responses.validation(
+        'Field RT/RW wajib diisi',
+        (!effectiveRt && 'rtNumber') || 'rwNumber',
+        { suggestion: 'Isi RT/RW atau konfigurasi RT Profile untuk default' },
+        { requestId, event },
+      )
+    }
+
+    // Jika lokasi detail masih kosong setelah fallback, minta konfigurasi RT Profile
+    if (!effectiveKelurahan || !effectiveKecamatan || !effectiveKabupaten || !effectiveProvinsi) {
+      return responses.validation(
+        'Lokasi default belum dikonfigurasi. Silakan atur RT Profile.',
+        (!effectiveKelurahan && 'kelurahan') || (!effectiveKecamatan && 'kecamatan') || (!effectiveKabupaten && 'kabupaten') || (!effectiveProvinsi && 'provinsi') || 'kelurahan',
+        { suggestion: 'Konfigurasikan RT Profile agar sistem otomatis mengisi alamat' },
         { requestId, event },
       )
     }
@@ -145,6 +191,7 @@ export default defineEventHandler(async (event) => {
     // Create house
     const created = await prisma.house.create({
       data: {
+        houseNumber: houseNumber,
         rtNumber: effectiveRt!,
         rwNumber: effectiveRw!,
         kelurahan: effectiveKelurahan!,
@@ -178,7 +225,7 @@ export default defineEventHandler(async (event) => {
     if (error && typeof error === 'object' && 'code' in error) {
       const prismaError = error as any
       if (prismaError.code === 'P2002') {
-        return responses.conflict('House number already exists', { requestId, event })
+        return responses.conflict('Unique constraint violation', { requestId, event })
       }
     }
 

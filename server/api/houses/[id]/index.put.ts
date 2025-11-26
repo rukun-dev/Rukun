@@ -5,6 +5,10 @@ import { requireRole } from '~~/server/utils/auth'
 import { startRequest, responses } from '~~/server/utils/response'
 
 const updateHouseSchema = z.object({
+  houseNumber: z
+    .string()
+    .regex(/^[\dA-Za-z\-\/]{1,10}$/i, 'Nomor rumah hanya angka/huruf, max 10, boleh -/')
+    .optional(),
   headNik: z.string().min(1).max(30).optional(),
   familyCount: z.coerce.number().int().min(0).optional(),
   memberCount: z.coerce.number().int().min(0).optional(),

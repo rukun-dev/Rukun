@@ -195,6 +195,9 @@ const pageTitle = computed(() => {
     ? rawPath.substring('/dashboard'.length) || '/'
     : rawPath
 
+  // Rumah Tangga page
+  if (path.startsWith('/rumah-tangga')) return 'Rumah Tangga'
+
   if (path.startsWith('/users')) return 'Manajemen Pengguna'
   if (path.startsWith('/warga')) return 'Data Warga'
   if (path.startsWith('/families') || path.startsWith('/kartu-keluarga')) return 'Data Keluarga'

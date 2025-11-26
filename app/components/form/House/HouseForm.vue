@@ -9,7 +9,7 @@
     >
       <div class="px-6 py-5 sm:p-6 border-b border-gray-200 flex items-center justify-between">
         <div>
-          <h3 class="text-lg leading-6 font-medium text-gray-900">{{ title || 'Tambah Rumah' }}</h3>
+          <h3 class="text-lg leading-6 font-medium text-gray-900">Tambah Rumah</h3>
         </div>
         <button
           v-if="!inline"
@@ -24,7 +24,39 @@
       </div>
 
       <form @submit.prevent="submitForm()" class="p-4 sm:p-6 space-y-6">
-        
+        <!-- Bagian: Keluarga -->
+        <div class="space-y-6">
+          <h4 class="text-base font-semibold text-gray-900">Informasi Keluarga</h4>
+          <div class="grid grid-cols-12 gap-6">
+            <div class="col-span-12 sm:col-span-8 md:col-span-9">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Keluarga <span class="text-gray-500 text-xs">(opsional)</span></label>
+              <input
+                :value="familyQuery"
+                @input="searchFamilies(($event.target as HTMLInputElement).value)"
+                type="text"
+                placeholder="Cari No KK / Nama Keluarga / Kepala Keluarga..."
+                class="block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              />
+            </div>
+            <div class="col-span-12 sm:col-span-4 md:col-span-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Hasil</label>
+              <select
+                @change="chooseFamily(($event.target as HTMLSelectElement).value)"
+                class="block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+              >
+                <option value="">Pilih hasil</option>
+                <option v-for="fam in familyOptions" :key="fam.id" :value="fam.id">
+                  {{ fam.noKk }} - {{ fam.head_name }} ({{ fam.name }})
+                </option>
+              </select>
+            </div>
+            <div v-if="selectedFamily" class="col-span-12 text-sm text-gray-600">
+              <p>No KK: <span class="font-medium">{{ selectedFamily.no_kk }}</span></p>
+              <p>Kepala: <span class="font-medium">{{ selectedFamily.head_name }}</span></p>
+              <p>Alamat: <span class="font-medium">{{ selectedFamily.address }}</span></p>
+            </div>
+          </div>
+        </div>
 
         <!-- Bagian: Kepala Keluarga & Kuantitas -->
         <div class="grid grid-cols-12 gap-6">
@@ -46,6 +78,20 @@
                 <option v-for="opt in headOptions" :key="opt.nik" :value="opt.nik">{{ opt.nik }} - {{ opt.name }}</option>
               </select>
               <p v-if="headQuery && headOptions.length === 0" class="col-span-12 text-xs text-gray-500">Tidak ada hasil untuk input ini. Coba ketik nama atau pastikan NIK benar.</p>
+              <!-- NIK Kepala (manual input) -->
+              <div class="col-span-12">
+                <label class="block text-sm font-medium text-gray-700 mb-1">NIK Kepala</label>
+                <input
+                  v-model="form.headNik"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="\d{16}"
+                  maxlength="16"
+                  placeholder="Masukkan NIK 16 digit"
+                  @input="searchWargaHeads(($event.target as HTMLInputElement).value)"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                />
+              </div>
             </div>
             <div v-if="selectedHead" class="mt-2 text-sm text-gray-600">
               <div class="flex flex-wrap gap-4">
@@ -85,32 +131,6 @@
         </div>
         <!-- Lokasi desa fix: kolom selain RT/RW/Nomor Rumah dihapus -->
       </div>
-      <!-- Jika RT Profile belum dikonfigurasi, tampilkan field lokasi agar bisa disimpan -->
-      <div v-if="!rtConfigured" class="grid grid-cols-12 gap-6">
-        <div class="col-span-12">
-          <p class="text-sm text-red-600">Lokasi default belum dikonfigurasi. Silakan isi detail lokasi di bawah ini.</p>
-        </div>
-        <div class="col-span-12 sm:col-span-6 md:col-span-3">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Kelurahan <span class="text-red-500">*</span></label>
-          <input v-model="form.kelurahan" type="text" class="block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
-        </div>
-        <div class="col-span-12 sm:col-span-6 md:col-span-3">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Kecamatan <span class="text-red-500">*</span></label>
-          <input v-model="form.kecamatan" type="text" class="block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
-        </div>
-        <div class="col-span-12 sm:col-span-6 md:col-span-3">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Kabupaten <span class="text-red-500">*</span></label>
-          <input v-model="form.kabupaten" type="text" class="block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
-        </div>
-        <div class="col-span-12 sm:col-span-6 md:col-span-3">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Provinsi <span class="text-red-500">*</span></label>
-          <input v-model="form.provinsi" type="text" class="block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
-        </div>
-        <div class="col-span-12 sm:col-span-6 md:col-span-3">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Kode Pos</label>
-          <input v-model="form.postalCode" type="text" inputmode="numeric" pattern="\d*" maxlength="10" class="block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
-        </div>
-      </div>
         </div>
 
         <!-- Aksi -->
@@ -143,23 +163,22 @@ import { computed } from 'vue'
 const form = defineModel<any>('form')
 
 // Props for rest of state and actions
-  const {
-    inline,
-    formLoading,
-    formError,
-    headQuery,
-    headOptions,
-    searchWargaHeads,
-    rtConfigured,
-    familyQuery,
-    familyOptions,
-    selectedFamily,
-    searchFamilies,
-    chooseFamily,
-    closeForm,
-    resetForm,
-    submitForm,
-    canSubmit,
+const {
+  inline,
+  formLoading,
+  formError,
+  headQuery,
+  headOptions,
+  searchWargaHeads,
+  familyQuery,
+  familyOptions,
+  selectedFamily,
+  searchFamilies,
+  chooseFamily,
+  closeForm,
+  resetForm,
+  submitForm,
+  canSubmit,
 } = defineProps<{
   inline?: boolean
   formLoading: any
@@ -167,7 +186,6 @@ const form = defineModel<any>('form')
   headQuery: any
   headOptions: any
   searchWargaHeads: (q: string) => any
-  rtConfigured?: boolean
   familyQuery: any
   familyOptions: any
   selectedFamily: any
@@ -177,7 +195,6 @@ const form = defineModel<any>('form')
   resetForm?: () => any
   submitForm: () => any
   canSubmit: any
-  title?: string
 }>()
 
 const selectedHead = computed(() => {

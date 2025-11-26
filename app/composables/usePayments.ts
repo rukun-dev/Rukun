@@ -11,50 +11,6 @@ export interface Payment {
   wargaName?: string
 }
 
-// Dummy seed data following prisma schema structure
-const dummyPayments: Payment[] = [
-  {
-    id: 'pay_1',
-    type: 'IURAN_BULANAN',
-    amount: 50000,
-    description: 'Iuran bulan Januari 2024',
-    dueDate: new Date('2024-01-31'),
-    paidDate: new Date('2024-01-25'),
-    status: 'PAID',
-    wargaName: 'Budi Hartono'
-  },
-  {
-    id: 'pay_2',
-    type: 'IURAN_BULANAN',
-    amount: 50000,
-    description: 'Iuran bulan Februari 2024',
-    dueDate: new Date('2024-02-29'),
-    paidDate: null,
-    status: 'PENDING',
-    wargaName: 'Siti Aminah'
-  },
-  {
-    id: 'pay_3',
-    type: 'DENDA',
-    amount: 10000,
-    description: 'Denda keterlambatan pembayaran',
-    dueDate: new Date('2024-02-10'),
-    paidDate: null,
-    status: 'OVERDUE',
-    wargaName: 'Joko Widodo'
-  },
-  {
-    id: 'pay_4',
-    type: 'SUMBANGAN',
-    amount: 150000,
-    description: 'Sumbangan acara 17 Agustusan',
-    dueDate: new Date('2024-08-10'),
-    paidDate: new Date('2024-08-05'),
-    status: 'PAID',
-    wargaName: 'Karang Taruna'
-  }
-]
-
 export function usePayments() {
   const payments = ref<Payment[]>([])
   const loading = ref(false)
@@ -63,11 +19,21 @@ export function usePayments() {
   const fetchPayments = async () => {
     try {
       loading.value = true
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500))
-      payments.value = [...dummyPayments]
+      // Ambil data dalam jumlah besar agar semua pembayaran terbaca di UI (pagination dilakukan di sisi klien)
+      const resp = await $fetch<any>('/api/finances/payments?limit=1000&page=1')
+      const items = resp?.data?.payments || []
+      payments.value = items.map((p: any) => ({
+        id: p.id,
+        type: p.type,
+        amount: Number(p.amount ?? 0),
+        description: p.description,
+        dueDate: new Date(p.dueDate),
+        paidDate: p.paidDate ? new Date(p.paidDate) : null,
+        status: p.status,
+        wargaName: p.wargaName
+      }))
     } catch (err) {
-      error.value = (err as Error).message
+      error.value = (err as Error)?.message || 'Gagal memuat pembayaran'
     } finally {
       loading.value = false
     }
@@ -77,10 +43,25 @@ export function usePayments() {
     payments.value.unshift({ ...data, id: `pay_${Date.now()}` })
   }
 
-  const updatePayment = async (id: string, payload: Partial<Payment>) => {
+  const updatePayment = async (
+    id: string,
+    payload: Omit<Partial<Payment>, 'id'>
+  ) => {
     const idx = payments.value.findIndex(p => p.id === id)
     if (idx !== -1) {
-      payments.value[idx] = { ...payments.value[idx], ...payload }
+      // Gunakan fallback per-properti agar tidak ada nilai undefined pada tipe wajib
+      const current = payments.value[idx]!
+      const updated: Payment = {
+        id: current.id,
+        type: payload.type !== undefined ? payload.type : current.type,
+        amount: payload.amount !== undefined ? payload.amount : current.amount,
+        description: payload.description !== undefined ? payload.description : current.description,
+        dueDate: payload.dueDate !== undefined ? payload.dueDate : current.dueDate,
+        paidDate: payload.paidDate !== undefined ? payload.paidDate : current.paidDate,
+        status: payload.status !== undefined ? payload.status : current.status,
+        wargaName: payload.wargaName !== undefined ? payload.wargaName : current.wargaName
+      }
+      payments.value[idx] = updated
     }
   }
 

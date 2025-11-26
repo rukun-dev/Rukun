@@ -25,48 +25,60 @@
           <!-- Notifications -->
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button variant="ghost" size="sm" class="relative p-2">
+              <Button variant="ghost" size="sm" class="relative p-2" @click="fetchNotifications">
                 <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                 </svg>
                 <!-- Notification badge -->
-                <span v-if="notificationCount > 0" class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {{ notificationCount > 9 ? '9+' : notificationCount }}
+                <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {{ unreadCount > 9 ? '9+' : unreadCount }}
                 </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" class="w-80">
-              <div class="px-4 py-3 border-b border-gray-200">
-                <h3 class="text-sm font-medium text-gray-900">Notifikasi</h3>
-              </div>
-              <div class="max-h-64 overflow-y-auto">
-                <div v-if="notifications.length === 0" class="px-4 py-6 text-center text-sm text-gray-500">
-                  Tidak ada notifikasi baru
-                </div>
-                <div v-else>
-                  <div 
-                    v-for="notification in notifications" 
-                    :key="notification.id"
-                    class="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+              <ClientOnly>
+                <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                  <h3 class="text-sm font-medium text-gray-900">Notifikasi</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    class="text-xs"
+                    :disabled="unreadCount === 0 || notificationsLoading"
+                    @click="markAllAsRead"
                   >
-                    <div class="flex items-start space-x-3">
-                      <div class="flex-shrink-0">
-                        <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-900">{{ notification.title }}</p>
-                        <p class="text-sm text-gray-500">{{ notification.message }}</p>
-                        <p class="text-xs text-gray-400 mt-1">{{ formatTime(notification.createdAt) }}</p>
+                    Tandai semua dibaca
+                  </Button>
+                </div>
+                <div class="max-h-64 overflow-y-auto">
+                  <div v-if="notifications.length === 0" class="px-4 py-6 text-center text-sm text-gray-500">
+                    Tidak ada notifikasi baru
+                  </div>
+                  <div v-else>
+                    <div 
+                      v-for="notification in notifications" 
+                      :key="notification.id"
+                      class="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer"
+                      @click="openNotification(notification.id)"
+                    >
+                      <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                          <div v-if="!notification.isRead" class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm font-medium text-gray-900">{{ notification.title }}</p>
+                          <p class="text-sm text-gray-500">{{ notification.message }}</p>
+                          <p class="text-xs text-gray-400 mt-1">{{ formatTime(notification.createdAt) }}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div class="px-4 py-3 border-t border-gray-200">
-                <NuxtLink to="/notifications" class="text-sm text-blue-600 hover:text-blue-500">
-                  Lihat semua notifikasi
-                </NuxtLink>
-              </div>
+                <div class="px-4 py-3 border-t border-gray-200">
+                  <NuxtLink to="/notifications" class="text-sm text-blue-600 hover:text-blue-500">
+                    Lihat semua notifikasi
+                  </NuxtLink>
+                </div>
+              </ClientOnly>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -129,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -139,33 +151,37 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useNotifications } from '@/composables/useNotifications'
 
 defineEmits<{
   toggleSidebar: []
 }>()
 
 const route = useRoute()
+const router = useRouter()
 
 // Use authentication composable to get current user data
 const { user, isAuthenticated, logout } = useAuth()
 
-// TODO: Replace with actual notifications from API
-const notifications = ref([
-  {
-    id: '1',
-    title: 'Pembayaran Baru',
-    message: 'Warga RT 01 telah melakukan pembayaran iuran bulanan',
-    createdAt: new Date(Date.now() - 1000 * 60 * 30) // 30 minutes ago
-  },
-  {
-    id: '2',
-    title: 'Dokumen Baru',
-    message: 'Surat keterangan domisili telah diupload',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2) // 2 hours ago
-  }
-])
+// Notifications from composable
+const {
+  notifications,
+  unreadCount,
+  fetchNotifications,
+  markAsRead,
+  markAllAsRead,
+  loading: notificationsLoading
+} = useNotifications()
 
-const notificationCount = computed(() => notifications.value.length)
+// Fetch only when authenticated
+watch(() => isAuthenticated.value, (authed) => {
+  if (authed) fetchNotifications()
+}, { immediate: true })
+
+const openNotification = (id: string) => {
+  markAsRead(id)
+  router.push(`/announcements/${id}`)
+}
 
 // Get page title based on current route
 const pageTitle = computed(() => {
@@ -179,12 +195,16 @@ const pageTitle = computed(() => {
     ? rawPath.substring('/dashboard'.length) || '/'
     : rawPath
 
+  // Rumah Tangga page
+  if (path.startsWith('/rumah-tangga')) return 'Rumah Tangga'
+
   if (path.startsWith('/users')) return 'Manajemen Pengguna'
   if (path.startsWith('/warga')) return 'Data Warga'
   if (path.startsWith('/families') || path.startsWith('/kartu-keluarga')) return 'Data Keluarga'
   if (path.startsWith('/transactions')) return 'Transaksi'
   if (path.startsWith('/payments')) return 'Pembayaran'
   if (path.startsWith('/announcements')) return 'Pengumuman'
+  if (path.startsWith('/notifications') || rawPath === '/notifications') return 'Notifikasi'
   if (path.startsWith('/reports')) return 'Laporan'
   if (path.startsWith('/documents-template')) return 'Template Dokumen'
   if (path.startsWith('/documents')) return 'Dokumen'
@@ -216,7 +236,8 @@ const getRoleLabel = (role: string) => {
   return roleLabels[role] || role
 }
 
-const formatTime = (date: Date) => {
+const formatTime = (input: string | Date) => {
+  const date = typeof input === 'string' ? new Date(input) : input
   const now = new Date()
   const diff = now.getTime() - date.getTime()
   const minutes = Math.floor(diff / (1000 * 60))

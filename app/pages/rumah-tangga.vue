@@ -1,29 +1,82 @@
 <template>
   <div class="min-h-screen bg-white">
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Header -->
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Rumah Tangga</h1>
-        <p class="text-gray-500">Data keluarga/household di lingkungan RT.</p>
+      <!-- Page Content Header -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between">
+          <div></div>
+          <button
+            @click="openForm()"
+            class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <span>Tambah Rumah</span>
+          </button>
+        </div>
       </div>
 
       <!-- Stats (Houses) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <p class="text-sm font-medium text-gray-500">Total Rumah</p>
-          <p class="text-2xl font-bold text-gray-900 mt-1">{{ pagination?.total || houses.length }}</p>
+        <!-- Total Rumah -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-500 mb-1">Total Rumah</p>
+              <h3 class="text-3xl font-bold text-gray-900">{{ pagination?.total || houses.length }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center">
+              <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9.5l9-6 9 6M5 10v9h14v-9M9 14h6v5H9z" />
+              </svg>
+            </div>
+          </div>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <p class="text-sm font-medium text-gray-500">Total Keluarga</p>
-          <p class="text-2xl font-bold text-gray-900 mt-1">{{ houses.reduce((sum, h) => sum + (h.familyCount || 0), 0) }}</p>
+
+        <!-- Total Keluarga -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-500 mb-1">Total Keluarga</p>
+              <h3 class="text-3xl font-bold text-gray-900">{{ houses.reduce((sum, h) => sum + (h.familyCount || 0), 0) }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+          </div>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <p class="text-sm font-medium text-gray-500">Total Anggota</p>
-          <p class="text-2xl font-bold text-gray-900 mt-1">{{ houses.reduce((sum, h) => sum + (h.memberCount || 0), 0) }}</p>
+
+        <!-- Total Anggota -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-500 mb-1">Total Anggota</p>
+              <h3 class="text-3xl font-bold text-gray-900">{{ houses.reduce((sum, h) => sum + (h.memberCount || 0), 0) }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
+              <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+          </div>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <p class="text-sm font-medium text-gray-500">RT Unik (halaman ini)</p>
-          <p class="text-2xl font-bold text-gray-900 mt-1">{{ new Set(houses.map(h => h.rtNumber)).size }}</p>
+
+        <!-- RT Unik -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-500 mb-1">RT Unik (halaman ini)</p>
+              <h3 class="text-3xl font-bold text-gray-900">{{ new Set(houses.map(h => h.rtNumber)).size }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center">
+              <svg class="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -36,7 +89,7 @@
               v-model="searchTerm"
               @input="loadHouses(1)"
               type="text"
-              placeholder="Cari RT/RW, Kelurahan, Kecamatan, Kabupaten, Provinsi, Kepala..."
+              placeholder="Cari RT/RW, Kepala Keluarga, NIK Kepala..."
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -53,199 +106,188 @@
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <!-- Header -->
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <div class="flex items-center justify-between gap-3">
-            <h3 class="text-lg font-semibold text-gray-900">Daftar Rumah Tangga</h3>
-            <div class="flex items-center gap-3">
-              <span class="text-sm text-gray-600 hidden sm:inline">Menampilkan {{ houses.length }} data</span>
-              <button
-                @click="openForm()"
-                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm shadow-sm"
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">Data Rumah Tangga</h3>
+            <div class="flex items-center space-x-4">
+              <span class="text-sm text-gray-600">
+                Menampilkan halaman {{ currentPage }} dari {{ totalPages }},
+                total {{ pagination?.total || houses.length }} data
+              </span>
+              <select
+                v-model.number="limit"
+                class="text-sm border border-gray-200 rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M12 5c.552 0 1 .448 1 1v5h5c.552 0 1 .448 1 1s-.448 1-1 1h-5v5c0 .552-.448 1-1 1s-1-.448-1-1v-5H6c-.552 0-1-.448-1-1s.448-1 1-1h5V6c0-.552.448-1 1-1z"/></svg>
-                Tambah Rumah
-              </button>
+                <option :value="10">10 per halaman</option>
+                <option :value="25">25 per halaman</option>
+                <option :value="50">50 per halaman</option>
+              </select>
             </div>
           </div>
         </div>
 
-        <!-- Form Tambah Rumah -->
-        <div v-if="showForm" class="px-6 py-4 border-b border-gray-200 bg-white">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Pilih Keluarga -->
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Keluarga (opsional)</label>
-              <div class="flex gap-2">
-                <input
-                  v-model="familyQuery"
-                  @input="searchFamilies(familyQuery)"
-                  type="text"
-                  placeholder="Cari No KK / Nama Keluarga / Kepala Keluarga..."
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <select
-                  @change="chooseFamily(($event.target as HTMLSelectElement).value)"
-                  class="px-3 py-2 border border-gray-300 rounded-lg bg-white"
-                >
-                  <option value="">Pilih hasil</option>
-                  <option v-for="fam in familyOptions" :key="fam.id" :value="fam.id">
-                    {{ fam.noKk }} - {{ fam.head_name }} ({{ fam.name }})
-                  </option>
-                </select>
-              </div>
-              <div v-if="selectedFamily" class="mt-2 text-sm text-gray-600">
-                <p>No KK: <span class="font-medium">{{ selectedFamily.no_kk }}</span></p>
-                <p>Kepala: <span class="font-medium">{{ selectedFamily.head_name }}</span></p>
-                <p>Alamat: <span class="font-medium">{{ selectedFamily.address }}</span></p>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Kepala Keluarga</label>
-              <div class="flex gap-2">
-                <input
-                  v-model="headQuery"
-                  @input="searchWargaHeads(headQuery)"
-                  type="text"
-                  placeholder="Cari NIK/Nama..."
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <select
-                  v-model="form.headNik"
-                  class="px-3 py-2 border border-gray-300 rounded-lg bg-white"
-                >
-                  <option value="">Pilih hasil</option>
-                  <option v-for="opt in headOptions" :key="opt.nik" :value="opt.nik">{{ opt.nik }} - {{ opt.name }}</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Keluarga</label>
-                <input type="number" v-model.number="form.familyCount" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Anggota</label>
-                <input type="number" v-model.number="form.memberCount" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">RT</label>
-                <input v-model="form.rtNumber" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">RW</label>
-                <input v-model="form.rwNumber" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Kelurahan</label>
-                <input v-model="form.kelurahan" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Kecamatan</label>
-                <input v-model="form.kecamatan" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Kabupaten</label>
-                <input v-model="form.kabupaten" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
-                <input v-model="form.provinsi" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-              <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Kode Pos</label>
-                <input v-model="form.postalCode" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <button
-                :disabled="formLoading || !canSubmit"
-                @click="submitForm()"
-                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
-              >Simpan Rumah</button>
-              <button @click="closeForm()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm">Batal</button>
-              <p v-if="formError" class="text-sm text-red-600">{{ formError }}</p>
-            </div>
-          </div>
-        </div>
+        
         <!-- Body -->
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor Rumah</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kepala Keluarga</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK Kepala</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RT/RW</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelurahan</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kecamatan</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kabupaten</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provinsi</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode Pos</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dibuat</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Kepala Keluarga</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Anggota Keluarga</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               <tr v-if="housesLoading">
-                <td colspan="9" class="px-6 py-4 text-sm text-gray-500">Memuat data...</td>
+                <td colspan="7" class="px-6 py-4 text-sm text-gray-500">Memuat data...</td>
               </tr>
               <tr v-else-if="housesError">
-                <td colspan="9" class="px-6 py-4 text-sm text-red-600">{{ housesError }}</td>
+                <td colspan="7" class="px-6 py-4 text-sm text-red-600">{{ housesError }}</td>
               </tr>
               <tr v-else-if="houses.length === 0">
-                <td colspan="9" class="px-6 py-8 text-center text-sm text-gray-500">Tidak ada data</td>
+                <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">Tidak ada data</td>
               </tr>
               <tr v-else v-for="h in houses" :key="h.id" class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ h.head?.name || '-' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ h.houseNumber || '-' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <div>{{ h.head?.name || '-' }}</div>
+                  <div v-if="(h.familyCount || 0) > 1" class="text-xs text-gray-500">(+{{ (h.familyCount || 0) - 1 }} KK lainnya)</div>
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ h.headNik }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ h.rtNumber }}/{{ h.rwNumber }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ h.kelurahan }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ h.kecamatan }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ h.kabupaten }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ h.provinsi }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ h.postalCode || '-' }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(h.createdAt) }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ h.familyCount }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ h.memberCount }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  <div class="flex items-center space-x-3">
+                    <button
+                      @click="startEdit(h)"
+                      class="text-blue-600 hover:text-blue-800 transition-colors"
+                      title="Edit"
+                    >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      @click="askDelete(h)"
+                      class="text-red-600 hover:text-red-800 transition-colors"
+                      title="Hapus"
+                    >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862A2 2 0 015.995 19.142L5 7m5 4v6m4-6v6m1-10V5a1 1 0 00-1-1h-4a1 1 0 00-1 1v2M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <!-- Pagination -->
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
-          <div class="text-sm text-gray-600">
-            Halaman {{ currentPage }} dari {{ totalPages }}
-          </div>
-          <div class="flex items-center gap-2">
-            <button
-              class="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
-              :disabled="(currentPage || 1) <= 1"
-              @click="goPrevPage()"
-            >Sebelumnya</button>
-            <button
-              class="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
-              :disabled="(currentPage || 1) >= totalPages"
-              @click="goNextPage()"
-            >Berikutnya</button>
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <button
+                @click="currentPage = 1"
+                :disabled="(pagination?.page || 1) <= 1"
+                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                First
+              </button>
+              <button
+                @click="goPrevPage()"
+                :disabled="(pagination?.page || 1) <= 1"
+                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+            </div>
+
+            <div class="flex items-center space-x-1">
+              <button
+                v-for="page in visiblePages"
+                :key="page"
+                @click="currentPage = page"
+                :class="
+                  (pagination?.page || currentPage) === page
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-500 hover:bg-gray-50'
+                "
+                class="px-3 py-2 text-sm font-medium border border-gray-300 rounded-lg transition-colors"
+              >
+                {{ page }}
+              </button>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <button
+                @click="goNextPage()"
+                :disabled="(pagination?.page || 1) >= (pagination?.total_pages || totalPages)"
+                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+              <button
+                @click="currentPage = totalPages"
+                :disabled="(pagination?.page || 1) >= (pagination?.total_pages || totalPages)"
+                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Last
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </main>
+    
+    <!-- Modal Form Tambah Rumah -->
+    <HouseForm
+      v-if="showForm"
+      v-model:form="form"
+      :formLoading="formLoading"
+      :formError="formError"
+      :headQuery="headQuery"
+      :headOptions="headOptions"
+      :searchWargaHeads="searchWargaHeads"
+      :rtConfigured="rtConfigured"
+      :familyQuery="familyQuery"
+      :familyOptions="familyOptions"
+      :selectedFamily="selectedFamily"
+      :searchFamilies="searchFamilies"
+      :chooseFamily="chooseFamily"
+      :closeForm="closeForm"
+      :title="isEditing ? 'Edit Rumah' : 'Tambah Rumah'"
+      :submitForm="submitForm"
+      :canSubmit="canSubmit"
+    />
+
+    <ConfirmDelete
+      v-model="showDelete"
+      title="Hapus Rumah?"
+      message="Apakah Anda yakin ingin menghapus rumah ini?"
+      :details="toDelete ? `${toDelete.houseNumber || '-'} • NIK ${toDelete.headNik}` : ''"
+      @confirm="confirmDelete"
+      @cancel="showDelete = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, watch, ref } from 'vue'
 import { useHouses } from '@/composables/useHouses'
+import HouseForm from '@/components/form/House/HouseForm.vue'
+import ConfirmDelete from '@/components/form/warga/ConfirmDelete.vue'
 
 definePageMeta({
   layout: 'dashboard',
   middleware: ['auth']
 })
 
-// Houses listing controls
+// Single composable instance for consistent state across list and form
 const {
   houses,
   pagination,
@@ -253,11 +295,9 @@ const {
   error: housesError,
   searchTerm,
   currentPage,
+  limit,
   loadHouses,
-} = useHouses()
-
-// Houses form controls
-const {
+  // form state & actions
   showForm,
   form,
   formLoading,
@@ -265,6 +305,8 @@ const {
   headQuery,
   headOptions,
   searchWargaHeads,
+  rtConfigured,
+  loadRtProfile,
   familyQuery,
   familyOptions,
   selectedFamily,
@@ -275,13 +317,45 @@ const {
   resetForm,
   submitForm,
   canSubmit,
+  // edit/delete
+  startEdit,
+  deleteHouse,
+  isEditing,
 } = useHouses()
 
 // Derived pagination helpers for safer template bindings
 const totalPages = computed(() => pagination.value?.total_pages ?? 1)
+const visiblePages = computed(() => {
+  const pages: number[] = []
+  const total = totalPages.value
+  const cur = pagination.value?.page ?? currentPage.value
+  let start = Math.max(1, cur - 2)
+  let end = Math.min(total, cur + 2)
+  if (end - start < 4) {
+    if (start === 1) end = Math.min(total, start + 4)
+    else if (end === total) start = Math.max(1, end - 4)
+  }
+  for (let i = start; i <= end; i++) pages.push(i)
+  return pages
+})
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    await loadRtProfile()
+  } catch (e) {
+    // Biarkan form tetap muncul; jika profil RT belum ada, field lokasi akan tampil
+  }
   loadHouses(1)
+})
+
+// Reload when page size changes
+watch(limit, () => {
+  loadHouses(1)
+})
+
+// Reload when page changes via header buttons
+watch(currentPage, (p) => {
+  loadHouses(p)
 })
 
 function resetHousesFilter() {
@@ -310,6 +384,23 @@ const formatDate = (d: string) => {
   if (!d) return '-'
   const date = new Date(d)
   return new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(date)
+}
+
+// Delete modal state & handlers
+const showDelete = ref(false)
+const toDelete = ref<any>(null)
+function askDelete(h: any) {
+  toDelete.value = h
+  showDelete.value = true
+}
+const confirmDelete = async () => {
+  try {
+    if (!toDelete.value) return
+    await deleteHouse(toDelete.value.id)
+  } finally {
+    showDelete.value = false
+    toDelete.value = null
+  }
 }
 </script>
 

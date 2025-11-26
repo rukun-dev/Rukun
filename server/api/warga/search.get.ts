@@ -1,15 +1,11 @@
-// server/api/warga/search.post.ts
+// server/api/warga/search.get.ts
 import { z } from "zod";
 import { prisma } from "~~/server/utils/database";
 import { requireAuth } from "~~/server/utils/auth";
 import { startRequest, responses } from "~~/server/utils/response";
 
-// Search schema
 const wargaSearchSchema = z.object({
-  q: z
-    .string()
-    .optional()
-    .transform((val) => val?.trim() || undefined),
+  q: z.string().optional().transform((val) => val?.trim() || undefined),
   nik: z.string().max(20).optional(),
   noKk: z.string().max(20).optional(),
   name: z.string().max(100).optional(),
@@ -33,19 +29,20 @@ const wargaSearchSchema = z.object({
     }),
   sortBy: z.string().optional().default("createdAt"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
-  limit: z.number().int().min(1).max(100).default(20),
-  page: z.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  page: z.coerce.number().int().min(1).default(1),
 });
 
 export default defineEventHandler(async (event) => {
   const requestId = startRequest(event);
   const startedAt = Date.now();
-  let body: any;
+  let input: any;
 
   try {
     const currentUser = await requireAuth(event);
 
-    body = await readBody(event);
+    const query = getQuery(event);
+    input = Object.keys(query).length > 0 ? query : await readBody(event);
     const {
       q,
       nik,
@@ -63,7 +60,7 @@ export default defineEventHandler(async (event) => {
       sortOrder,
       limit,
       page,
-    } = wargaSearchSchema.parse(body);
+    } = wargaSearchSchema.parse(input);
 
     const where: any = { AND: [] };
 
@@ -172,7 +169,7 @@ export default defineEventHandler(async (event) => {
             return acc;
           }, {} as Record<string, string>),
           error_count: error.issues.length,
-          provided_data: body ? Object.keys(body) : [],
+          provided_data: input ? Object.keys(input) : [],
         },
         { requestId, event },
       );

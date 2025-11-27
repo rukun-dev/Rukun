@@ -30,14 +30,14 @@ export default defineEventHandler(async (event) => {
     if (q && q.trim().length > 0) {
       const queryText = q.trim()
       where.OR = [
-        { head: { name: { contains: queryText, mode: 'insensitive' } } },
+        { head: { name: { contains: queryText } } },
         { headNik: { contains: queryText } },
         { rtNumber: { contains: queryText } },
         { rwNumber: { contains: queryText } },
-        { kelurahan: { contains: queryText, mode: 'insensitive' } },
-        { kecamatan: { contains: queryText, mode: 'insensitive' } },
-        { kabupaten: { contains: queryText, mode: 'insensitive' } },
-        { provinsi: { contains: queryText, mode: 'insensitive' } },
+        { kelurahan: { contains: queryText } },
+        { kecamatan: { contains: queryText } },
+        { kabupaten: { contains: queryText } },
+        { provinsi: { contains: queryText } },
       ]
     }
 

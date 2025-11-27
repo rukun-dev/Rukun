@@ -25,14 +25,7 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah (Rp)</label>
-          <input
-            v-model="amountStr"
-            @input="onAmountInput"
-            type="text"
-            inputmode="numeric"
-            class="w-full px-3 py-2 border rounded-lg"
-            placeholder="Masukkan jumlah"
-          />
+          <input v-model.number="local.amount" type="number" min="0" class="w-full px-3 py-2 border rounded-lg" />
         </div>
 
         <div>
@@ -40,7 +33,10 @@
           <input v-model="dueDateStr" type="date" class="w-full px-3 py-2 border rounded-lg" />
         </div>
 
-        <!-- Field Warga dihilangkan dari form edit -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Warga</label>
+          <input v-model="local.wargaName" type="text" class="w-full px-3 py-2 border rounded-lg" />
+        </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -64,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import type { Payment } from '@/composables/usePayments'
 
 const props = defineProps<{
@@ -79,13 +75,9 @@ const emit = defineEmits<{
 }>()
 
 const local = ref<Payment>({ ...props.payment })
-const amountStr = ref<string>('')
-const formatThousands = (digits: string) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-amountStr.value = local.value.amount ? formatThousands(String(local.value.amount)) : ''
 
 watch(() => props.payment, (p) => {
   local.value = { ...p }
-  amountStr.value = local.value.amount ? formatThousands(String(local.value.amount)) : ''
 }, { deep: true })
 
 const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`)
@@ -97,13 +89,6 @@ watch(dueDateStr, (val) => {
 })
 
 const close = () => emit('update:modelValue', false)
-
-const onAmountInput = (e: Event) => {
-  const raw = (e.target as HTMLInputElement).value
-  const digits = raw.replace(/\D/g, '')
-  amountStr.value = digits ? formatThousands(digits) : ''
-  local.value.amount = digits ? Number(digits) : 0
-}
 
 const onSubmit = () => {
   if (!local.value.description || local.value.amount <= 0) return

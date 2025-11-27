@@ -19,8 +19,7 @@ export function usePayments() {
   const fetchPayments = async () => {
     try {
       loading.value = true
-      // Ambil data dalam jumlah besar agar semua pembayaran terbaca di UI (pagination dilakukan di sisi klien)
-      const resp = await $fetch<any>('/api/finances/payments?limit=1000&page=1')
+      const resp = await $fetch<any>('/api/finances/payments')
       const items = resp?.data?.payments || []
       payments.value = items.map((p: any) => ({
         id: p.id,

@@ -12,16 +12,8 @@
       <div class="rounded-xl border border-gray-200 p-5 bg-gray-50">
         <div class="flex items-center justify-between mb-3">
           <h4 class="font-medium text-gray-900">QRIS Bendahara</h4>
-          <div class="flex items-center space-x-2">
-            <a v-if="qrisUrl" :href="qrisUrl" download class="text-blue-600 hover:text-blue-800 text-sm">Unduh QRIS</a>
-            <button
-              v-if="canUpload"
-              :disabled="isUploading"
-              @click="triggerFile"
-              class="text-sm px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 disabled:opacity-50"
-            >
-              {{ isUploading ? 'Mengunggah...' : 'Unggah QRIS' }}
-            </button>
+          <div v-if="qrisUrl" class="flex items-center space-x-2">
+            <a :href="qrisUrl" download class="text-blue-600 hover:text-blue-800 text-sm">Unduh QRIS</a>
           </div>
         </div>
         <div class="flex items-center justify-center">
@@ -33,9 +25,6 @@
             </div>
           </div>
         </div>
-        <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileChange" />
-        <div v-if="uploadError" class="mt-3 text-xs text-red-600">{{ uploadError }}</div>
-        <div v-if="uploadSuccess" class="mt-3 text-xs text-green-700">QRIS berhasil diunggah.</div>
         <div class="mt-4 text-xs text-gray-500">
           Scan QRIS menggunakan aplikasi pembayaran (contoh: m-banking, e-wallet).
         </div>
@@ -85,16 +74,9 @@ const props = defineProps<{
   accountHolder?: string
   whatsapp?: string // format: 628xxxxxxxxxx
   note?: string
-  canUpload?: boolean
 }>()
 
-const emit = defineEmits<{ (e: 'qrisUploaded', payload: { url: string, id?: string }): void }>()
-
 const copied = ref(false)
-const isUploading = ref(false)
-const uploadError = ref('')
-const uploadSuccess = ref(false)
-const fileInput = ref<HTMLInputElement | null>(null)
 
 const copyAccount = async () => {
   if (!props.accountNumber) return
@@ -119,54 +101,4 @@ const accountHolder = props.accountHolder ?? '—'
 const whatsapp = props.whatsapp
 const qrisUrl = props.qrisUrl
 const note = props.note
-const canUpload = props.canUpload ?? false
-
-const triggerFile = () => {
-  uploadError.value = ''
-  uploadSuccess.value = false
-  fileInput.value?.click()
-}
-
-const onFileChange = async (e: Event) => {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-  if (!file.type.startsWith('image/')) {
-    uploadError.value = 'File harus berupa gambar (PNG/JPG/WebP).'
-    return
-  }
-  if (file.size > 5 * 1024 * 1024) { // 5MB
-    uploadError.value = 'Ukuran file maksimal 5MB.'
-    return
-  }
-
-  try {
-    isUploading.value = true
-    uploadError.value = ''
-    uploadSuccess.value = false
-
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('folder', 'rukun-app/qris')
-    formData.append('tags', 'qris,payment')
-
-    const res = await fetch('/api/files', { method: 'POST', body: formData })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err?.message || 'Gagal mengunggah QRIS')
-    }
-    const data = await res.json()
-    const url: string | undefined = data?.file?.url || data?.file?.cloudinaryUrl
-    const id: string | undefined = data?.file?.id
-    if (!url) throw new Error('URL hasil unggah tidak ditemukan')
-
-    emit('qrisUploaded', { url, id })
-    uploadSuccess.value = true
-  } catch (err: any) {
-    uploadError.value = err?.message || 'Terjadi kesalahan saat unggah'
-  } finally {
-    isUploading.value = false
-    if (fileInput.value) fileInput.value.value = ''
-  }
-}
 </script>

@@ -9,7 +9,6 @@ type BulkPayload = {
   description: string
   dueDate: string | Date
   status?: 'PENDING' | 'PAID' | 'OVERDUE' | 'CANCELLED'
-  roles?: Array<'WARGA' | 'KETUA_RT' | 'BENDAHARA' | 'SEKRETARIS' | 'SUPER_ADMIN'>
 }
 
 export default defineEventHandler(async (event) => {
@@ -33,35 +32,11 @@ export default defineEventHandler(async (event) => {
   })
   const excludedEmails = superAdmins.map(u => u.email).filter(Boolean) as string[]
 
-  // Jika roles disediakan, filter warga berdasarkan peran User (via email yang cocok)
-  let wargaWhere: any = {
-    isActive: true,
-    ...(excludedEmails.length > 0 ? { NOT: { email: { in: excludedEmails } } } : {})
-  }
-
-  const rolesToInclude = (payload.roles || []).filter(r => r !== 'SUPER_ADMIN')
-  if (rolesToInclude.length > 0) {
-    // Ambil email pengguna aktif dengan peran terpilih
-    const includeUsers = await prisma.user.findMany({
-      where: { role: { in: rolesToInclude as any }, isActive: true },
-      select: { email: true },
-    })
-    const includedEmails = includeUsers.map(u => u.email).filter(Boolean) as string[]
-
-    // Jika memilih WARGA, artinya semua warga aktif (kecuali SUPER_ADMIN)
-    const includeAllWarga = rolesToInclude.includes('WARGA')
-    if (!includeAllWarga) {
-      // Batasi warga hanya yang email-nya cocok dengan peran terpilih
-      wargaWhere = {
-        ...wargaWhere,
-        email: { in: includedEmails.length > 0 ? includedEmails : ['__none__'] },
-      }
-    }
-    // Jika includeAllWarga = true, gunakan wargaWhere dasar (aktif & bukan SUPER_ADMIN)
-  }
-
   const wargaList = await prisma.warga.findMany({
-    where: wargaWhere,
+    where: {
+      isActive: true,
+      ...(excludedEmails.length > 0 ? { NOT: { email: { in: excludedEmails } } } : {})
+    },
     select: { id: true },
   })
 

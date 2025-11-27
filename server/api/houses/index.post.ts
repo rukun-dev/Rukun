@@ -6,10 +6,6 @@ import { startRequest, responses } from '~~/server/utils/response'
 
 const createHouseSchema = z
   .object({
-    houseNumber: z
-      .string()
-      .regex(/^[\dA-Za-z\-\/]{1,10}$/i, 'Nomor rumah hanya angka/huruf, max 10, boleh -/')
-      .optional(),
     // Lokasi rumah
     rtNumber: z.string().min(1).max(10).optional(),
     rwNumber: z.string().min(1).max(10).optional(),
@@ -46,7 +42,6 @@ export default defineEventHandler(async (event) => {
 
     const body = await readBody(event)
     const {
-      houseNumber,
       rtNumber,
       rwNumber,
       kelurahan,
@@ -191,7 +186,6 @@ export default defineEventHandler(async (event) => {
     // Create house
     const created = await prisma.house.create({
       data: {
-        houseNumber: houseNumber,
         rtNumber: effectiveRt!,
         rwNumber: effectiveRw!,
         kelurahan: effectiveKelurahan!,
@@ -225,7 +219,7 @@ export default defineEventHandler(async (event) => {
     if (error && typeof error === 'object' && 'code' in error) {
       const prismaError = error as any
       if (prismaError.code === 'P2002') {
-        return responses.conflict('Unique constraint violation', { requestId, event })
+        return responses.conflict('House number already exists', { requestId, event })
       }
     }
 

@@ -195,6 +195,7 @@ model FamilyMember {
 // House Management
 model House {
   id          String         @id @default(cuid())
+  houseNumber String?
   rtNumber      String
   rwNumber      String
   kelurahan     String

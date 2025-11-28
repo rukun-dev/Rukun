@@ -7,8 +7,10 @@ import { startRequest, responses } from '~~/server/utils/response'
 const updateHouseSchema = z.object({
   houseNumber: z
     .string()
-    .regex(/^[\dA-Za-z\-\/]{1,10}$/i, 'Nomor rumah hanya angka/huruf, max 10, boleh -/')
-    .optional(),
+    .optional()
+    .refine((val) => !val || /^[\dA-Za-z\-\/]{1,10}$/i.test(val), {
+      message: 'Nomor rumah hanya angka/huruf, max 10, boleh -/'
+    }),
   headNik: z.string().min(1).max(30).optional(),
   familyCount: z.coerce.number().int().min(0).optional(),
   memberCount: z.coerce.number().int().min(0).optional(),
@@ -33,16 +35,29 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Dukungan ganda: jika param CUID, anggap sebagai id; jika bukan, gunakan houseNumber unik
-    const asId = z.string().cuid().safeParse(houseNumberParam)
-    const where = asId.success ? { id: asId.data } : { houseNumber: houseNumberParam }
+    // Cari house berdasarkan houseNumber atau id
+    let houseId: string;
+
+    const asId = z.string().cuid().safeParse(houseNumberParam);
+    if (asId.success) {
+      houseId = asId.data;
+    } else {
+      const house = await prisma.house.findFirst({
+        where: { houseNumber: houseNumberParam },
+        select: { id: true }
+      });
+      if (!house) {
+        return responses.notFound('Rumah tangga tidak ditemukan', { requestId, event });
+      }
+      houseId = house.id;
+    }
 
     const updated = await prisma.house.update({
-      where,
+      where: { id: houseId },
       data,
       include: {
-        head: { select: { nik: true, name: true, noKk: true, address: true } },
-      },
+        head: { select: { nik: true, name: true, noKk: true, address: true } }
+      }
     })
 
     const executionTime = `${Date.now() - startedAt}ms`

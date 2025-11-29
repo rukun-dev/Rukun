@@ -25,7 +25,14 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah (Rp)</label>
-          <input v-model.number="form.amount" type="number" min="0" class="w-full px-3 py-2 border rounded-lg" />
+          <input
+            v-model="amountStr"
+            @input="onAmountInput"
+            type="text"
+            inputmode="numeric"
+            class="w-full px-3 py-2 border rounded-lg"
+            placeholder="Masukkan jumlah"
+          />
         </div>
 
         <div>
@@ -33,19 +40,28 @@
           <input v-model="dueDateStr" type="date" class="w-full px-3 py-2 border rounded-lg" />
         </div>
 
+        <!-- Target Pembayar: Pilih peran yang perlu membayar (multi-select) -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Warga</label>
-          <input v-model="form.wargaName" type="text" class="w-full px-3 py-2 border rounded-lg" placeholder="Nama Warga" />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-          <select v-model="form.status" class="w-full px-3 py-2 border rounded-lg">
-            <option value="PENDING">Pending</option>
-            <option value="PAID">Lunas</option>
-            <option value="OVERDUE">Terlambat</option>
-            <option value="CANCELLED">Dibatalkan</option>
-          </select>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Siapa yang perlu membayar?</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" value="WARGA" v-model="selectedRoles" />
+              <span>Warga</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" value="KETUA_RT" v-model="selectedRoles" />
+              <span>Ketua RT</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" value="BENDAHARA" v-model="selectedRoles" />
+              <span>Bendahara</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" value="SEKRETARIS" v-model="selectedRoles" />
+              <span>Sekretaris</span>
+            </label>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">SUPER_ADMIN selalu dikecualikan.</p>
         </div>
 
         <div class="flex items-center justify-end space-x-3 pt-2">
@@ -68,9 +84,16 @@ const props = defineProps<{
   isSubmitting: boolean
 }>()
 
+type BulkPaymentInput = Pick<Payment, 'type' | 'description' | 'amount' | 'dueDate' | 'status'>
+type RoleOption = 'WARGA' | 'KETUA_RT' | 'BENDAHARA' | 'SEKRETARIS'
+type BulkPaymentWithRoles = Pick<Payment, 'type' | 'description' | 'amount' | 'dueDate' | 'status'> & {
+  roles?: RoleOption[]
+}
+
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
   (e: 'save', value: Payment): void
+  (e: 'saveBulk', value: BulkPaymentWithRoles): void
 }>()
 
 const today = new Date()
@@ -89,6 +112,24 @@ const form = ref<Payment>({
 })
 
 const dueDateStr = ref<string>(toDateStr(today))
+const amountStr = ref<string>('')
+const selectedRoles = ref<RoleOption[]>(['WARGA'])
+
+const formatThousands = (digits: string) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+const onAmountInput = (e: Event) => {
+  const raw = (e.target as HTMLInputElement).value
+  const digits = raw.replace(/\D/g, '')
+  amountStr.value = digits ? formatThousands(digits) : ''
+  form.value.amount = digits ? Number(digits) : 0
+}
+
+watch(() => props.modelValue, (open) => {
+  if (open) {
+    amountStr.value = form.value.amount ? formatThousands(String(form.value.amount)) : ''
+  } else {
+    amountStr.value = ''
+  }
+})
 
 watch(dueDateStr, (val) => {
   form.value.dueDate = new Date(val)
@@ -99,6 +140,14 @@ const close = () => emit('update:modelValue', false)
 const onSubmit = () => {
   // Basic validation
   if (!form.value.description || form.value.amount <= 0) return
-  emit('save', { ...form.value })
+  const payload: BulkPaymentWithRoles = {
+    type: form.value.type,
+    description: form.value.description,
+    amount: form.value.amount,
+    dueDate: form.value.dueDate,
+    status: form.value.status,
+    roles: selectedRoles.value,
+  }
+  emit('saveBulk', payload)
 }
 </script>

@@ -64,6 +64,17 @@
           </svg>
           Keluarga
         </NuxtLink>
+
+        <NuxtLink
+          to="/rumah-tangga"
+          class="group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
+          :class="isActiveRoute('/rumah-tangga') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+        >
+          <svg class="mr-3 h-5 w-5" :class="isActiveRoute('/rumah-tangga') ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h5V7a2 2 0 00-2-2H5a2 2 0 00-2 2zm11 3v9h5a2 2 0 002-2v-5a2 2 0 00-2-2h-3a2 2 0 00-2 2z"></path>
+          </svg>
+          Rumah Tangga
+        </NuxtLink>
         
         <NuxtLink
           to="/warga"

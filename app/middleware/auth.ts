@@ -1,21 +1,43 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
   // Handle server-side rendering
   if (process.server) {
-    // For protected routes, we need to ensure auth state is available
-    // This is handled by the auth composable on server side
-    console.log('🔐 Auth Middleware - Server-side rendering for:', to.path)
-    
-    // Only skip if it's a public route
+    // Server-side: lakukan verifikasi awal agar tidak terjadi hydration mismatch
     const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/unauthorized']
     const isPublicRoute = publicRoutes.includes(to.path) || to.path.startsWith('/reset-password')
-    
+
+    // Public route: lewati pengecekan
     if (isPublicRoute) {
-      return // Allow public routes on server
+      return
     }
-    
-    // For protected routes, let the auth composable handle it
-    // The server will render the page and auth will be checked on client-side
-    return
+
+    try {
+      // Cek sesi lewat API agar SSR bisa redirect lebih awal jika tidak login
+      const headers = useRequestHeaders(['cookie', 'user-agent'])
+      const resp: any = await $fetch('/api/auth/me', {
+        method: 'GET',
+        headers
+      })
+
+      const user = resp?.data?.user
+      if (!resp?.success || !user) {
+        return navigateTo('/login')
+      }
+
+      // Cek role berbasis meta.roles bila ada
+      const requiredRoles = (to.meta as any)?.roles as string[] | undefined
+      if (requiredRoles && requiredRoles.length > 0) {
+        const isAllowed = requiredRoles.includes(user.role)
+        if (!isAllowed) {
+          return navigateTo('/unauthorized')
+        }
+      }
+
+      // Auth OK pada SSR, lanjut render
+      return
+    } catch (error) {
+      // Gagal memverifikasi di SSR: redirect ke login
+      return navigateTo('/login')
+    }
   }
 
   const { isAuthenticated, fetchUser, isLoading } = useAuth()

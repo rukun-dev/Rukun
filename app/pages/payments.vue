@@ -140,6 +140,8 @@
             </select>
           </div>
         </div>
+
+        
       </div>
 
       <!-- Table -->
@@ -159,6 +161,16 @@
                 <option :value="25">25 per halaman</option>
                 <option :value="50">50 per halaman</option>
               </select>
+              <button
+                v-if="canManagePayments"
+                @click="openManageAll"
+                class="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm transition-colors"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m4-4H8" />
+                </svg>
+                <span>Kelola Semua</span>
+              </button>
             </div>
           </div>
         </div>
@@ -170,7 +182,6 @@
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah (Rp)</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200" v-if="!loading">
@@ -184,44 +195,11 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm" :class="statusColor(p.status)">{{ mapStatus(p.status) }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex space-x-2" :class="{ 'opacity-50 pointer-events-none': !canManagePayments }">
-                  <button
-                    @click="openEdit(p)"
-                    class="text-blue-600 hover:text-blue-800 transition-colors"
-                    title="Edit"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    @click="askDelete(p)"
-                     class="text-red-600 hover:text-red-800 transition-colors"
-                     title="Hapus"
-                   >
-                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path
-                         stroke-linecap="round"
-                         stroke-linejoin="round"
-                         stroke-width="2"
-                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862A2 2 0 015.995 19.142L5 7m5 4v6m4-6v6m1-10V5a1 1 0 00-1-1h-4a1 1 0 00-1 1v2M4 7h16"
-                       />
-                     </svg>
-                     
-                  </button>
-                </div>
-              </td>
             </tr>
           </tbody>
           <tbody v-else>
             <tr>
-              <td colspan="6" class="px-6 py-8 text-center">
+              <td colspan="5" class="px-6 py-8 text-center">
                 <div class="flex justify-center space-x-2">
                   <div class="w-4 h-4 bg-gray-300 rounded-full animate-pulse"></div>
                   <div class="w-4 h-4 bg-gray-300 rounded-full animate-pulse"></div>
@@ -241,6 +219,132 @@
           @confirm="confirmDelete"
           @cancel="showDelete = false"
         />
+
+        <!-- Bulk Delete Confirmation Modal -->
+        <ConfirmDelete
+          v-model="showDeleteBulk"
+          title="Hapus Massal Pembayaran?"
+          :message="deleteBulkMessage"
+          :details="deleteBulkDetails"
+          @confirm="confirmDeleteBulk"
+          @cancel="showDeleteBulk = false"
+        />
+
+        <!-- Manage Modal (Edit + Hapus dengan filter) -->
+        <div v-if="showManage" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold text-gray-900">Kelola Pembayaran</h3>
+            <p class="mt-1 text-sm text-gray-600">
+              {{ manageTarget ? (manageTarget.description + ' • ' + currency(manageTarget.amount)) : '' }}
+            </p>
+
+            <div v-if="bulkManageMode" class="mt-3 flex items-center justify-between text-sm text-gray-600">
+              <span>Item {{ manageIndex + 1 }} dari {{ manageList.length }}</span>
+              <div class="space-x-2">
+                <button
+                  class="px-3 py-1 rounded-md border border-gray-300 text-gray-700 disabled:opacity-50"
+                  :disabled="manageIndex === 0"
+                  @click="managePrev"
+                >Sebelumnya</button>
+                <button
+                  class="px-3 py-1 rounded-md border border-gray-300 text-gray-700 disabled:opacity-50"
+                  :disabled="manageIndex >= manageList.length - 1"
+                  @click="manageNext"
+                >Berikutnya</button>
+              </div>
+            </div>
+
+            <!-- Filter Waktu untuk Kelola Semua + Hapus Massal -->
+            <div v-if="bulkManageMode" class="mt-4 border border-gray-200 rounded-lg p-3">
+              <label class="text-sm font-medium text-gray-900">Filter Waktu</label>
+              <div class="mt-2 grid grid-cols-1 gap-3">
+                <div>
+                  <div class="flex items-center space-x-4 text-sm text-gray-700">
+                    <label class="flex items-center space-x-2">
+                      <input type="radio" class="form-radio" value="MONTH" v-model="bulkDeleteMode" />
+                      <span>Bulan</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                      <input type="radio" class="form-radio" value="DATE" v-model="bulkDeleteMode" />
+                      <span>Tanggal</span>
+                    </label>
+                  </div>
+                </div>
+                <div v-if="bulkDeleteMode === 'MONTH'">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Bulan</label>
+                  <input type="month" v-model="bulkDeleteMonth" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                </div>
+                <div v-else>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Tanggal</label>
+                  <input type="date" v-model="bulkDeleteDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                </div>
+              </div>
+              <div class="mt-3 flex items-center justify-between">
+                <button
+                  class="inline-flex items-center space-x-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg"
+                  @click="applyManageFilter"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+                  </svg>
+                  <span>Terapkan Filter</span>
+                </button>
+                <button
+                  class="inline-flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+                  @click="askDeleteBulk"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862A2 2 0 015.995 19.142L5 7m5 4v6m4-6v6m1-10V5a1 1 0 00-1-1h-4a1 1 0 00-1 1v2M4 7h16" />
+                  </svg>
+                  <span>Hapus Semua (Terfilter)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-4 space-y-4">
+              <button
+                class="w-full inline-flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                @click="doEditFromManage"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                <span>Edit</span>
+              </button>
+
+              <div class="border border-gray-200 rounded-lg p-3">
+                <label class="text-sm font-medium text-gray-900">Filter Hapus</label>
+                <div class="mt-2 space-y-2 text-sm text-gray-700">
+                  <label class="flex items-center space-x-2">
+                    <input type="radio" class="form-radio" value="PENDING_ONLY" v-model="deleteFilter" />
+                    <span>Hanya status Pending</span>
+                  </label>
+                  <label class="flex items-center space-x-2">
+                    <input type="radio" class="form-radio" value="PENDING_OR_OVERDUE" v-model="deleteFilter" />
+                    <span>Pending atau Terlambat</span>
+                  </label>
+                  <label class="flex items-center space-x-2">
+                    <input type="radio" class="form-radio" value="ALL" v-model="deleteFilter" />
+                    <span>Semua status</span>
+                  </label>
+                </div>
+                <button
+                  class="mt-3 w-full inline-flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  @click="doDeleteWithFilter"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862A2 2 0 015.995 19.142L5 7m5 4v6m4-6v6m1-10V5a1 1 0 00-1-1h-4a1 1 0 00-1 1v2M4 7h16" />
+                  </svg>
+                  <span>Hapus sesuai filter</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-5 flex justify-end">
+              <button class="px-4 py-2 text-gray-700 hover:text-gray-900" @click="showManage = false; manageTarget = null; bulkManageMode = false; manageIndex = 0">Tutup</button>
+            </div>
+          </div>
+        </div>
 
         <!-- Pagination -->
         <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between" v-if="totalPages > 1">
@@ -278,6 +382,7 @@
         v-model="isFormOpen"
         :isSubmitting="formSubmitting"
         @save="handleSave"
+        @saveBulk="handleSaveBulk"
       />
       <EditPayment
         v-else
@@ -294,6 +399,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { usePayments, type Payment } from '@/composables/usePayments'
 import { useAuth } from '@/composables/useAuth'
+import { useGlobalLoading } from '@/composables/useGlobalLoading'
 import { currency } from '@/lib/utils'
 import { toast } from 'vue-sonner'
 
@@ -324,6 +430,10 @@ const canManagePayments = computed(() => {
 })
 
 const { payments, fetchPayments, addPayment, updatePayment, deletePayment, error, loading } = usePayments()
+const { showLoading, hideLoading, setLoadingText } = useGlobalLoading()
+
+// Langsung tampilkan global loading saat komponen dimuat (seperti dashboard)
+showLoading('Memuat data pembayaran...', 'Mohon tunggu sebentar')
 
 /* Filters */
 const search = ref('')
@@ -381,8 +491,55 @@ const isEditing = ref(false)
 const formSubmitting = ref(false)
 const form = ref<Payment | null>(null)
 
-onMounted(() => {
-  fetchPayments()
+// Manage modal state
+const showManage = ref(false)
+const manageTarget = ref<Payment | null>(null)
+type DeleteFilter = 'PENDING_ONLY' | 'PENDING_OR_OVERDUE' | 'ALL'
+const deleteFilter = ref<DeleteFilter>('PENDING_ONLY')
+// Bulk delete state
+type BulkDeleteMode = 'MONTH' | 'DATE'
+const bulkDeleteMode = ref<BulkDeleteMode>('MONTH')
+const bulkDeleteMonth = ref<string>('') // YYYY-MM
+const bulkDeleteDate = ref<string>('') // YYYY-MM-DD
+const bulkDeleteSubmitting = ref(false)
+const showDeleteBulk = ref(false)
+const deleteBulkMessage = computed(() => bulkDeleteMode.value === 'MONTH' ? 'Menghapus semua pembayaran pada bulan terpilih.' : 'Menghapus semua pembayaran pada tanggal terpilih.')
+const deleteBulkDetails = ref<string>('')
+// Bulk manage state
+const bulkManageMode = ref(false)
+const manageIndex = ref(0)
+const manageList = computed(() => {
+  let base = filteredPayments.value
+  // Terapkan filter waktu hanya saat mode kelola massal aktif
+  if (bulkManageMode.value) {
+    if (bulkDeleteMode.value === 'MONTH' && bulkDeleteMonth.value) {
+      const [yearStr, monthStr] = bulkDeleteMonth.value.split('-')
+      const y = Number(yearStr)
+      const m = Number(monthStr)
+      base = base.filter(p => {
+        const d = new Date(p.dueDate)
+        return d.getFullYear() === y && (d.getMonth() + 1) === m
+      })
+    } else if (bulkDeleteMode.value === 'DATE' && bulkDeleteDate.value) {
+      const target = new Date(bulkDeleteDate.value)
+      const ty = target.getFullYear()
+      const tm = target.getMonth()
+      const td = target.getDate()
+      base = base.filter(p => {
+        const d = new Date(p.dueDate)
+        return d.getFullYear() === ty && d.getMonth() === tm && d.getDate() === td
+      })
+    }
+  }
+  return base
+})
+
+onMounted(async () => {
+  try {
+    await fetchPayments()
+  } finally {
+    hideLoading()
+  }
 })
 
 const openAddForm = () => {
@@ -405,11 +562,163 @@ const openEdit = (payment: Payment) => {
   isFormOpen.value = true
 }
 
+const openManage = (payment: Payment) => {
+  if (!canManagePayments.value) {
+    toast.error('Anda tidak berhak mengelola pembayaran')
+    return
+  }
+  bulkManageMode.value = false
+  manageTarget.value = { ...payment }
+  deleteFilter.value = 'PENDING_ONLY'
+  showManage.value = true
+}
+
+const openManageAll = () => {
+  if (!canManagePayments.value) {
+    toast.error('Anda tidak berhak mengelola pembayaran')
+    return
+  }
+  if (manageList.value.length === 0) {
+    toast.error('Tidak ada pembayaran untuk dikelola')
+    return
+  }
+  bulkManageMode.value = true
+  manageIndex.value = 0
+  deleteFilter.value = 'PENDING_ONLY'
+  const firstItem = manageList.value[manageIndex.value]
+  if (!firstItem) {
+    toast.error('Tidak ada pembayaran untuk dikelola')
+    bulkManageMode.value = false
+    return
+  }
+  manageTarget.value = { ...firstItem }
+  showManage.value = true
+}
+
+const applyManageFilter = () => {
+  // Validasi input filter waktu
+  if (bulkDeleteMode.value === 'MONTH') {
+    if (!bulkDeleteMonth.value) {
+      toast.error('Pilih bulan terlebih dahulu')
+      return
+    }
+  } else {
+    if (!bulkDeleteDate.value) {
+      toast.error('Pilih tanggal terlebih dahulu')
+      return
+    }
+  }
+  // Reset ke item pertama dari daftar terfilter
+  manageIndex.value = 0
+  const first = manageList.value[0]
+  if (!first) {
+    manageTarget.value = null
+    toast.error('Tidak ada item sesuai filter')
+    return
+  }
+  manageTarget.value = { ...first }
+}
+
+const doEditFromManage = () => {
+  if (manageTarget.value) {
+    openEdit(manageTarget.value)
+    showManage.value = false
+    manageTarget.value = null
+  }
+}
+
+const doDeleteWithFilter = () => {
+  const p = manageTarget.value
+  if (!p) return
+  const allowed =
+    deleteFilter.value === 'ALL' ? true :
+    deleteFilter.value === 'PENDING_OR_OVERDUE' ? (p.status === 'PENDING' || p.status === 'OVERDUE') :
+    deleteFilter.value === 'PENDING_ONLY' ? p.status === 'PENDING' : false
+
+  if (!allowed) {
+    toast.error('Pembayaran tidak memenuhi kriteria penghapusan')
+    return
+  }
+  askDelete(p)
+  showManage.value = false
+  manageTarget.value = null
+}
+
+const askDeleteBulk = () => {
+  if (!canManagePayments.value) {
+    toast.error('Anda tidak berhak menghapus pembayaran')
+    return
+  }
+  if (bulkDeleteMode.value === 'MONTH') {
+    if (!bulkDeleteMonth.value) {
+      toast.error('Pilih bulan terlebih dahulu')
+      return
+    }
+    const [yearStr, monthStr] = bulkDeleteMonth.value.split('-')
+    if (!yearStr || !monthStr) {
+      toast.error('Format bulan tidak valid')
+      return
+    }
+    deleteBulkDetails.value = `Bulan: ${monthStr}-${yearStr}`
+  } else {
+    if (!bulkDeleteDate.value) {
+      toast.error('Pilih tanggal terlebih dahulu')
+      return
+    }
+    deleteBulkDetails.value = `Tanggal: ${bulkDeleteDate.value}`
+  }
+  showDeleteBulk.value = true
+}
+
+const confirmDeleteBulk = async () => {
+  bulkDeleteSubmitting.value = true
+  try {
+    showLoading('Menghapus pembayaran massal...', 'Memproses data sesuai filter')
+    const body: any = {}
+    if (bulkDeleteMode.value === 'MONTH') {
+      const [yearStr, monthStr] = bulkDeleteMonth.value.split('-')
+      body.year = Number(yearStr)
+      body.month = Number(monthStr)
+    } else {
+      body.date = bulkDeleteDate.value
+    }
+    await $fetch('/api/finances/manage/payments/bulk', { method: 'DELETE', body })
+    setLoadingText('Memuat ulang...', 'Memperbarui daftar pembayaran')
+    await fetchPayments()
+    toast.success('Pembayaran massal berhasil dihapus')
+    showDeleteBulk.value = false
+    deleteBulkDetails.value = ''
+  } catch (err: any) {
+    const msg = err?.data?.message || err?.message || 'Gagal menghapus pembayaran massal'
+    toast.error(msg)
+  } finally {
+    hideLoading()
+    bulkDeleteSubmitting.value = false
+  }
+}
+
+const manageNext = () => {
+  if (!bulkManageMode.value) return
+  if (manageIndex.value >= manageList.value.length - 1) return
+  manageIndex.value = Math.min(manageIndex.value + 1, manageList.value.length - 1)
+  const nextItem = manageList.value[manageIndex.value]
+  if (nextItem) manageTarget.value = { ...nextItem }
+}
+
+const managePrev = () => {
+  if (!bulkManageMode.value) return
+  if (manageIndex.value <= 0) return
+  manageIndex.value = Math.max(manageIndex.value - 1, 0)
+  const prevItem = manageList.value[manageIndex.value]
+  if (prevItem) manageTarget.value = { ...prevItem }
+}
+
 const handleSave = async (payload: Payment) => {
   formSubmitting.value = true
   try {
     if (isEditing.value && form.value) {
-      await updatePayment(form.value.id, payload)
+      const { id: _ignored, ...rest } = payload
+      await updatePayment(form.value.id, rest)
       toast.success('Pembayaran berhasil diperbarui')
     } else {
       await addPayment(payload)
@@ -419,6 +728,40 @@ const handleSave = async (payload: Payment) => {
   } catch (err) {
     toast.error('Terjadi kesalahan')
   } finally {
+    formSubmitting.value = false
+  }
+}
+
+type BulkPaymentInput = Pick<Payment, 'type' | 'description' | 'amount' | 'dueDate' | 'status'>
+const handleSaveBulk = async (payload: BulkPaymentInput) => {
+  formSubmitting.value = true
+  try {
+    if (!canManagePayments.value) {
+      toast.error('Anda tidak berhak menambah pembayaran')
+      return
+    }
+    showLoading('Membuat pembayaran massal...', 'Menargetkan warga sesuai peran')
+    await $fetch('/api/finances/manage/payments/bulk', {
+      method: 'POST',
+      body: {
+        type: payload.type,
+        description: payload.description,
+        amount: payload.amount,
+        dueDate: payload.dueDate,
+        status: payload.status,
+        // @ts-ignore: roles dikirim dari AddPayment.vue sebagai array string
+        roles: (payload as any).roles || ['WARGA']
+      }
+    })
+    setLoadingText('Memuat ulang...', 'Memperbarui daftar pembayaran')
+    await fetchPayments()
+    toast.success('Pembayaran iuran untuk semua warga (kecuali super admin) berhasil dibuat')
+    isFormOpen.value = false
+  } catch (err: any) {
+    const msg = err?.data?.message || err?.message || 'Gagal membuat pembayaran massal'
+    toast.error(msg)
+  } finally {
+    hideLoading()
     formSubmitting.value = false
   }
 }
@@ -438,13 +781,37 @@ const askDelete = (p: Payment) => {
 const confirmDelete = async () => {
   if (toDelete.value) {
     try {
+      showLoading('Menghapus pembayaran...', 'Memproses penghapusan')
       await deletePayment(toDelete.value.id)
       toast.success('Pembayaran berhasil dihapus')
     } catch (err) {
       toast.error('Gagal menghapus pembayaran')
     } finally {
+      hideLoading()
       showDelete.value = false
       toDelete.value = null
+      // Jika sedang mode bulk, buka kembali modal Kelola untuk item berikutnya
+      if (bulkManageMode.value) {
+        if (manageList.value.length === 0) {
+          bulkManageMode.value = false
+          showManage.value = false
+          manageTarget.value = null
+          manageIndex.value = 0
+        } else {
+          // Pastikan indeks tidak melewati batas setelah data berubah
+          manageIndex.value = Math.min(manageIndex.value, Math.max(0, manageList.value.length - 1))
+          const current = manageList.value[manageIndex.value]
+          if (current) {
+            manageTarget.value = { ...current }
+            showManage.value = true
+          } else {
+            bulkManageMode.value = false
+            manageTarget.value = null
+            showManage.value = false
+            manageIndex.value = 0
+          }
+        }
+      }
     }
   }
 }

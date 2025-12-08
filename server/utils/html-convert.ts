@@ -53,7 +53,7 @@ export async function createHtmlTemplate(
 
   // --- Konfigurasi LangChain untuk Google GenAI ---
   const chat = new ChatGoogleGenerativeAI({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.5-pro',
     apiKey: config.exnestApiKey,
     temperature: 0.1,
   });
